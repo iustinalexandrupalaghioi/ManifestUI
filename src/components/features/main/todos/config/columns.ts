@@ -1,0 +1,83 @@
+import type { ColumnConfig } from "@/framework/components/data-view/core/ui/createColumnsFromConfig";
+import { Gender } from "@/app/types/main/Relation";
+
+export const todoColumns: ColumnConfig[] = [
+  { field: "id", label: "Id", type: "number", size: 55, cardHidden: true },
+  { field: "title", label: "Title", type: "text", size: 300 },
+  { field: "completed", label: "Completed", type: "boolean", size: 90 },
+  { field: "notes", label: "Notes", type: "text", size: 300 },
+  {
+    field: "user_id",
+    label: "User id",
+    type: "number",
+    size: 70,
+    hidden: true,
+  },
+  {
+    field: "relation_username",
+    label: "Username",
+    type: "text",
+    size: 110,
+    columnName: "username",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.username,
+    navigationHidden: true,
+    cardNavigationHidden: true,
+  },
+  {
+    field: "relation_first_name",
+    label: "First name",
+    type: "text",
+    size: 90,
+    columnName: "first_name",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.first_name,
+    hidden: true,
+  },
+  {
+    field: "relation_last_name",
+    label: "Last name",
+    type: "text",
+    size: 90,
+    columnName: "last_name",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.last_name,
+    hidden: true,
+  },
+  {
+    field: "relation_email",
+    label: "Email",
+    type: "text",
+    size: 250,
+    columnName: "email",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.email,
+    hidden: true,
+  },
+  {
+    field: "relation_gender",
+    label: "Gender",
+    type: "select",
+    size: 85,
+    columnName: "gender",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.gender,
+    hidden: true,
+    selectOptions: Gender.options,
+  },
+  {
+    field: "created_at",
+    label: "Add time",
+    type: "datetime",
+    size: 130,
+    hidden: true,
+  },
+];
+
+export const todoPickupColumns: ColumnConfig[] = [
+  { field: "id", label: "Id", type: "number", size: 70 },
+  { field: "title", label: "Title", type: "text", size: 300 },
+  { field: "completed", label: "Completed", type: "boolean", size: 80 },
+  { field: "notes", label: "Notes", type: "text", size: 300 },
+  { field: "created_at", label: "Created at", type: "datetime", size: 140 },
+];
