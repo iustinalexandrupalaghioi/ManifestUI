@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { mapPgError } from "@/framework/lib/mapPgError";
 import { ActionResultError } from "@/framework/lib/actionResult";
 import type { AppError } from "@/framework/types/global/AppError";
@@ -8,7 +9,7 @@ import { toastLoading, toastUpdate } from "@/framework/lib/toast";
 import { useUploadStore } from "../components/form/hooks/useUploadStore";
 import type { UploadEntry } from "../registry/UploadRegistryContext";
 
-export function mapErr(err: any): AppError {
+export function mapErr(err: any, locale: string): AppError {
   if (err instanceof ActionResultError) {
     return {
       ...err.error,
@@ -23,20 +24,24 @@ export function mapErr(err: any): AppError {
     detail?: string;
     hint?: string;
   };
-  return mapPgError({
-    message: e?.message ?? "An unexpected error occurred.",
-    code: e?.code,
-    details: e?.details ?? e?.detail,
-    hint: e?.hint,
-  });
+  return mapPgError(
+    {
+      message: e?.message ?? "",
+      code: e?.code,
+      details: e?.details ?? e?.detail,
+      hint: e?.hint,
+    },
+    locale,
+  );
 }
 
 export function useFileErrorState() {
+  const locale = useLocale();
   const [fileError, setFileError] = useState<AppError | null>(null);
   const [fileErrorOpen, setFileErrorOpen] = useState(false);
 
   const setError = (err: any) => {
-    setFileError(mapErr(err));
+    setFileError(mapErr(err, locale));
     setFileErrorOpen(true);
   };
 

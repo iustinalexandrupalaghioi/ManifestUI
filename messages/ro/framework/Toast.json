@@ -3,7 +3,7 @@
   "deletingMulti": "Se șterg {completed} din {total} {label}...",
   "deleted": "{gender, select, feminine {{count, plural, one {# {label} ștearsă!} few {# {label} șterse!} other {# de {label} șterse!}}} neuter {{count, plural, one {# {label} șters!} few {# {label} șterse!} other {# de {label} șterse!}}} other {{count, plural, one {# {label} șters!} few {# {label} șterși!} other {# de {label} șterși!}}}}",
   "deletedOf": "{gender, select, feminine {{succeeded} din {total} {label} șterse.} neuter {{succeeded} din {total} {label} șterse.} other {{succeeded} din {total} {label} șterși.}}",
-  "failedToDelete": "Nu s-a putut șterge {count} {label}.",
+  "failedToDelete": "{count, plural, one {{gender, select, feminine {Nu s-a putut șterge o {label}.} other {Nu s-a putut șterge un {label}.}}} few {Nu s-au putut șterge # {label}.} other {Nu s-au putut șterge # de {label}.}}",
   "uploadingFiles": "Se încarcă fișierele pentru {label}...",
   "filesUploaded": "Fișierele pentru {label} au fost încărcate!",
   "failedToUpload": "Nu s-au putut încărca fișierele pentru {label}.",

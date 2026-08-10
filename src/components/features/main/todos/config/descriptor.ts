@@ -6,6 +6,7 @@ export const todosDescriptor: ResourceDescriptor = {
   id,
   table: "todos",
   singular: { en: "To do", ro: "Sarcină" },
+  singularDefinite: { en: "to do", ro: "sarcina" },
   plural: { en: "To dos", ro: "Sarcini" },
   new: { en: "To do", ro: "Sarcină" },
   gender: "feminine",

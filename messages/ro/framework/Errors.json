@@ -1,4 +1,27 @@
 {
   "unknownError": "Eroare necunoscută",
-  "actionFailed": "Acțiunea a eșuat."
+  "actionFailed": "Acțiunea a eșuat.",
+  "notAbleTo": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {subject}.",
+  "notAbleToWithReason": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {subject}: {reason}",
+  "notAbleToGeneric": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {gender, select, feminine {o} other {un}} {label}",
+  "forbidden": "Nu aveți permisiunea de a efectua această acțiune.",
+  "invalidInput": "Date de intrare invalide.",
+  "fkStillReferenced": "Această înregistrare nu poate fi ștearsă deoarece este încă referențiată din \"{table}\".",
+  "fkMissingReference": "Înregistrarea referențiată nu există în \"{table}\".",
+  "fkViolation": "A fost încălcată o constrângere de cheie externă.",
+  "uniqueViolationWithValue": "Există deja o înregistrare cu {column} \"{value}\".",
+  "uniqueViolation": "Există deja o înregistrare cu aceste valori.",
+  "requiredFieldNamed": "\"{column}\" este obligatoriu și nu poate fi gol.",
+  "requiredField": "Lipsește un câmp obligatoriu.",
+  "checkConstraintSpotsAvailable": "Locurile disponibile trebuie să fie mai mari decât 0.",
+  "checkConstraintGeneric": "Una sau mai multe valori sunt invalide.",
+  "dateTimeEmpty": "Câmpul de tip {typeLabel} a fost lăsat gol, deși ar fi trebuit omis sau setat la null.",
+  "dateTimeInvalid": "\"{value}\" nu este o valoare validă de tip {typeLabel}.",
+  "dateTimeGeneric": "Una sau mai multe valori de dată sau oră au un format incorect.",
+  "typeDateTime": "dată/oră",
+  "typeDate": "dată",
+  "typeTime": "oră",
+  "recordNotFound": "Înregistrarea nu a putut fi găsită sau nu aveți permisiunea de a o accesa.",
+  "fieldNotInDatabase": "Un câmp din acest formular nu există în baza de date.",
+  "unexpectedError": "A apărut o eroare neașteptată."
 }

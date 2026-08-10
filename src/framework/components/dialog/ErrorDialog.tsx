@@ -77,7 +77,7 @@ export function ErrorDialog({ open, setOpen, error }: ErrorDialogProps) {
     <BaseDialog
       open={open}
       setOpen={setOpen}
-      title={t("title")}
+      title={error.title ?? t("title")}
       className="md:min-w-lg"
       footer={footer}
     >

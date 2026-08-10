@@ -5,6 +5,7 @@ export const usersDescriptor: ResourceDescriptor = {
   id,
   table: "users",
   singular: { en: "User", ro: "Utilizator" },
+  singularDefinite: { en: "user", ro: "utilizatorul" },
   plural: { en: "Users", ro: "Utilizatori" },
   new: { en: "User", ro: "Utilizator" },
   gender: "masculine",

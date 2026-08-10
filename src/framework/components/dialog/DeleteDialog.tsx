@@ -10,7 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { BaseDialog } from "./BaseDialog";
 import { ErrorDialog } from "./ErrorDialog";
 import { mapErr } from "@/framework/core/resource-helpers";
@@ -46,6 +46,7 @@ export function DeleteDialog({
   const t = useTranslations("Dialog");
   const tc = useTranslations("Common");
   const tBulk = useTranslations("BulkResult");
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const ids = Array.isArray(id) ? id : [id];
   const isMulti = ids.length > 1;
@@ -80,7 +81,7 @@ export function DeleteDialog({
       }
     },
     onError: (err: unknown) => {
-      setError(mapErr(err));
+      setError(mapErr(err, locale));
       setErrorOpen(true);
     },
   });

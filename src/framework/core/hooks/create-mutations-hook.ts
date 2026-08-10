@@ -34,7 +34,7 @@ export function createMutationsHook<
     };
 
     const handleError = (err: unknown) => {
-      setError(mapErr(err));
+      setError(mapErr(err, locale));
     };
 
     const invalidateSelfAndRelations = (
@@ -105,7 +105,7 @@ export function createMutationsHook<
           success: (count) => t("deleted", { count, label: noun(count), gender }),
           partial: (succeeded, total) =>
             t("deletedOf", { succeeded, total, label: noun(total), gender }),
-          failure: (count) => t("failedToDelete", { count, label: noun(count) }),
+          failure: (count) => t("failedToDelete", { count, label: noun(count), gender }),
         });
 
         if (bulkResult.failures.length === 0) {

@@ -6,6 +6,7 @@ export const relationsDescriptor: ResourceDescriptor = {
   id,
   table: "relations",
   singular: { en: "Relation", ro: "Relație" },
+  singularDefinite: { en: "relation", ro: "relația" },
   plural: { en: "Relations", ro: "Relații" },
   new: { en: "Relation", ro: "Relație" },
   gender: "feminine",

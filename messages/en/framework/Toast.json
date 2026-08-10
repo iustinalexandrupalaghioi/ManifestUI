@@ -3,7 +3,7 @@
   "deletingMulti": "Deleting {completed} of {total} {label}...",
   "deleted": "Deleted {count} {label}!",
   "deletedOf": "Deleted {succeeded} of {total} {label}.",
-  "failedToDelete": "Failed to delete {count} {label}.",
+  "failedToDelete": "{count, plural, one {Failed to delete this {label}.} other {Failed to delete {count} {label}.}}",
   "uploadingFiles": "Uploading {label} files...",
   "filesUploaded": "{label} files uploaded!",
   "failedToUpload": "Failed to upload {label} files.",

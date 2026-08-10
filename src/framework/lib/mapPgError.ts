@@ -1,4 +1,8 @@
+import { createTranslator } from "next-intl";
 import type { AppError } from "@/framework/types/global/AppError";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
+import enErrors from "../../../messages/en/framework/Errors.json";
+import roErrors from "../../../messages/ro/framework/Errors.json";
 
 interface PgError {
   code?: string;
@@ -9,74 +13,89 @@ interface PgError {
   constraint_name?: string;
 }
 
-const PG_ERROR_MESSAGES: Record<string, (err: PgError) => string> = {
-  "23503": (err) => {
+const ERRORS_MESSAGES: Record<Locale, Record<string, string>> = {
+  en: enErrors,
+  ro: roErrors,
+};
+
+// Plain function (not a hook) so it's callable both from component render
+// (with `useLocale()`'s result) and from server-only, non-component call
+// sites (with `getLocale()`'s result) — see resolveLabel.ts for the same
+// pattern, and the comment there for why.
+function getErrorsTranslator(locale: string) {
+  const messages = ERRORS_MESSAGES[locale as Locale] ?? ERRORS_MESSAGES[DEFAULT_LOCALE];
+  return createTranslator({ locale, messages: { Errors: messages }, namespace: "Errors" });
+}
+
+type ErrorsTranslator = ReturnType<typeof getErrorsTranslator>;
+
+const PG_ERROR_MESSAGES: Record<string, (err: PgError, t: ErrorsTranslator) => string> = {
+  "23503": (err, t) => {
     // Delete blocked — record is still referenced
     const refMatch = err.details?.match(/still referenced from table "(.+)"/);
     if (refMatch) {
-      return `This record cannot be deleted because it is still referenced by "${refMatch[1]}".`;
+      return t("fkStillReferenced", { table: refMatch[1] });
     }
 
     // Insert/update blocked — foreign key value doesn't exist
     const missingMatch = err.details?.match(/is not present in table "(.+)"/);
     if (missingMatch) {
-      return `The referenced record does not exist in "${missingMatch[1]}".`;
+      return t("fkMissingReference", { table: missingMatch[1] });
     }
 
-    return "A foreign key constraint was violated.";
+    return t("fkViolation");
   },
-  "23505": (err) => {
+  "23505": (err, t) => {
     const match = err.details?.match(/Key \((.+)\)=\((.+)\) already exists/);
-    if (match) return `A record with ${match[1]} "${match[2]}" already exists.`;
-    return "A record with these values already exists.";
+    if (match) return t("uniqueViolationWithValue", { column: match[1], value: match[2] });
+    return t("uniqueViolation");
   },
-  "23502": (err) => {
+  "23502": (err, t) => {
     const match = err.message.match(/column "(.+)"/);
     return match
-      ? `"${match[1]}" is required and cannot be empty.`
-      : "A required field is missing.";
+      ? t("requiredFieldNamed", { column: match[1] })
+      : t("requiredField");
   },
-  "23514": (err) => {
+  "23514": (err, t) => {
     const match = err.message.match(/violates check constraint "(.+)"/);
     const constraint = match?.[1];
 
-    const CHECK_CONSTRAINT_MESSAGES: Record<string, string> = {
-      course_session_available_spots_check:
-        "Available spots must be greater than 0.",
+    const CHECK_CONSTRAINT_KEYS: Record<string, string> = {
+      course_session_available_spots_check: "checkConstraintSpotsAvailable",
     };
 
-    if (constraint && CHECK_CONSTRAINT_MESSAGES[constraint]) {
-      return CHECK_CONSTRAINT_MESSAGES[constraint];
+    if (constraint && CHECK_CONSTRAINT_KEYS[constraint]) {
+      return t(CHECK_CONSTRAINT_KEYS[constraint]);
     }
 
-    return "One or more values are invalid.";
+    return t("checkConstraintGeneric");
   },
-  "22007": (err) => {
+  "22007": (err, t) => {
     const match = err.message.match(
       /invalid input syntax for type (.+?): "(.*)"/,
     );
 
     if (match) {
       const [, type, value] = match;
-      const typeLabel =
+      const typeLabelKey =
         {
-          "timestamp with time zone": "date/time",
-          timestamptz: "date/time",
-          timestamp: "date/time",
-          date: "date",
-          time: "time",
-        }[type] ?? type;
+          "timestamp with time zone": "typeDateTime",
+          timestamptz: "typeDateTime",
+          timestamp: "typeDateTime",
+          date: "typeDate",
+          time: "typeTime",
+        }[type] ?? undefined;
+      const typeLabel = typeLabelKey ? t(typeLabelKey) : type;
 
       return value === ""
-        ? `A ${typeLabel} field was left empty when it should have been omitted or set to null.`
-        : `"${value}" is not a valid ${typeLabel} value.`;
+        ? t("dateTimeEmpty", { typeLabel })
+        : t("dateTimeInvalid", { value, typeLabel });
     }
 
-    return "One or more date or time values are formatted incorrectly.";
+    return t("dateTimeGeneric");
   },
-  PGRST116: () =>
-    "The record could not be found or you do not have permission to access it.",
-  PGRST204: () => "A field in this form doesn't exist in the database.",
+  PGRST116: (_err, t) => t("recordNotFound"),
+  PGRST204: (_err, t) => t("fieldNotInDatabase"),
 };
 
 // Drizzle (postgres.js) throws a `DrizzleQueryError` whose own `message` is
@@ -105,15 +124,17 @@ export function extractPgError(err: unknown): PgError {
   };
 }
 
-export function mapCaughtError(err: unknown): AppError {
-  return mapPgError(extractPgError(err));
+export function mapCaughtError(err: unknown, locale: string): AppError {
+  return mapPgError(extractPgError(err), locale);
 }
 
 export function mapPgError(
   err: PgError & { meta?: AppError["meta"] },
+  locale: string,
 ): AppError {
+  const t = getErrorsTranslator(locale);
   const friendlyMessage = err.code
-    ? PG_ERROR_MESSAGES[err.code]?.(err)
+    ? PG_ERROR_MESSAGES[err.code]?.(err, t)
     : undefined;
 
   // `details`/`hint`/`originalMessage` can contain literal row values (e.g.
@@ -123,7 +144,7 @@ export function mapPgError(
   // the raw Postgres detail outside production, where a developer debugging
   // the error needs it; production users get the friendly message only.
   const includeRawDetail = process.env.NODE_ENV !== "production";
-  const message = friendlyMessage ?? err.message ?? "An unexpected error occurred.";
+  const message = friendlyMessage || err.message || t("unexpectedError");
 
   return {
     message,

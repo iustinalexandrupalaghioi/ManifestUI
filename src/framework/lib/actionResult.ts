@@ -4,6 +4,8 @@ export interface ActionError {
   hint?: string;
   message: string;
   originalMessage?: string;
+  // See AppError.title — short summary for the client's error dialog header.
+  title?: string;
   meta?: { type: string; [key: string]: unknown };
 }
 

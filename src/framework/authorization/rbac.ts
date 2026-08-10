@@ -1,6 +1,7 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { ZodError } from "zod";
+import { getLocale, getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import { role_resource_permissions, roles, user_roles, users } from "@/db/schema";
 import { getSupabase } from "@/lib/supabase/getSupabase";
@@ -226,11 +227,14 @@ export function withPermission<Args extends unknown[], R>(
       // client.
       console.error(`[${resourceId}:${action}]`, err);
 
+      const locale = await getLocale();
+
       if (err instanceof ForbiddenError) {
+        const t = await getTranslations({ locale, namespace: "Errors" });
         return {
           ok: false,
           error: {
-            message: "You don't have permission to perform this action.",
+            message: t("forbidden"),
             originalMessage: err.message,
             meta: { type: "forbidden" },
           },
@@ -242,10 +246,11 @@ export function withPermission<Args extends unknown[], R>(
       }
 
       if (err instanceof ZodError) {
+        const t = await getTranslations({ locale, namespace: "Errors" });
         return {
           ok: false,
           error: {
-            message: "Invalid input.",
+            message: t("invalidInput"),
             meta: {
               type: "validation",
               issues: err.issues.map((issue) => ({
@@ -257,7 +262,7 @@ export function withPermission<Args extends unknown[], R>(
         };
       }
 
-      return { ok: false, error: mapCaughtError(err) };
+      return { ok: false, error: mapCaughtError(err, locale) };
     }
   };
 }

@@ -5,6 +5,7 @@ export const rolesDescriptor: ResourceDescriptor = {
   id,
   table: "roles",
   singular: { en: "Role", ro: "Rol" },
+  singularDefinite: { en: "role", ro: "rolul" },
   plural: { en: "Roles", ro: "Roluri" },
   new: { en: "Role", ro: "Rol" },
   gender: "neuter",

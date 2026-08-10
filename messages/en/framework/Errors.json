@@ -1,4 +1,27 @@
 {
   "unknownError": "Unknown error",
-  "actionFailed": "Action failed."
+  "actionFailed": "Action failed.",
+  "notAbleTo": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} {subject}.",
+  "notAbleToWithReason": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} {subject}: {reason}",
+  "notAbleToGeneric": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} this {label}",
+  "forbidden": "You don't have permission to perform this action.",
+  "invalidInput": "Invalid input.",
+  "fkStillReferenced": "This record cannot be deleted because it is still referenced by \"{table}\".",
+  "fkMissingReference": "The referenced record does not exist in \"{table}\".",
+  "fkViolation": "A foreign key constraint was violated.",
+  "uniqueViolationWithValue": "A record with {column} \"{value}\" already exists.",
+  "uniqueViolation": "A record with these values already exists.",
+  "requiredFieldNamed": "\"{column}\" is required and cannot be empty.",
+  "requiredField": "A required field is missing.",
+  "checkConstraintSpotsAvailable": "Available spots must be greater than 0.",
+  "checkConstraintGeneric": "One or more values are invalid.",
+  "dateTimeEmpty": "A {typeLabel} field was left empty when it should have been omitted or set to null.",
+  "dateTimeInvalid": "\"{value}\" is not a valid {typeLabel} value.",
+  "dateTimeGeneric": "One or more date or time values are formatted incorrectly.",
+  "typeDateTime": "date/time",
+  "typeDate": "date",
+  "typeTime": "time",
+  "recordNotFound": "The record could not be found or you do not have permission to access it.",
+  "fieldNotInDatabase": "A field in this form doesn't exist in the database.",
+  "unexpectedError": "An unexpected error occurred."
 }

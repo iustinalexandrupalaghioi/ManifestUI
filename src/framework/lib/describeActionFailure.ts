@@ -1,6 +1,6 @@
 import "server-only";
 import { sql } from "drizzle-orm";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { db } from "@/db";
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 import { resolveLabel } from "./resolveLabel";
@@ -22,6 +22,8 @@ function getResourceRow(
     name: entry.id,
     label: resolveLabel(entry.plural, locale),
     singularLabel: resolveLabel(entry.singular, locale),
+    mentionLabel: resolveLabel(entry.singularDefinite ?? entry.singular, locale),
+    gender: entry.gender,
   };
 }
 
@@ -120,10 +122,18 @@ export async function describeActionFailure(
   verb: string = "delete",
 ): Promise<ActionError> {
   const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "Errors" });
   const pg = extractPgError(err);
   const resource = getResourceRow(registry, resourceId, locale);
-  const label = resource?.singularLabel ?? resource?.label ?? resourceId;
+  const label = resource?.mentionLabel ?? resource?.singularLabel ?? resource?.label ?? resourceId;
   const subject = id !== undefined ? `${label} #${id}` : label;
+  // Dialog-header summary — deliberately generic (indefinite article, no id)
+  // since the specific record is already named in `message` below.
+  const title = t("notAbleToGeneric", {
+    verb,
+    gender: resource?.gender ?? "masculine",
+    label: (resource?.singularLabel ?? resourceId).toLowerCase(),
+  });
 
   if (id !== undefined && pg.code === "23503" && pg.table_name) {
     const refs = await lookupReferencingRows(
@@ -135,7 +145,8 @@ export async function describeActionFailure(
     );
     if (refs) {
       return {
-        message: `Not able to ${verb} ${subject}.`,
+        message: t("notAbleTo", { verb, subject }),
+        title,
         code: pg.code,
         originalMessage: pg.message,
         meta: {
@@ -147,9 +158,10 @@ export async function describeActionFailure(
     }
   }
 
-  const mapped = mapPgError(pg);
+  const mapped = mapPgError(pg, locale);
   return {
-    message: `Not able to ${verb} ${subject}: ${mapped.message}`,
+    message: t("notAbleToWithReason", { verb, subject, reason: mapped.message }),
+    title,
     code: mapped.code,
     originalMessage: mapped.originalMessage,
     details: mapped.details,
