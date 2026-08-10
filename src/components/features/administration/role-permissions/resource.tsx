@@ -15,34 +15,27 @@ import {
   type RolePermissionFormValues,
 } from "./config/schema";
 import { rolePermissionColumns } from "./config/columns";
+import { rolePermissionsDescriptor } from "./config/descriptor";
 
 export const rolePermissionsResource = defineResource<
   RolePermission,
   RolePermissionFormValues
 >({
-  id: "role-permissions",
-  noun: "role permission",
-  queryKey: ["role-permissions"],
+  id: rolePermissionsDescriptor.id,
+  noun: rolePermissionsDescriptor.noun,
+  queryKey: rolePermissionsDescriptor.queryKey,
   schema: rolePermissionSchema,
 
-  routes: {
-    list: "/role-permissions",
-    add: "/role-permissions/add",
-    detail: (id: string) => `/role-permissions/${id}`,
-  },
+  routes: rolePermissionsDescriptor.routes,
 
-  labels: {
-    singular: "Role permission",
-    plural: "Role permissions",
-    new: "Role permission",
-  },
+  labels: rolePermissionsDescriptor,
 
   openMode: "dialog",
   addMode: "dialog",
 
   emptyValues: {
     role_id: 0,
-    resource_id: 0,
+    resource_id: "",
     can_read: false,
     can_add: false,
     can_update: false,
@@ -62,8 +55,8 @@ export const rolePermissionsResource = defineResource<
   pickupColumns: rolePermissionColumns,
   form: rolePermissionsForm,
 
-  overviewKey: "role-permissions-overview",
-  defaultViewName: "Role permissions",
+  overviewKey: rolePermissionsDescriptor.overviewKey,
+  defaultViewName: rolePermissionsDescriptor.defaultViewName,
 });
 
 export const {
@@ -72,7 +65,7 @@ export const {
 } = rolePermissionsResource;
 
 export const rolePermissionKeys = rolePermissionHooks.keys;
-export const OVERVIEW_KEY = "role-permissions-overview";
+export const OVERVIEW_KEY = rolePermissionsDescriptor.overviewKey;
 export const useRolePermissionsInfinite = rolePermissionHooks.useList;
 export const useRolePermission = rolePermissionHooks.useDetail;
 

@@ -3,11 +3,11 @@ import {
   foreignKey,
   pgPolicy,
   bigint,
+  text,
   boolean,
   unique,
 } from "drizzle-orm/pg-core";
 import { roles } from "./roles";
-import { resources } from "./resources";
 
 export const role_resource_permissions = pgTable(
   "role_resource_permissions",
@@ -19,13 +19,16 @@ export const role_resource_permissions = pgTable(
       cache: 1,
     }),
     role_id: bigint({ mode: "number" }).notNull(),
-    resource_id: bigint({ mode: "number" }).notNull(),
-    // Meaningful for resources.type = "resource" rows.
+    // A code-level id, not a DB foreign key — either a resourceDescriptors
+    // id (e.g. "todos", meaningful with can_read/add/update/delete) or a
+    // grantableActions id (e.g. "todos:complete-with-note", meaningful with
+    // `allowed`). See src/app/grantablePermissions.ts — the valid set lives
+    // in code, not a database table, so there's nothing to foreign-key to.
+    resource_id: text().notNull(),
     can_read: boolean().notNull().default(false),
     can_add: boolean().notNull().default(false),
     can_update: boolean().notNull().default(false),
     can_delete: boolean().notNull().default(false),
-    // Meaningful for resources.type = "action" rows.
     allowed: boolean().notNull().default(false),
   },
   (table) => [
@@ -37,11 +40,6 @@ export const role_resource_permissions = pgTable(
       columns: [table.role_id],
       foreignColumns: [roles.id],
       name: "role_resource_permissions_role_id_fkey",
-    }).onDelete("restrict"),
-    foreignKey({
-      columns: [table.resource_id],
-      foreignColumns: [resources.id],
-      name: "role_resource_permissions_resource_id_fkey",
     }).onDelete("restrict"),
     pgPolicy("Enable read access for authenticated users", {
       as: "permissive",

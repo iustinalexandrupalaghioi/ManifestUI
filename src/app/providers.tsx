@@ -1,19 +1,17 @@
 "use client";
 
-import { AppNavBar } from "@/components/AppNavbar";
-import { Toaster } from "@/framework/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import {
   createSupabaseHandler,
   setStorageHandler,
 } from "@/framework/components/files";
-import { queryClient } from "@/framework/lib/queryClient";
+import { getQueryClient } from "@/framework/lib/queryClient";
 import { PERMISSIONS_QUERY_KEY } from "@/framework/authorization/usePermissions";
 import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/useCurrentUserId";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import "./register-resources";
-import "@/framework/components/dialog/fkReferencesErrorExtra";
 
 setStorageHandler(
   createSupabaseHandler({
@@ -24,20 +22,20 @@ setStorageHandler(
 
 export function Providers({
   children,
+  appNavBar,
   initialPermissions,
-  isAuthenticated,
   userId,
 }: {
   children: ReactNode;
+  appNavBar: ReactNode;
   initialPermissions: string[];
-  isAuthenticated: boolean;
   userId: string | null;
 }) {
+  const queryClient = getQueryClient();
+
   useEffect(() => {
-    // Seeded client-side only, never during render — queryClient is a
-    // process-wide singleton shared across concurrent server requests, so
-    // writing to it during SSR could leak one user's permissions into
-    // another request rendered on the same server worker.
+    // Seeded client-side only, never during render — writing to the query
+    // cache is a side effect and belongs in an effect, not the render body.
     queryClient.setQueryData(
       PERMISSIONS_QUERY_KEY,
       new Set(initialPermissions),
@@ -50,7 +48,7 @@ export function Providers({
     <QueryClientProvider client={queryClient}>
       <Toaster />
       <ThemeProvider>
-        <AppNavBar isAuthenticated={isAuthenticated} />
+        {appNavBar}
         {children}
       </ThemeProvider>
     </QueryClientProvider>

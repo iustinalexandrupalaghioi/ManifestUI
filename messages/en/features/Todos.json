@@ -1,0 +1,11 @@
+{
+  "complete": "Complete",
+  "completeWithNote": "Complete with note",
+  "completeWithNotesTitle": "Complete with notes",
+  "completionNotes": "Completion notes",
+  "completingSingle": "Completing to do...",
+  "completingMulti": "Completing {completed} of {total} to dos...",
+  "completed": "{count, plural, one {Completed # to do!} other {Completed # to dos!}}",
+  "completedOf": "Completed {succeeded} of {total} to dos.",
+  "failedToComplete": "{count, plural, one {Failed to complete # to do.} other {Failed to complete # to dos.}}"
+}

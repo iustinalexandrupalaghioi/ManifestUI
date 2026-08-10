@@ -1,7 +1,8 @@
 "use client";
-import { menuItems } from "@/components/MenuItems";
+import { useMenuItems } from "@/components/MenuItems";
 import GridMenu from "@/framework/components/menu/GridMenu";
 
 export default function HomePage() {
+  const menuItems = useMenuItems();
   return <GridMenu menuItems={menuItems} />;
 }

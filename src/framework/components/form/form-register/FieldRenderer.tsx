@@ -1,5 +1,7 @@
 import { cn } from "@/framework/lib/utils";
 import { useFormContext, useWatch } from "react-hook-form";
+import { useLocale } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { FieldConfig } from "../types/types";
 import { FileFieldRenderer } from "./FileFieldRenderer";
 import { LookupFieldRenderer } from "./LookupFieldRenderer";
@@ -73,6 +75,7 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
 }: FieldRendererProps<TFormValues>) {
   const { control } = useFormContext<TFormValues>();
   const values = useWatch({ control });
+  const locale = useLocale();
 
   const context = { ...item, ...values } as Record<string, unknown>;
 
@@ -110,6 +113,7 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
         readOnly={isReadOnly}
         className={className}
         activeCols={activeCols}
+        locale={locale}
       />
     );
   }
@@ -122,7 +126,7 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
     return (
       <FormReadOnlyInput
         name={field.name}
-        label={field.label}
+        label={resolveLabel(field.label, locale)}
         item={item}
         className={className}
         dataType={field.dataType}
@@ -137,6 +141,7 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
       disabled: isDisabled,
       readOnly: isReadOnly,
       className,
+      locale,
     });
   }
 
@@ -144,7 +149,7 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
     return (
       <FormJsonTextarea
         name={field.name}
-        label={field.label}
+        label={resolveLabel(field.label, locale)}
         placeholder={field.placeholder}
         maxRows={field.maxRows}
         disabled={isDisabled}

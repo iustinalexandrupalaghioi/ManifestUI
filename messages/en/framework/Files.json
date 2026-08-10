@@ -1,0 +1,18 @@
+{
+  "download": "Download",
+  "delete": "Delete",
+  "image": "Image",
+  "pdf": "PDF",
+  "file": "File",
+  "clickToPreview": "{category} · click to preview",
+  "uploadArea": "File upload area",
+  "dropFilesHere": "Drop files here",
+  "dragDropOrClick": "Drag & drop or click to upload",
+  "accepted": "Accepted: {accept}",
+  "maxSize": "Max {size} MB",
+  "upToFiles": "Up to {count} {count, plural, one {file} other {files}}",
+  "anyFileType": "Any file type",
+  "exceedsLimit": "{files} {count, plural, one {exceeds} other {exceed}} the {size} MB limit",
+  "uploaded": "Uploaded",
+  "noPreviewAvailable": "No preview available"
+}

@@ -4,7 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/framework/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import {
   ArrowDownIcon,
   ArrowDownZaIcon,
@@ -15,6 +15,7 @@ import {
   PinIcon,
   X,
 } from "lucide-react"
+import { useTranslations } from "next-intl"
 import type { Enum } from "@/framework/types/global/Enum"
 import type { ColumnType } from "../../features/filtering/filters"
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations"
@@ -70,6 +71,7 @@ export function DataTableHeaderDropdown({
   onTogglePin,
   onHide,
 }: DataTableHeaderDropdownProps) {
+  const t = useTranslations("DataTable")
   const SortIcon = sortRule
     ? sortRule.desc
       ? ArrowDownIcon
@@ -99,24 +101,24 @@ export function DataTableHeaderDropdown({
             {sortRule?.desc !== false ? (
               <DropdownMenuItem onClick={() => onPrimarySort(columnId, false)}>
                 <ArrowUpAzIcon className="mr-2 h-3.5 w-3.5" />
-                Sort ascending
+                {t("sortAscending")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => onClearSort(columnId)}>
                 <X className="mr-2 h-3.5 w-3.5" />
-                Remove sort
+                {t("removeSort")}
               </DropdownMenuItem>
             )}
 
             {sortRule?.desc !== true ? (
               <DropdownMenuItem onClick={() => onPrimarySort(columnId, true)}>
                 <ArrowDownZaIcon className="mr-2 h-3.5 w-3.5" />
-                Sort descending
+                {t("sortDescending")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem onClick={() => onClearSort(columnId)}>
                 <X className="mr-2 h-3.5 w-3.5" />
-                Remove sort
+                {t("removeSort")}
               </DropdownMenuItem>
             )}
 
@@ -127,14 +129,14 @@ export function DataTableHeaderDropdown({
                   disabled={sortRule?.desc === false && !isMultiSort}
                 >
                   <ArrowUpAzIcon className="mr-2 h-3.5 w-3.5" />
-                  Also sort ascending
+                  {t("alsoSortAscending")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onAlsoSort(columnId, true)}
                   disabled={sortRule?.desc === true && !isMultiSort}
                 >
                   <ArrowDownZaIcon className="mr-2 h-3.5 w-3.5" />
-                  Also sort descending
+                  {t("alsoSortDescending")}
                 </DropdownMenuItem>
               </>
             )}
@@ -153,20 +155,20 @@ export function DataTableHeaderDropdown({
             }
           >
             <FilterIcon className="mr-2 h-3.5 w-3.5" />
-            Add filter
+            {t("addFilter")}
           </DropdownMenuItem>
         )}
         {(canHide || onTogglePin) && <DropdownMenuSeparator />}
         {onTogglePin && (
           <DropdownMenuItem onClick={onTogglePin}>
             <PinIcon className="mr-2 h-3.5 w-3.5" />
-            {isPinned ? "Unpin column" : "Pin column"}
+            {isPinned ? t("unpinColumn") : t("pinColumn")}
           </DropdownMenuItem>
         )}
         {canHide && onHide && (
           <DropdownMenuItem onClick={onHide}>
             <EyeOffIcon className="mr-2 h-3.5 w-3.5" />
-            Hide column
+            {t("hideColumn")}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

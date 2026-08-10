@@ -30,9 +30,11 @@ import {
 } from "@/framework/components/data-view/features/filtering";
 import { toFilterRuleFallback } from "@/framework/components/data-view/features/filtering/filters";
 import type { Row } from "@tanstack/react-table";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import type { FieldValues } from "react-hook-form";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
+import { useLocale } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { stashNavigationState } from "@/framework/lib/navigationHandoff";
 import type { OverviewSlots } from "../../types/define-resource-type";
@@ -102,7 +104,7 @@ export function createOverview<
     listColumnVisibility,
   } = config;
 
-  const { idField, keys, noun, routes, labels, openMode, addMode } = hooks;
+  const { idField, keys, routes, labels, openMode, addMode } = hooks;
 
   return function Overview(
     props: {
@@ -135,6 +137,14 @@ export function createOverview<
     const searchParams = useSearchParams();
     const setNavigator = useNavigatorStore((s) => s.set);
     const clearNavigator = useNavigatorStore((s) => s.clear);
+
+    const locale = useLocale();
+    const resolvedLabels = {
+      singular: resolveLabel(labels.singular, locale),
+      plural: resolveLabel(labels.plural, locale),
+      new: resolveLabel(labels.new, locale),
+      gender: labels.gender,
+    };
 
     // Subscribes this component to the permissions query so it re-renders
     // once Providers seeds the real data — resolvePermission below reads a
@@ -233,7 +243,8 @@ export function createOverview<
       : overviewKey;
 
     const resolvedViewName =
-      config.getOverviewTitle?.(preFilters) ?? defaultViewName;
+      config.getOverviewTitle?.(preFilters) ??
+      resolveLabel(defaultViewName, locale);
 
     getViewsStore(
       tableId,
@@ -245,6 +256,28 @@ export function createOverview<
         ? cardNavigationColumnVisibility
         : (listColumnVisibility ?? {}),
     );
+
+    // getViewsStore only names the default view on first creation — it won't
+    // pick up a later locale switch on its own (the store outlives the
+    // locale it was created under, and persists to localStorage). The
+    // default view is never user-renamable (see TableViewBar/ListViewBar),
+    // so it's always safe to keep it in sync with the current locale here.
+    useEffect(() => {
+      const store = getViewsStore(tableId);
+      const { tableViews, listViews } = store.getState().persisted;
+      const tableDefault = tableViews.views.find(
+        (v) => v.id === DEFAULT_TABLE_VIEW_ID,
+      );
+      const listDefault = listViews.views.find(
+        (v) => v.id === DEFAULT_LIST_VIEW_ID,
+      );
+      if (tableDefault && tableDefault.name !== resolvedViewName) {
+        store.getState().renameTableView(DEFAULT_TABLE_VIEW_ID, resolvedViewName);
+      }
+      if (listDefault && listDefault.name !== resolvedViewName) {
+        store.getState().renameListView(DEFAULT_LIST_VIEW_ID, resolvedViewName);
+      }
+    }, [tableId, resolvedViewName]);
 
     const activeMode = useActiveMode(tableId);
     const activeTableView = useActiveTableView(tableId);
@@ -299,8 +332,21 @@ export function createOverview<
       fetchNextPage,
       hasNextPage,
       isFetchingNextPage,
-      isLoading,
+      isLoading: listIsLoading,
     } = hooks.useList(sorting, activeFilters, canRead);
+
+    // The list query is deliberately `enabled: canRead`, and canRead fails
+    // closed (false) until permissions actually resolve — so a disabled
+    // query's own isLoading is false the whole time permissions are
+    // unknown, not just once denial is confirmed. Left as query.isLoading
+    // alone, that's false identically on the server's first render and the
+    // client's pre-hydration render (both start with unresolved
+    // permissions), so hydration matches — but it then flips to "no
+    // results" before permissions (and therefore canRead) are actually
+    // known, which is wrong, and the *subsequent* client render (once
+    // permissions resolve and the query enables) flips again to true,
+    // producing the hydration-mismatch flash this replaces.
+    const isLoading = !permissionsLoaded || listIsLoading;
 
     const isForbidden =
       (permissionsLoaded && !canRead) ||
@@ -394,15 +440,17 @@ export function createOverview<
                 action.onSelect(rows.map((r) => r.original)),
             })),
         }),
-        ...(createColumns?.() ?? []),
+        ...(createColumns?.(locale) ?? []),
         createBufferColumn<TItem>(),
       ],
-      [getRowUrl, handleOpen, isDeleteEligible, actions, canRead, canDelete],
+      [getRowUrl, handleOpen, isDeleteEligible, actions, canRead, canDelete, locale],
     );
 
-    if (isForbidden) return <AccessDeniedDialog resource={labels.plural} />;
+    if (isForbidden)
+      return <AccessDeniedDialog resource={resolvedLabels.plural} />;
 
-    if (isError) return <div>Error loading {labels.plural.toLowerCase()}</div>;
+    if (isError)
+      return <div>Error loading {resolvedLabels.plural.toLowerCase()}</div>;
 
     const chromeNode = (
       <OverviewActionChrome
@@ -420,10 +468,9 @@ export function createOverview<
         preFilters={preFilters}
         popOutUrl={popOutUrl}
         toolbarChildren={config.overviewSlots?.toolbarExtra?.(selectedRows)}
-        noun={noun}
         routes={routes}
         queryKeyAll={keys.all}
-        labels={labels}
+        labels={resolvedLabels}
         deleteOpen={deleteOpen}
         setDeleteOpen={setDeleteOpen}
         pendingDeleteItems={pendingDeleteItems}

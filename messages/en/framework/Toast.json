@@ -1,0 +1,12 @@
+{
+  "deletingSingle": "Deleting {label}...",
+  "deletingMulti": "Deleting {completed} of {total} {label}...",
+  "deleted": "Deleted {count} {label}!",
+  "deletedOf": "Deleted {succeeded} of {total} {label}.",
+  "failedToDelete": "Failed to delete {count} {label}.",
+  "uploadingFiles": "Uploading {label} files...",
+  "filesUploaded": "{label} files uploaded!",
+  "failedToUpload": "Failed to upload {label} files.",
+  "created": "{label} created!",
+  "updated": "{label} updated!"
+}

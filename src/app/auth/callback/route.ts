@@ -1,20 +1,24 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { isSafeRedirect } from "@/framework/authentication/isSafeRedirect";
+import { isSafeRedirect } from "@/framework/authentication/lib/isSafeRedirect";
 import {
   RECOVERY_COOKIE,
   RECOVERY_COOKIE_MAX_AGE_SECONDS,
-} from "@/framework/authentication/recoveryCookie";
+} from "@/framework/authentication/lib/recoveryCookie";
+import { OAUTH_NEXT_COOKIE } from "@/framework/authentication/lib/oauthNextCookie";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const rawNext = searchParams.get("next");
-  const next = isSafeRedirect(rawNext) ? rawNext : "/";
 
   if (code) {
     const cookieStore = await cookies();
+    const oauthNext = cookieStore.get(OAUTH_NEXT_COOKIE)?.value;
+    cookieStore.delete(OAUTH_NEXT_COOKIE);
+    const rawNext = oauthNext ?? searchParams.get("next");
+    const next = isSafeRedirect(rawNext) ? rawNext : "/";
+
     const supabase = createClient(cookieStore);
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {

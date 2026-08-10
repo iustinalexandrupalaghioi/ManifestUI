@@ -1,6 +1,7 @@
 import type { Row, Table } from "@tanstack/react-table"
 import type { ReactNode } from "react"
 import { useEffect, useMemo, useRef } from "react"
+import { useTranslations } from "next-intl"
 
 export interface DataTableToolbarAction {
   label: ReactNode
@@ -13,6 +14,7 @@ export function useDataTableToolbarActions<TData>(
   table: Table<TData>,
   selectedRows: Row<TData>[]
 ) {
+  const tc = useTranslations("Common")
   const tableRef = useRef(table)
   useEffect(() => {
     tableRef.current = table
@@ -39,7 +41,7 @@ export function useDataTableToolbarActions<TData>(
             ? selectedRows.filter(meta.isDeleteEligible)
             : selectedRows
           actions.push({
-            label: "Delete",
+            label: tc("delete"),
             onSelect: () => meta.onDelete!(eligible),
             destructive: true,
             disabled: eligible.length === 0,
@@ -66,7 +68,7 @@ export function useDataTableToolbarActions<TData>(
     }
 
     return actions
-  }, [selectedRows])
+  }, [selectedRows, tc])
 
   return { resolvedActions }
 }

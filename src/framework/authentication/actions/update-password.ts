@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSupabase } from "@/lib/supabase/getSupabase";
 import type { ActionResult } from "@/framework/lib/actionResult";
-import { RECOVERY_COOKIE } from "@/framework/authentication/recoveryCookie";
+import { RECOVERY_COOKIE } from "@/framework/authentication/lib/recoveryCookie";
 
 // Require proof the caller actually came through the emailed
 // password-recovery link (see auth/callback/route.ts), not just that

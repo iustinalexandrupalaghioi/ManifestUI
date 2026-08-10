@@ -1,0 +1,12 @@
+{
+  "title": "Error",
+  "copied": "Copied",
+  "copyError": "Copy error",
+  "technicalDetails": "Technical details",
+  "referencedByExisting": "Referenced by existing records",
+  "andMore": "…and {count} more",
+  "message": "Message",
+  "code": "Code",
+  "details": "Details",
+  "hint": "Hint"
+}

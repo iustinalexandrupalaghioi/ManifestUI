@@ -92,7 +92,8 @@ export function defineResourceComponents<
     ? typeof rawColumns === "function"
       ? rawColumns
       : isColumnConfig(rawColumns)
-        ? () => createColumnsFromConfig<TItem>(rawColumns as ColumnConfig[])
+        ? (locale: string) =>
+            createColumnsFromConfig<TItem>(rawColumns as ColumnConfig[], locale)
         : () => rawColumns as any
     : undefined;
 
@@ -103,8 +104,11 @@ export function defineResourceComponents<
     ? typeof rawPickupColumns === "function"
       ? rawPickupColumns
       : isColumnConfig(rawPickupColumns)
-        ? (_onSelect: (item: TItem) => void) =>
-            createColumnsFromConfig<TItem>(rawPickupColumns as ColumnConfig[])
+        ? (_onSelect: (item: TItem) => void, locale: string) =>
+            createColumnsFromConfig<TItem>(
+              rawPickupColumns as ColumnConfig[],
+              locale,
+            )
         : (onSelect: (item: TItem) => void) =>
             (rawPickupColumns as any)(onSelect)
     : undefined;
@@ -187,6 +191,7 @@ export function defineResourceComponents<
   };
 
   const componentsConfig: ResourceComponentsConfig<TItem, TFormValues> = {
+    id: config.id,
     Form,
     AddForm,
     createColumns,

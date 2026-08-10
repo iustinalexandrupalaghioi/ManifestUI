@@ -1,6 +1,7 @@
 "use client";
 
-import { DateInput } from "@/framework/components/ui/date-input";
+import { CustomDateInput } from "@/framework/components/ui/CustomDateInput";
+import { useTranslations } from "next-intl";
 import {
   Controller,
   useFormContext,
@@ -29,6 +30,7 @@ function FormDate<T extends FieldValues>({
   readOnly,
 }: FormDateProps<T>) {
   const { control, setError, clearErrors } = useFormContext();
+  const t = useTranslations("Validation");
   return (
     <Controller
       control={control}
@@ -40,7 +42,7 @@ function FormDate<T extends FieldValues>({
           error={fieldState.error?.message}
           className={className}
         >
-          <DateInput
+          <CustomDateInput
             ref={field.ref}
             id={id ?? name}
             value={field.value}
@@ -51,7 +53,7 @@ function FormDate<T extends FieldValues>({
             onBlur={(hasFormatError) => {
               if (hasFormatError && !disabled && !readOnly) {
                 setError(name, {
-                  message: "Date must be in dd-MM-yyyy format",
+                  message: t("dateFormat"),
                 });
               }
               field.onBlur();

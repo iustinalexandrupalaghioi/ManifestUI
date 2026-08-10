@@ -1,6 +1,7 @@
 "use client";
 
-import { DateTimeInput } from "@/framework/components/ui/date-time-input";
+import { CustomDateTimeInput } from "@/framework/components/ui/CustomDateTimeInput";
+import { useTranslations } from "next-intl";
 import {
   Controller,
   useFormContext,
@@ -29,6 +30,7 @@ function FormDateTime<T extends FieldValues>({
   readOnly,
 }: FormDateTimeProps<T>) {
   const { control, setError, clearErrors } = useFormContext();
+  const t = useTranslations("Validation");
   return (
     <Controller
       control={control}
@@ -40,7 +42,7 @@ function FormDateTime<T extends FieldValues>({
           error={fieldState.error?.message}
           className={className}
         >
-          <DateTimeInput
+          <CustomDateTimeInput
             ref={field.ref}
             value={field.value}
             onChange={(val) => {
@@ -50,7 +52,7 @@ function FormDateTime<T extends FieldValues>({
             onBlur={(hasFormatError) => {
               if (hasFormatError && !disabled && !readOnly) {
                 setError(name, {
-                  message: "Date or time format is invalid",
+                  message: t("dateTimeFormat"),
                 });
               }
               field.onBlur();

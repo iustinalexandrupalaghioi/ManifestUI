@@ -1,7 +1,8 @@
 "use client"
 
-import { Textarea } from "@/framework/components/ui/textarea"
+import { CustomTextarea } from "@/framework/components/ui/CustomTextarea"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 
 function splitValues(text: string): string[] {
   return text
@@ -23,6 +24,7 @@ export function FilterTagInput({
   placeholder,
   validate,
 }: FilterTagInputProps) {
+  const t = useTranslations("Filtering")
   const [error, setError] = useState(false)
   const [text, setText] = useState(value.join("; "))
 
@@ -52,16 +54,16 @@ export function FilterTagInput({
 
   return (
     <div className="flex flex-col gap-1">
-      <Textarea
+      <CustomTextarea
         value={text}
         onChange={handleChange}
         onPaste={handlePaste}
-        placeholder={placeholder ?? "Values separated by ;"}
+        placeholder={placeholder ?? t("valuesSeparatedBySemicolon")}
         className="scrollbar-thumb-rounded scrollbar-thin max-h-60 min-h-24 resize-none overflow-y-auto font-mono text-sm scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80"
       />
-      {error && <p className="text-xs text-destructive">Must be a number</p>}
+      {error && <p className="text-xs text-destructive">{t("mustBeNumber")}</p>}
       <p className="text-xs text-muted-foreground">
-        Paste CSV, TSV, or separate values by ;
+        {t("pasteCsvTsvHint")}
       </p>
     </div>
   )

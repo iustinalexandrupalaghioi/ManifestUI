@@ -1,8 +1,8 @@
-import { Card, CardContent } from "@/framework/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/framework/lib/utils";
 import Link from "next/link";
 import type { LiveTileProps } from "./types";
-import { Badge } from "@/framework/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 const LiveTile = ({
   title,

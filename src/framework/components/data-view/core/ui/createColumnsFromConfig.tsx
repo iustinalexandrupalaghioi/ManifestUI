@@ -2,11 +2,13 @@ import TableCellContent from "@/framework/components/data-view/core/ui/TableCell
 import type { ColumnType } from "@/framework/components/data-view/features/filtering/filters";
 import type { Enum } from "@/framework/types/global/Enum";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
+import type { TranslatableText } from "@/framework/types/i18n-types";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 
 export interface ColumnConfig {
   field: string;
-  label: string;
-  columnLabel?: string;
+  label: TranslatableText;
+  columnLabel?: TranslatableText;
   columnName?: string;
   accessorFn?: (row: any) => any;
   type: ColumnType;
@@ -23,8 +25,8 @@ export interface ColumnConfig {
   bucket?: string;
   origin?: string;
   cardGroup?: string;
-  cardGroupLabel?: string;
-  cardLabel?: string;
+  cardGroupLabel?: TranslatableText;
+  cardLabel?: TranslatableText;
   cardLabelPosition?: "before" | "after";
 }
 
@@ -42,6 +44,7 @@ const DEFAULT_SIZE_BY_TYPE: Record<ColumnType, number> = {
 
 export function createColumnsFromConfig<TItem>(
   columns: ColumnConfig[],
+  locale: string,
 ): ColumnDef<TItem>[] {
   return columns.map((col) => ({
     id: col.field,
@@ -57,13 +60,15 @@ export function createColumnsFromConfig<TItem>(
     meta: {
       columnId: col.field,
       columnName: col.columnName ?? col.field,
-      columnLabel: col.columnLabel ?? col.label,
+      columnLabel: resolveLabel(col.columnLabel ?? col.label, locale),
       columnType: col.type,
       origin: col.origin,
       selectOptions: col.selectOptions,
       cardGroup: col.cardGroup,
-      cardGroupLabel: col.cardGroupLabel,
-      cardLabel: col.cardLabel,
+      cardGroupLabel: col.cardGroupLabel
+        ? resolveLabel(col.cardGroupLabel, locale)
+        : undefined,
+      cardLabel: col.cardLabel ? resolveLabel(col.cardLabel, locale) : undefined,
       cardLabelPosition: col.cardLabelPosition,
     },
   }));

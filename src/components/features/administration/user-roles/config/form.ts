@@ -11,22 +11,22 @@ export const userRolesForm: FormConfig<UserRoleFormValues> = {
           {
             type: "input",
             name: "user_id",
-            label: "User",
+            label: { en: "User", ro: "Utilizator" },
             pickup: {
               resource: "users",
               mapField: "id",
               targetField: "user_id",
               embeddedField: "user",
               fillFields: [
-                { from: "email", label: "Email", readonly: true },
-                { from: "full_name", label: "Full name", readonly: true },
+                { from: "email", label: { en: "Email", ro: "Email" }, readonly: true },
+                { from: "full_name", label: { en: "Full name", ro: "Nume complet" }, readonly: true },
               ],
             },
           },
           {
             type: "input",
             name: "role_id",
-            label: "Role",
+            label: { en: "Role", ro: "Rol" },
             inputType: "number",
             pickup: {
               resource: "roles",
@@ -35,7 +35,7 @@ export const userRolesForm: FormConfig<UserRoleFormValues> = {
               fillFields: [
                 {
                   from: "name",
-                  label: "Role",
+                  label: { en: "Role", ro: "Rol" },
                   readonly: true,
                 },
               ],

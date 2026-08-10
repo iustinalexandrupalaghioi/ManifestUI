@@ -2,7 +2,8 @@
 
 import { MenuIcon } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/framework/components/ui/button";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import { useDataViewCore } from "../stores/DataViewProvider";
 import { useActiveMode } from "../stores/ViewModeStore";
 import {
@@ -14,6 +15,7 @@ import {
 import { DataListColumnManager } from "./ColumnManager";
 
 export function ColumnManagerButton({ type }: { type: "list" | "table" }) {
+  const t = useTranslations("ColumnManager");
   const { table, tableId } = useDataViewCore();
   const viewMode = useActiveMode(tableId);
   const viewsStore = getViewsStore(tableId);
@@ -80,7 +82,7 @@ export function ColumnManagerButton({ type }: { type: "list" | "table" }) {
           onClick={() => setOpen(true)}
         >
           <MenuIcon />
-          Columns
+          {t("columns")}
         </Button>
       ) : (
         <Button

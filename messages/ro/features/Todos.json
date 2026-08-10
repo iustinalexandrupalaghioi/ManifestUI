@@ -1,0 +1,11 @@
+{
+  "complete": "Finalizează",
+  "completeWithNote": "Finalizează cu notă",
+  "completeWithNotesTitle": "Finalizează cu notițe",
+  "completionNotes": "Note de finalizare",
+  "completingSingle": "Se finalizează sarcina...",
+  "completingMulti": "Se finalizează {completed} din {total} sarcini...",
+  "completed": "{count, plural, one {O sarcină finalizată!} few {# sarcini finalizate!} other {# de sarcini finalizate!}}",
+  "completedOf": "{succeeded, plural, one {O sarcină finalizată din {total}.} few {# sarcini finalizate din {total}.} other {# de sarcini finalizate din {total}.}}",
+  "failedToComplete": "{count, plural, one {Nu s-a putut finaliza sarcina.} few {Nu s-au putut finaliza # sarcini.} other {Nu s-au putut finaliza # de sarcini.}}"
+}

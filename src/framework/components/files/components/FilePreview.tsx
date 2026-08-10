@@ -1,14 +1,15 @@
+import { useTranslations } from "next-intl"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/framework/components/ui/popover"
+} from "@/components/ui/popover"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/framework/components/ui/tooltip"
+} from "@/components/ui/tooltip"
 import { useCoarsePointer } from "../hooks/useCoarsePointer"
 import { FileActions } from "./FileActions"
 import { FileCategoryIcon, getFileCategory } from "./FileUtils"
@@ -62,8 +63,12 @@ export function FilePreview({
   onDelete,
   disabled,
 }: FilePreviewProps) {
+  const t = useTranslations("Files")
   const isCoarse = useCoarsePointer()
   const category = getFileCategory(mimeType)
+
+  const categoryLabel =
+    category === "image" ? t("image") : category === "pdf" ? t("pdf") : t("file")
 
   const trigger = (
     <div className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-2 text-sm">
@@ -71,8 +76,7 @@ export function FilePreview({
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium">{filename}</p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          {category === "image" ? "Image" : category === "pdf" ? "PDF" : "File"}
-          {" · click to preview"}
+          {t("clickToPreview", { category: categoryLabel })}
         </p>
       </div>
       <FileActions

@@ -15,7 +15,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type {
   ActionFormConfig,
   ResourceId,
-  ResourceLabels,
+  ResolvedResourceLabels,
 } from "@/framework/types/resource-hook-types";
 import type { AppError } from "@/framework/types/global/AppError";
 import type { BulkActionResult } from "@/framework/lib/actionResult";
@@ -38,10 +38,9 @@ interface OverviewActionChromeProps<TItem> {
   popOutUrl?: string;
   toolbarChildren?: ReactNode;
 
-  noun: string;
   routes?: { detail?: (id: string) => string };
   queryKeyAll: readonly string[];
-  labels: ResourceLabels;
+  labels: ResolvedResourceLabels;
 
   deleteOpen: boolean;
   setDeleteOpen: Dispatch<SetStateAction<boolean>>;
@@ -78,7 +77,6 @@ export function OverviewActionChrome<TItem>({
   preFilters,
   popOutUrl,
   toolbarChildren,
-  noun,
   routes,
   queryKeyAll,
   labels,
@@ -131,7 +129,9 @@ export function OverviewActionChrome<TItem>({
       <DeleteDialog
         open={deleteOpen}
         setOpen={setDeleteOpen}
-        noun={noun}
+        itemLabel={labels.singular}
+        pluralLabel={labels.plural}
+        gender={labels.gender}
         id={pendingDeleteItems.map((i) =>
           getItemId(i as Record<string, unknown>, idField),
         )}

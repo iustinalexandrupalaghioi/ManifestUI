@@ -1,21 +1,12 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { ZodError } from "zod";
-import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
-import {
-  resources,
-  role_resource_permissions,
-  roles,
-  user_roles,
-  users,
-} from "@/db/schema";
+import { role_resource_permissions, roles, user_roles, users } from "@/db/schema";
 import { getSupabase } from "@/lib/supabase/getSupabase";
 import { mapCaughtError } from "@/framework/lib/mapPgError";
 import { DescribedActionError, type ActionResult } from "@/framework/lib/actionResult";
 import { ALL_PERMISSIONS } from "./constants";
-
-const parentResources = alias(resources, "parent_resources");
 
 export async function getCurrentUserId(): Promise<string | null> {
   const supabase = await getSupabase();
@@ -42,9 +33,7 @@ export async function isAdministrator(userId: string): Promise<boolean> {
 }
 
 type PermissionRow = {
-  name: string;
-  parentName: string | null;
-  type: string;
+  resource_id: string;
   can_read: boolean | null;
   can_add: boolean | null;
   can_update: boolean | null;
@@ -52,21 +41,23 @@ type PermissionRow = {
   allowed: boolean | null;
 };
 
-// "action" rows: reconstruct "<parent.name>:<name>" (e.g.
-// "todos:complete-with-note"), gated by a single `allowed` flag.
-// "resource" rows: expand each true CRUD flag into "<name>:<action>".
+// `resource_id` is a code-level id (see src/app/grantablePermissions.ts),
+// not a DB foreign key — it's either a resourceDescriptors id ("todos"),
+// expanded via the CRUD flags into "todos:read"/"todos:add"/etc., or an
+// already-full grantableActions permission string ("todos:complete-with-note",
+// distinguished by containing ":"), gated by the single `allowed` flag.
 function expandPermissionRows(rows: PermissionRow[]): string[] {
   return rows.flatMap((row) =>
-    row.type === "action"
+    row.resource_id.includes(":")
       ? row.allowed
-        ? [`${row.parentName}:${row.name}`]
+        ? [row.resource_id]
         : []
       : (
           [
-            row.can_read && `${row.name}:read`,
-            row.can_add && `${row.name}:add`,
-            row.can_update && `${row.name}:update`,
-            row.can_delete && `${row.name}:delete`,
+            row.can_read && `${row.resource_id}:read`,
+            row.can_add && `${row.resource_id}:add`,
+            row.can_update && `${row.resource_id}:update`,
+            row.can_delete && `${row.resource_id}:delete`,
           ] as const
         ).filter((v): v is string => !!v),
   );
@@ -84,9 +75,7 @@ export async function getPermissionsForRoleIds(
 
   const rows = await db
     .select({
-      name: resources.name,
-      parentName: parentResources.name,
-      type: resources.type,
+      resource_id: role_resource_permissions.resource_id,
       can_read: role_resource_permissions.can_read,
       can_add: role_resource_permissions.can_add,
       can_update: role_resource_permissions.can_update,
@@ -94,14 +83,6 @@ export async function getPermissionsForRoleIds(
       allowed: role_resource_permissions.allowed,
     })
     .from(role_resource_permissions)
-    .innerJoin(
-      resources,
-      eq(resources.id, role_resource_permissions.resource_id),
-    )
-    .leftJoin(
-      parentResources,
-      eq(parentResources.id, resources.parent_resource_id),
-    )
     .where(inArray(role_resource_permissions.role_id, roleIds));
 
   return expandPermissionRows(rows);
@@ -150,12 +131,11 @@ export async function assertHasAllPermissions(
 // Given a `role_resource_permissions` row's flags (as about to be
 // inserted/updated), reconstructs the permission string(s) it would grant —
 // so a write to that table can be checked against `assertHasAllPermissions`
-// the same way a role assignment is. Returns [] for an unknown resource id
-// rather than throwing, since the caller (e.g. `toRow` in
-// role-permissions/config/api.ts) already goes on to attempt the write,
-// which will fail on the FK constraint instead.
-export async function permissionStringsForResourceGrant(
-  resourceId: number,
+// the same way a role assignment is. No DB lookup needed: `resourceId` is
+// already the code-level id being granted against (see
+// src/app/grantablePermissions.ts), not a row to resolve.
+export function permissionStringsForResourceGrant(
+  resourceId: string,
   flags: {
     can_read?: boolean | null;
     can_add?: boolean | null;
@@ -163,38 +143,15 @@ export async function permissionStringsForResourceGrant(
     can_delete?: boolean | null;
     allowed?: boolean | null;
   },
-): Promise<string[]> {
-  const [resource] = await db
-    .select({
-      name: resources.name,
-      type: resources.type,
-      parentResourceId: resources.parent_resource_id,
-    })
-    .from(resources)
-    .where(eq(resources.id, resourceId))
-    .limit(1);
-  if (!resource) return [];
-
-  if (resource.type === "action") {
-    if (!flags.allowed || !resource.parentResourceId) return [];
-    const [parent] = await db
-      .select({ name: resources.name })
-      .from(resources)
-      .where(eq(resources.id, resource.parentResourceId))
-      .limit(1);
-    return parent ? [`${parent.name}:${resource.name}`] : [];
-  }
-
+): string[] {
   return expandPermissionRows([
     {
-      name: resource.name,
-      parentName: null,
-      type: resource.type,
+      resource_id: resourceId,
       can_read: flags.can_read ?? false,
       can_add: flags.can_add ?? false,
       can_update: flags.can_update ?? false,
       can_delete: flags.can_delete ?? false,
-      allowed: false,
+      allowed: flags.allowed ?? false,
     },
   ]);
 }

@@ -26,6 +26,8 @@ import {
   type SetStateAction,
 } from "react";
 import type { FieldValues } from "react-hook-form";
+import { useLocale, useTranslations } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { ResourceComponentsConfig } from "../../types/resource-components-types";
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
@@ -45,7 +47,7 @@ export function createLookupDialog<
     pickupColumnVisibility,
     listColumnVisibility,
   } = config;
-  const { noun, labels, idField } = hooks;
+  const { labels, idField } = hooks;
 
   return memo(function LookupDialog({
     open,
@@ -58,11 +60,16 @@ export function createLookupDialog<
     onSelect?: (item: TItem) => void;
     preFilters?: FilterInput[];
   }) {
+    const locale = useLocale();
+    const tr = useTranslations("Resource");
+    const resolvedPlural = resolveLabel(labels.plural, locale);
+    const resolvedSingular = resolveLabel(labels.singular, locale);
+
     const tableId = `${overviewKey}-pickup`;
 
     getViewsStore(
       tableId,
-      labels.plural,
+      resolvedPlural,
       pickupColumnVisibility ?? {},
       listColumnVisibility ?? {},
     );
@@ -113,10 +120,10 @@ export function createLookupDialog<
         createSelectColumn<TItem>({
           onSelect: (rows) => handleSelect(rows[0]?.original),
         }),
-        ...(createPickupColumns?.(handleSelect) ?? []),
+        ...(createPickupColumns?.(handleSelect, locale) ?? []),
         createBufferColumn<TItem>(),
       ],
-      [handleSelect],
+      [handleSelect, locale],
     );
 
     if (isError) return null;
@@ -125,14 +132,14 @@ export function createLookupDialog<
       <BaseDialog
         open={open}
         setOpen={setOpen}
-        title={`Select ${noun}`}
+        title={tr("selectResource", { resource: resolvedSingular.toLowerCase() })}
         onClose={() => setOpen(false)}
         className="gap-2 bg-background md:max-w-5xl"
       >
         <div className="flex min-h-0 w-full flex-1 flex-col px-4">
           <DataView
             isLoading={isLoading}
-            defaultViewName={labels.plural}
+            defaultViewName={resolvedPlural}
             tableId={tableId}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}

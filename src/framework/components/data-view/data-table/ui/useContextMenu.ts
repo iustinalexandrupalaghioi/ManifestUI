@@ -2,6 +2,7 @@
 
 import type { Table, Cell, Row } from "@tanstack/react-table"
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import { useTranslations } from "next-intl"
 import type { ContextMenuState, ResolvedAction } from "../../core/types"
 
 // ─────────────────────────────────────────────
@@ -23,6 +24,7 @@ function buildLabel(
 // ─────────────────────────────────────────────
 
 export function useContextMenu<TData>(table: Table<TData>) {
+  const tc = useTranslations("Common")
   const [contextMenu, setContextMenu] =
     useState<ContextMenuState<TData> | null>(null)
 
@@ -64,7 +66,7 @@ export function useContextMenu<TData>(table: Table<TData>) {
           : effectiveRows
         const eligible = eligibleRows.length
         deleteAction = {
-          label: buildLabel("Delete", eligible, total, isMulti),
+          label: buildLabel(tc("delete"), eligible, total, isMulti),
           onSelect: () => actionsMeta.onDelete!(eligibleRows),
           destructive: true,
           disabled: eligible === 0,
@@ -107,7 +109,7 @@ export function useContextMenu<TData>(table: Table<TData>) {
         canFilter: cell.column.getCanFilter(),
       })
     },
-    []
+    [tc]
   )
 
   const closeContextMenu = useCallback(() => setContextMenu(null), [])

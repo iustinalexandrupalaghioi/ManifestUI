@@ -1,7 +1,8 @@
 "use client";
 
-import { TimeInput } from "@/framework/components/ui/time-input";
+import { CustomTimeInput } from "@/framework/components/ui/CustomTimeInput";
 import { cn } from "@/framework/lib/utils";
+import { useTranslations } from "next-intl";
 import {
   Controller,
   useFormContext,
@@ -28,6 +29,7 @@ export function FormTimeInput<T extends FieldValues>({
   readOnly,
 }: FormTimeInputProps<T>) {
   const { control, setError, clearErrors } = useFormContext<T>();
+  const t = useTranslations("Validation");
 
   return (
     <Controller
@@ -40,7 +42,7 @@ export function FormTimeInput<T extends FieldValues>({
           error={fieldState.error?.message}
           className={className}
         >
-          <TimeInput
+          <CustomTimeInput
             ref={field.ref}
             value={field.value}
             onChange={(val) => {
@@ -50,7 +52,7 @@ export function FormTimeInput<T extends FieldValues>({
             onBlur={(hasFormatError) => {
               if (hasFormatError && !disabled && !readOnly) {
                 setError(name, {
-                  message: "Time must be in HH:mm:ss format",
+                  message: t("timeFormat"),
                 });
               }
               field.onBlur();

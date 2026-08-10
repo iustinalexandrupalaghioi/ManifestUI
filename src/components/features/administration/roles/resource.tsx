@@ -14,24 +14,17 @@ import { roleSchema, type RoleFormValues } from "./config/schema";
 import { roleColumns } from "./config/columns";
 import { rolesTabs } from "./config/tabs";
 import { rolesRelations } from "./config/relations";
+import { rolesDescriptor } from "./config/descriptor";
 
 export const rolesResource = defineResource<Role, RoleFormValues>({
-  id: "roles",
-  noun: "role",
-  queryKey: ["roles"],
+  id: rolesDescriptor.id,
+  noun: rolesDescriptor.noun,
+  queryKey: rolesDescriptor.queryKey,
   schema: roleSchema,
 
-  routes: {
-    list: "/roles",
-    add: "/roles/add",
-    detail: (id: string) => `/roles/${id}`,
-  },
+  routes: rolesDescriptor.routes,
 
-  labels: {
-    singular: "Role",
-    plural: "Roles",
-    new: "Role",
-  },
+  labels: rolesDescriptor,
 
   openMode: "page",
   addMode: "dialog",
@@ -52,14 +45,14 @@ export const rolesResource = defineResource<Role, RoleFormValues>({
   tabs: rolesTabs,
   relations: rolesRelations,
 
-  overviewKey: "roles-overview",
-  defaultViewName: "Roles",
+  overviewKey: rolesDescriptor.overviewKey,
+  defaultViewName: rolesDescriptor.defaultViewName,
 });
 
 export const { hooks: roleHooks, components: roleComponents } = rolesResource;
 
 export const roleKeys = roleHooks.keys;
-export const OVERVIEW_KEY = "roles-overview";
+export const OVERVIEW_KEY = rolesDescriptor.overviewKey;
 export const useRolesInfinite = roleHooks.useList;
 export const useRole = roleHooks.useDetail;
 

@@ -1,9 +1,12 @@
+import { useTranslations } from "next-intl"
+
 interface BooleanDisplayProps {
   value: boolean
   title?: string
 }
 const BooleanDisplay = ({ value, title }: BooleanDisplayProps) => {
-  return <span title={title}>{value ? "Yes" : "No"}</span>
+  const t = useTranslations("Common")
+  return <span title={title}>{value ? t("yes") : t("no")}</span>
 }
 
 export default BooleanDisplay

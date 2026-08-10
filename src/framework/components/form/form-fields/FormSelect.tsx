@@ -6,11 +6,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/framework/components/ui/select";
-import { Input } from "@/framework/components/ui/input";
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/framework/lib/utils";
 import type { FieldValues, Path } from "react-hook-form";
 import { Controller, useFormContext } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { FormFieldBase } from "./FormFieldBase";
 
 interface SelectOption {
@@ -33,13 +34,15 @@ export function FormSelect<T extends FieldValues>({
   name,
   label,
   options,
-  placeholder = "Select an option",
+  placeholder,
   id,
   className,
   disabled,
   readOnly,
 }: FormSelectProps<T>) {
   const { control } = useFormContext<T>();
+  const t = useTranslations("DataView");
+  const resolvedPlaceholder = placeholder ?? t("selectOption");
 
   return (
     <Controller
@@ -83,7 +86,7 @@ export function FormSelect<T extends FieldValues>({
                     "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
                 )}
               >
-                <SelectValue placeholder={placeholder} />
+                <SelectValue placeholder={resolvedPlaceholder} />
               </SelectTrigger>
               <SelectContent>
                 {options.map((option) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Input } from "@/framework/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/framework/lib/utils";
 import type { ComponentProps } from "react";
 import type { FieldValues, Path } from "react-hook-form";

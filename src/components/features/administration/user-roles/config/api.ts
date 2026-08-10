@@ -8,7 +8,7 @@ import {
   getCurrentUserId,
   getPermissionsForRoleIds,
 } from "@/framework/authorization/rbac";
-import { createResourceActions } from "@/framework/lib/transactionalAction";
+import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import { buildWhereConditions } from "@/framework/components/data-view/features/filtering/drizzle-filters";

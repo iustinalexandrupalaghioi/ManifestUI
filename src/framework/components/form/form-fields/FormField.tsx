@@ -1,4 +1,4 @@
-import { Label } from "@/framework/components/ui/label"
+import { Label } from "@/components/ui/label"
 
 const FormField = ({
   label,

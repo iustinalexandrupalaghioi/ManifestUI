@@ -82,9 +82,10 @@ const PG_ERROR_MESSAGES: Record<string, (err: PgError) => string> = {
 // Drizzle (postgres.js) throws a `DrizzleQueryError` whose own `message` is
 // just "Failed query: <sql>" — the actual Postgres error (with `code`,
 // `detail`, `hint`) lives on `.cause`. Server actions catch the error at the
-// `withPermission` boundary (see rbac.ts) before it can cross back to the
-// client, so this is the one place that needs to know about that wrapping;
-// everywhere else just deals in the resulting `AppError`.
+// `withAdminAction` boundary (see
+// framework/authorization/lib/withAdminAction.ts) before it can cross back to
+// the client, so this is the one place that needs to know about that
+// wrapping; everywhere else just deals in the resulting `AppError`.
 export function extractPgError(err: unknown): PgError {
   const top = err as PgError & { cause?: unknown };
   const cause = top?.cause;

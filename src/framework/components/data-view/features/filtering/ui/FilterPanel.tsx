@@ -1,13 +1,13 @@
 "use client"
 
-import { Button } from "@/framework/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/framework/components/ui/select"
+} from "@/components/ui/select"
 import {
   Sheet,
   SheetClose,
@@ -16,18 +16,18 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/framework/components/ui/sheet"
-import { YesNoSwitch } from "@/framework/components/ui/yes-no-switch"
+} from "@/components/ui/sheet"
+import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch"
 import { formatByType } from "@/framework/lib/utils"
 import { LockIcon, PlusIcon, XIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 import {
   type ColumnType,
   type FilterableColumn,
   type FilterOperator,
   type FilterRule,
   OPERATORS_BY_TYPE,
-  OPERATOR_LABELS,
   getOperatorDisplay,
 } from "../filters"
 import { FilterValueInput } from "./FilterValueInput"
@@ -94,6 +94,17 @@ function ruleFromExisting(rule: FilterRule): DraftRule {
   }
 }
 
+function translateFixedValue(
+  fixedValue: string | undefined,
+  t: (key: string, values?: Record<string, string | number | Date>) => string,
+  tc: (key: string, values?: Record<string, string | number | Date>) => string,
+): string | undefined {
+  if (fixedValue === "Empty") return t("empty")
+  if (fixedValue === "Yes") return tc("yes")
+  if (fixedValue === "No") return tc("no")
+  return fixedValue
+}
+
 function noValueNeeded(op: FilterOperator | "") {
   return (
     op === "is_empty" ||
@@ -140,6 +151,7 @@ function RuleRow({
   onChange,
   onRemove,
 }: RuleRowProps) {
+  const t = useTranslations("Filtering")
   const col = filterableColumns.find((c) => c.id === draft.columnId)
   const operators = col ? (OPERATORS_BY_TYPE[col.type] ?? []) : []
   const isBool = col?.type === "boolean"
@@ -176,7 +188,7 @@ function RuleRow({
         {/* Column picker */}
         <Select value={draft.columnId} onValueChange={handleColumnChange}>
           <SelectTrigger className="h-8 flex-1 text-xs">
-            <SelectValue placeholder="Column..." />
+            <SelectValue placeholder={t("columnPlaceholder")} />
           </SelectTrigger>
           <SelectContent>
             {filterableColumns
@@ -197,7 +209,7 @@ function RuleRow({
           size="icon"
           className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
           onClick={onRemove}
-          aria-label="Remove rule"
+          aria-label={t("removeRule")}
         >
           <XIcon className="h-3.5 w-3.5" />
         </Button>
@@ -208,8 +220,8 @@ function RuleRow({
           {isBool ? (
             /* Boolean — operator IS the value */
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Is</span>
-              <YesNoSwitch
+              <span className="text-xs text-muted-foreground">{t("is")}</span>
+              <CustomYesNoSwitch
                 id={`bool-${draft._key}`}
                 checked={draft.operator === "is_true"}
                 onCheckedChange={(checked) =>
@@ -228,12 +240,12 @@ function RuleRow({
                 onValueChange={handleOperatorChange}
               >
                 <SelectTrigger className="h-8 w-full text-xs">
-                  <SelectValue placeholder="Condition..." />
+                  <SelectValue placeholder={t("conditionPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {operators.map((op) => (
                     <SelectItem key={op} value={op} className="text-xs">
-                      {OPERATOR_LABELS[op]}
+                      {t(`operator.${op}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -270,6 +282,8 @@ export function FilterPanel({
   onApply,
   staticFilters,
 }: FilterPanelProps) {
+  const t = useTranslations("Filtering")
+  const tc = useTranslations("Common")
   const [drafts, setDrafts] = useState<DraftRule[]>([])
 
   useEffect(() => {
@@ -349,9 +363,9 @@ export function FilterPanel({
       >
         {/* Sticky header */}
         <SheetHeader className="flex shrink-0 flex-row items-center justify-between border-b px-4 py-3">
-          <SheetTitle className="text-base">Filters</SheetTitle>
+          <SheetTitle className="text-base">{t("filters")}</SheetTitle>
           <SheetDescription className="hidden">
-            Add filter rules
+            {t("addFilterRules")}
           </SheetDescription>
           <SheetClose asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -366,11 +380,12 @@ export function FilterPanel({
             {staticFilters && staticFilters.length > 0 && (
               <div className="mb-2 flex flex-col gap-2">
                 <p className="text-xs text-muted-foreground">
-                  Applied from context
+                  {t("appliedFromContext")}
                 </p>
                 {staticFilters.map((rule) => {
-                  const { symbol, valueWrap, fixedValue, showValue } =
+                  const { symbol, valueWrap, fixedValue: rawFixedValue, showValue } =
                     getOperatorDisplay(rule.operator)
+                  const fixedValue = translateFixedValue(rawFixedValue, t, tc)
                   const rawValue =
                     fixedValue ??
                     (showValue === false
@@ -419,7 +434,7 @@ export function FilterPanel({
 
             {drafts.length === 0 && (
               <p className="py-4 text-center text-sm text-muted-foreground">
-                No filters applied
+                {t("noFiltersApplied")}
               </p>
             )}
 
@@ -447,7 +462,7 @@ export function FilterPanel({
               }
             >
               <PlusIcon className="h-3.5 w-3.5" />
-              Add filter
+              {t("addFilter")}
             </Button>
           </div>
         </div>
@@ -460,7 +475,7 @@ export function FilterPanel({
             onClick={handleApply}
             disabled={drafts.length === 0 || !allValid}
           >
-            Apply
+            {t("apply")}
           </Button>
           <Button
             variant="outline"
@@ -469,7 +484,7 @@ export function FilterPanel({
             disabled={drafts.length === 0}
             onClick={handleClearAll}
           >
-            Clear all
+            {t("clearAll")}
           </Button>
           <Button
             variant="ghost"
@@ -477,7 +492,7 @@ export function FilterPanel({
             className="w-full"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {tc("cancel")}
           </Button>
         </SheetFooter>
       </SheetContent>

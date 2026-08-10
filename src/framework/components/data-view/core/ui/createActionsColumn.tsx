@@ -1,6 +1,7 @@
-import { Button } from "@/framework/components/ui/button"
+import { Button } from "@/components/ui/button"
 import type { ColumnDef, Row } from "@tanstack/react-table"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import type { RowAction } from "../types"
 import { ColumnManagerButton } from "./ColumnManagerButton"
 
@@ -12,26 +13,37 @@ interface ActionsColumnMeta<TData> {
   actions?: () => RowAction<TData>[]
 }
 
+function OpenRowButton<TData>({
+  row,
+  onOpen,
+}: {
+  row: Row<TData>
+  onOpen?: (rows: Row<TData>[]) => void
+}) {
+  const t = useTranslations("DataView")
+  return (
+    <Button
+      variant="ghost"
+      className="w-fit"
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        onOpen?.([row])
+      }}
+      aria-label={t("openRow")}
+    >
+      <ChevronRightIcon />
+    </Button>
+  )
+}
+
 export function createActionsColumn<TData>(
   meta: ActionsColumnMeta<TData> = {}
 ): ColumnDef<TData> {
   return {
     id: "columns",
     header: () => <ColumnManagerButton type="table" />,
-    cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        className="w-fit"
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          meta.onOpen?.([row])
-        }}
-        aria-label="Open row"
-      >
-        <ChevronRightIcon />
-      </Button>
-    ),
+    cell: ({ row }) => <OpenRowButton row={row} onOpen={meta.onOpen} />,
     enableSorting: false,
     enableResizing: false,
     enableHiding: false,
@@ -49,26 +61,37 @@ interface SelectColumnMeta<TData> {
   onSelect?: (rows: Row<TData>[]) => void
 }
 
+function SelectRowButton<TData>({
+  row,
+  onSelect,
+}: {
+  row: Row<TData>
+  onSelect?: (rows: Row<TData>[]) => void
+}) {
+  const t = useTranslations("DataView")
+  return (
+    <Button
+      variant="ghost"
+      className="w-fit"
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation()
+        onSelect?.([row])
+      }}
+      aria-label={t("selectRow")}
+    >
+      <ChevronLeftIcon />
+    </Button>
+  )
+}
+
 export function createSelectColumn<TData>(
   meta: SelectColumnMeta<TData> = {}
 ): ColumnDef<TData> {
   return {
     id: "select",
     header: () => <ColumnManagerButton type="table" />,
-    cell: ({ row }) => (
-      <Button
-        variant="ghost"
-        className="w-fit"
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation()
-          meta.onSelect?.([row])
-        }}
-        aria-label="Select row"
-      >
-        <ChevronLeftIcon />
-      </Button>
-    ),
+    cell: ({ row }) => <SelectRowButton row={row} onSelect={meta.onSelect} />,
     enableSorting: false,
     enableResizing: false,
     enableHiding: false,

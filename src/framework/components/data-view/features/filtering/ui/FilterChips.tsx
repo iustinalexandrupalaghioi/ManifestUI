@@ -1,13 +1,14 @@
-import { Badge } from "@/framework/components/ui/badge"
-import { Button } from "@/framework/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/framework/components/ui/popover"
+} from "@/components/ui/popover"
 import { cn, formatByType } from "@/framework/lib/utils"
 import type { Enum } from "@/framework/types/global/Enum"
 import { ChevronDown, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useDataViewCore } from "../../../core/stores/DataViewProvider"
 import { getOperatorDisplay, type FilterRule } from "../filters"
 
@@ -17,11 +18,32 @@ const MAX_VISIBLE = 2
 // Helpers
 // ─────────────────────────────────────────────
 
+type Translator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string
+
+function translateFixedValue(
+  fixedValue: string | undefined,
+  t: Translator,
+  tc: Translator,
+): string | undefined {
+  if (fixedValue === "Empty") return t("empty")
+  if (fixedValue === "Yes") return tc("yes")
+  if (fixedValue === "No") return tc("no")
+  return fixedValue
+}
+
 function formatChipValue(
   rule: FilterRule,
+  t: Translator,
+  tc: Translator,
   selectOptions?: Enum[]
 ): string | null {
-  const { showValue, valueWrap, fixedValue } = getOperatorDisplay(rule.operator)
+  const { showValue, valueWrap, fixedValue: rawFixedValue } = getOperatorDisplay(
+    rule.operator,
+  )
+  const fixedValue = translateFixedValue(rawFixedValue, t, tc)
 
   if (showValue === false) return null
   if (fixedValue) return fixedValue
@@ -60,8 +82,10 @@ function FilterChip({
   locked?: boolean
   selectOptions?: Enum[]
 }) {
+  const t = useTranslations("Filtering")
+  const tc = useTranslations("Common")
   const { symbol } = getOperatorDisplay(rule.operator)
-  const value = formatChipValue(rule, selectOptions)
+  const value = formatChipValue(rule, t, tc, selectOptions)
 
   return (
     <Badge
@@ -81,9 +105,9 @@ function FilterChip({
             e.stopPropagation()
             onRemove()
           }}
-          title={`Remove filter on ${rule.columnLabel}`}
+          title={t("removeFilterOn", { label: rule.columnLabel })}
           className="ml-0.5 rounded-sm opacity-60 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none"
-          aria-label={`Remove filter on ${rule.columnLabel}`}
+          aria-label={t("removeFilterOn", { label: rule.columnLabel })}
         >
           <X className="h-4 w-4" />
         </button>
@@ -109,11 +133,12 @@ function OverflowPopover({
   onClearAll: () => void
   getSelectOptions: (columnId: string) => Enum[] | undefined
 }) {
+  const t = useTranslations("Filtering")
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 gap-1 px-2 text-xs">
-          +{rules.length} more
+          {t("moreCount", { count: rules.length })}
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </Button>
       </PopoverTrigger>
@@ -134,7 +159,7 @@ function OverflowPopover({
             onClick={onClearAll}
             className="text-xs text-muted-foreground underline-offset-2 hover:underline"
           >
-            Clear all
+            {t("clearAll")}
           </button>
         </div>
       </PopoverContent>
@@ -159,6 +184,7 @@ export function FilterChips({
   onClearAll,
   onOpenFilter,
 }: FilterChipsProps) {
+  const t = useTranslations("Filtering")
   const { table } = useDataViewCore()
 
   if (filters.length === 0) return null
@@ -195,7 +221,7 @@ export function FilterChips({
             onClick={onClearAll}
             className="text-xs text-muted-foreground underline-offset-2 hover:underline"
           >
-            Clear all
+            {t("clearAll")}
           </button>
         )
       )}

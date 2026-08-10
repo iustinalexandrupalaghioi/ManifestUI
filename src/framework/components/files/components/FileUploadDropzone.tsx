@@ -1,5 +1,6 @@
 import * as React from "react";
 import { UploadCloud } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/framework/lib/utils";
 import type { UploadedFile } from "../storage/types";
 import { FileUploadItem } from "./FileUploadItem";
@@ -27,6 +28,7 @@ export function FileUploadDropzone({
   disabled,
   className,
 }: FileUploadDropzoneProps) {
+  const t = useTranslations("Files");
   const [isDragging, setIsDragging] = React.useState(false);
   const [sizeError, setSizeError] = React.useState<string | null>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -41,7 +43,11 @@ export function FileUploadDropzone({
       const oversized = arr.filter((f) => maxSize && f.size > maxSize);
       if (oversized.length) {
         setSizeError(
-          `${oversized.map((f) => f.name).join(", ")} exceed${oversized.length === 1 ? "s" : ""} the ${(maxSize! / 1024 / 1024).toFixed(0)} MB limit`,
+          t("exceedsLimit", {
+            count: oversized.length,
+            files: oversized.map((f) => f.name).join(", "),
+            size: (maxSize! / 1024 / 1024).toFixed(0),
+          }),
         );
         return;
       }
@@ -72,7 +78,7 @@ export function FileUploadDropzone({
       <div
         role="button"
         tabIndex={disabled || !canAdd ? -1 : 0}
-        aria-label="File upload area"
+        aria-label={t("uploadArea")}
         onClick={() => !disabled && canAdd && inputRef.current?.click()}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
@@ -100,16 +106,16 @@ export function FileUploadDropzone({
 
         <div>
           <p className="text-sm font-medium">
-            {isDragging ? "Drop files here" : "Drag & drop or click to upload"}
+            {isDragging ? t("dropFilesHere") : t("dragDropOrClick")}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {[
-              accept && `Accepted: ${accept}`,
-              maxSize && `Max ${(maxSize / 1024 / 1024).toFixed(0)} MB`,
-              maxFiles && `Up to ${maxFiles} file${maxFiles > 1 ? "s" : ""}`,
+              accept && t("accepted", { accept }),
+              maxSize && t("maxSize", { size: (maxSize / 1024 / 1024).toFixed(0) }),
+              maxFiles && t("upToFiles", { count: maxFiles }),
             ]
               .filter(Boolean)
-              .join(" · ") || "Any file type"}
+              .join(" · ") || t("anyFileType")}
           </p>
         </div>
       </div>

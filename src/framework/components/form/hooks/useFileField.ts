@@ -4,15 +4,17 @@ import { getStorageHandler } from "@/framework/components/files"
 import { getMimeTypeFromPath } from "@/framework/components/files/components/FileUtils"
 import { useContext, useEffect, useRef } from "react"
 import { useFormContext } from "react-hook-form"
+import { useTranslations } from "next-intl"
 import { FormIdContext } from "../contexts/FormIdContext"
 import { UploadRegistryContext } from "../../../registry/UploadRegistryContext"
 import { selectIsUploading, useUploadStore } from "./useUploadStore"
 import type { FieldCondition } from "../types/types"
+import type { TranslatableText } from "@/framework/types/i18n-types"
 
 export interface FileFieldConfig {
   type: "file"
   name: string
-  label: string
+  label: TranslatableText
   span?: number
   className?: string
   disabled?: boolean | FieldCondition
@@ -24,6 +26,7 @@ export interface FileFieldConfig {
 }
 
 export function useFileField(fieldName: string, bucket: string) {
+  const t = useTranslations("Files")
   const { watch, setValue } = useFormContext()
   const registry = useContext(UploadRegistryContext)
   const formId = useContext(FormIdContext)
@@ -151,7 +154,7 @@ export function useFileField(fieldName: string, bucket: string) {
       ? getMimeTypeFromPath(currentPathForDisplay)
       : undefined,
     filename: currentPathForDisplay
-      ? (currentPathForDisplay.split("/").pop() ?? "File")
+      ? (currentPathForDisplay.split("/").pop() ?? t("file"))
       : undefined,
     isDirty,
     isUploading,

@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/framework/components/ui/tabs";
+  CustomTabs,
+  CustomTabsContent,
+  CustomTabsList,
+  CustomTabsTrigger,
+} from "@/framework/components/ui/CustomTabs";
 import { cn } from "@/framework/lib/utils";
 import { RelationList } from "@/framework/components/relations/RelationList";
 import { TabTriggerLabel } from "./TabTriggerLabel";
@@ -47,30 +47,30 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
   const formKey = `${itemId}-${JSON.stringify(item)}`;
 
   return (
-    <Tabs
+    <CustomTabs
       value={activeTab}
       onValueChange={setActiveTab}
       className="mt-2 w-full gap-0"
     >
       <div className="flex items-center gap-1 overflow-x-auto">
-        <TabsList>
+        <CustomTabsList>
           {tabs.map((tab, index) => (
             <div key={tab.value} className="flex items-center">
-              <TabsTrigger value={tab.value} title={tab.label}>
+              <CustomTabsTrigger value={tab.value} title={tab.label}>
                 <TabTriggerLabel
                   icon={tab.icon}
                   label={tab.label}
                   index={index}
                 />
-              </TabsTrigger>
+              </CustomTabsTrigger>
             </div>
           ))}
-        </TabsList>
+        </CustomTabsList>
       </div>
       {tabs.map((tab) => {
         if (tab.type === "fields") {
           return (
-            <TabsContent
+            <CustomTabsContent
               key={tab.value}
               value={tab.value}
               className={cn("mt-0 py-6", contentClassName)}
@@ -81,7 +81,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
                 sections={tab.sections}
                 readOnly={readOnly}
               />
-            </TabsContent>
+            </CustomTabsContent>
           );
         }
 
@@ -94,7 +94,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
               );
             }
             return (
-              <TabsContent
+              <CustomTabsContent
                 key={tab.value}
                 value={tab.value}
                 className="mt-0 py-0"
@@ -103,7 +103,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
           }
 
           return (
-            <TabsContent
+            <CustomTabsContent
               key={tab.value}
               value={tab.value}
               className="mt-0 py-0"
@@ -114,20 +114,20 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
                 slotId={`${tab.value}-${itemId}`}
                 height={tab.height ?? (formOpen ? 430 : undefined)}
               />
-            </TabsContent>
+            </CustomTabsContent>
           );
         }
 
         // type === "list" (default): fully custom tab content, owned by the caller.
         return (
-          <TabsContent key={tab.value} value={tab.value} className="mt-0 py-0">
+          <CustomTabsContent key={tab.value} value={tab.value} className="mt-0 py-0">
             {tab.render(item, {
               formOpen,
               basePath: pathname,
             })}
-          </TabsContent>
+          </CustomTabsContent>
         );
       })}
-    </Tabs>
+    </CustomTabs>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Textarea } from "@/framework/components/ui/textarea";
+import { CustomTextarea } from "@/framework/components/ui/CustomTextarea";
 import { cn } from "@/framework/lib/utils";
 import type { ComponentProps } from "react";
 import type { FieldValues, Path } from "react-hook-form";
@@ -8,7 +8,7 @@ import { Controller, useFormContext } from "react-hook-form";
 import { FormFieldBase } from "./FormFieldBase";
 
 interface FormTextareaProps<T extends FieldValues> extends Omit<
-  ComponentProps<typeof Textarea>,
+  ComponentProps<typeof CustomTextarea>,
   "name" | "id"
 > {
   name: Path<T>;
@@ -43,7 +43,7 @@ export function FormTextarea<T extends FieldValues>({
           error={fieldState.error?.message}
           className={className}
         >
-          <Textarea
+          <CustomTextarea
             {...textareaProps}
             {...field}
             maxRows={maxRows}

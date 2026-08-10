@@ -1,7 +1,7 @@
 "use client"
 
-import { Input } from "@/framework/components/ui/input"
-import { Button } from "@/framework/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/framework/lib/utils"
 import { SearchIcon, X } from "lucide-react"
 import type { Dispatch, SetStateAction } from "react"
@@ -11,6 +11,7 @@ import {
   Controller,
   useFormContext,
 } from "react-hook-form"
+import { useTranslations } from "next-intl"
 import { FormFieldBase } from "./FormFieldBase"
 
 interface FormLookupInputProps<T extends FieldValues> {
@@ -48,6 +49,7 @@ export function FormLookupInput<T extends FieldValues>({
   inputClassName,
 }: FormLookupInputProps<T>) {
   const { control } = useFormContext<T>()
+  const t = useTranslations("DataView")
 
   return (
     <Controller
@@ -90,7 +92,7 @@ export function FormLookupInput<T extends FieldValues>({
               <Button
                 type="button"
                 variant="ghost"
-                title="Lookup"
+                title={t("lookup")}
                 onClick={() => setOpen(true)}
                 className="inline-flex"
               >

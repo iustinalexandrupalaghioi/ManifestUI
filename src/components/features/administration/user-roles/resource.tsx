@@ -12,28 +12,21 @@ import {
 import { userRolesForm } from "./config/form";
 import { userRoleSchema, type UserRoleFormValues } from "./config/schema";
 import { userRoleColumns } from "./config/columns";
+import { userRolesDescriptor } from "./config/descriptor";
 
 export const userRolesResource = defineResource<
   UserRole,
   UserRoleFormValues,
   string
 >({
-  id: "user-roles",
-  noun: "user role",
-  queryKey: ["user-roles"],
+  id: userRolesDescriptor.id,
+  noun: userRolesDescriptor.noun,
+  queryKey: userRolesDescriptor.queryKey,
   schema: userRoleSchema,
 
-  routes: {
-    list: "/user-roles",
-    add: "/user-roles/add",
-    detail: (id: string) => `/user-roles/${id}`,
-  },
+  routes: userRolesDescriptor.routes,
 
-  labels: {
-    singular: "User role",
-    plural: "User roles",
-    new: "User role",
-  },
+  labels: userRolesDescriptor,
 
   openMode: "dialog",
   addMode: "dialog",
@@ -56,15 +49,15 @@ export const userRolesResource = defineResource<
 
   form: userRolesForm,
 
-  overviewKey: "user-roles-overview",
-  defaultViewName: "User roles",
+  overviewKey: userRolesDescriptor.overviewKey,
+  defaultViewName: userRolesDescriptor.defaultViewName,
 });
 
 export const { hooks: userRoleHooks, components: userRoleComponents } =
   userRolesResource;
 
 export const userRoleKeys = userRoleHooks.keys;
-export const OVERVIEW_KEY = "user-roles-overview";
+export const OVERVIEW_KEY = userRolesDescriptor.overviewKey;
 export const useUserRolesInfinite = userRoleHooks.useList;
 export const useUserRole = userRoleHooks.useDetail;
 

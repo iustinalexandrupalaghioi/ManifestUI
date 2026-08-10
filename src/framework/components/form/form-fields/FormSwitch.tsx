@@ -1,13 +1,13 @@
 "use client"
 
-import { YesNoSwitch } from "@/framework/components/ui/yes-no-switch"
+import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch"
 import type { ComponentProps } from "react"
 import type { FieldValues, Path } from "react-hook-form"
 import { Controller, useFormContext } from "react-hook-form"
 import { FormFieldBase } from "./FormFieldBase"
 
 interface FormSwitchProps<T extends FieldValues> extends Omit<
-  ComponentProps<typeof YesNoSwitch>,
+  ComponentProps<typeof CustomYesNoSwitch>,
   "name" | "checked" | "onCheckedChange"
 > {
   name: Path<T>
@@ -37,7 +37,7 @@ export function FormSwitch<T extends FieldValues>({
           error={fieldState.error?.message}
           className={className}
         >
-          <YesNoSwitch
+          <CustomYesNoSwitch
             {...switchProps}
             id={id ?? name}
             checked={field.value}

@@ -1,0 +1,18 @@
+{
+  "download": "Descarcă",
+  "delete": "Șterge",
+  "image": "Imagine",
+  "pdf": "PDF",
+  "file": "Fișier",
+  "clickToPreview": "{category} · clic pentru previzualizare",
+  "uploadArea": "Zonă de încărcare fișiere",
+  "dropFilesHere": "Plasați fișierele aici",
+  "dragDropOrClick": "Trageți și plasați sau faceți clic pentru a încărca",
+  "accepted": "Accepta: {accept}",
+  "maxSize": "Maxim {size} MB",
+  "upToFiles": "Până la {count} {count, plural, one {fișier} other {fișiere}}",
+  "anyFileType": "Orice tip de fișier",
+  "exceedsLimit": "{files} {count, plural, one {depășește} other {depășesc}} limita de {size} MB",
+  "uploaded": "Încărcat",
+  "noPreviewAvailable": "Previzualizare indisponibilă"
+}

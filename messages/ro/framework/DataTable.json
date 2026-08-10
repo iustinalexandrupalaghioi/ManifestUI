@@ -1,0 +1,11 @@
+{
+  "sortAscending": "Sortează crescător",
+  "removeSort": "Elimină sortarea",
+  "sortDescending": "Sortează descrescător",
+  "alsoSortAscending": "Sortează și crescător",
+  "alsoSortDescending": "Sortează și descrescător",
+  "addFilter": "Adaugă filtru",
+  "unpinColumn": "Anulează fixarea coloanei",
+  "pinColumn": "Fixează coloana",
+  "hideColumn": "Ascunde coloana"
+}

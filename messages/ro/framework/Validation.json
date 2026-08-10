@@ -1,0 +1,6 @@
+{
+  "dateFormat": "Data trebuie să fie în formatul zz-ll-aaaa",
+  "dateTimeFormat": "Formatul datei sau orei este invalid",
+  "timeFormat": "Ora trebuie să fie în formatul HH:mm:ss",
+  "invalidJson": "JSON invalid"
+}

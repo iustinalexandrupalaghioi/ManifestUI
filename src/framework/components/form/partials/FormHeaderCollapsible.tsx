@@ -4,8 +4,8 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/framework/components/ui/collapsible";
-import { Button } from "@/framework/components/ui/button";
+} from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/framework/lib/utils";
 import {
   ChevronDown,
@@ -15,6 +15,7 @@ import {
   ChevronsRightIcon,
 } from "lucide-react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { useTranslations } from "next-intl";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { useFormPageContext } from "../../page/FormPage";
 
@@ -51,6 +52,8 @@ export function FormHeaderCollapsible({
 }: FormHeaderCollapsibleProps) {
   const hasNav = prevPath !== undefined || nextPath !== undefined;
   const router = useTransitionRouter();
+  const t = useTranslations("Pagination");
+  const tr = useTranslations("Resource");
 
   const formPage = (() => {
     try {
@@ -82,7 +85,9 @@ export function FormHeaderCollapsible({
       >
         <CollapsibleTrigger className="flex cursor-pointer items-center gap-2">
           <span className="font-semibold text-primary">{title}</span>
-          {isAddScreen && <span className="text-muted">(new item)</span>}
+          {isAddScreen && (
+            <span className="text-muted">{tr("newItemBadge")}</span>
+          )}
           <ChevronDown
             className={cn(
               "h-4 w-4 transition-transform duration-200",
@@ -99,7 +104,7 @@ export function FormHeaderCollapsible({
               variant="ghost"
               size="icon"
               disabled={!firstPath || router.isPending}
-              title="First"
+              title={t("first")}
               type="button"
               onClick={() => firstPath && go(firstPath)}
             >
@@ -109,7 +114,7 @@ export function FormHeaderCollapsible({
               variant="ghost"
               size="icon"
               disabled={!prevPath || router.isPending}
-              title="Previous"
+              title={t("previous")}
               type="button"
               onClick={() => prevPath && go(prevPath)}
             >
@@ -124,7 +129,7 @@ export function FormHeaderCollapsible({
               variant="ghost"
               size="icon"
               disabled={!nextPath || router.isPending}
-              title="Next"
+              title={t("next")}
               type="button"
               onClick={() => nextPath && go(nextPath)}
             >
@@ -134,7 +139,7 @@ export function FormHeaderCollapsible({
               variant="ghost"
               size="icon"
               disabled={!lastPath || router.isPending}
-              title="Last"
+              title={t("last")}
               type="button"
               onClick={() => lastPath && go(lastPath)}
             >

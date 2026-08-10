@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import type { FieldValues, UseFormHandleSubmit } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { toastSuccess } from "@/framework/lib/toast";
 import {
   runUploadsInBackground,
@@ -55,6 +56,7 @@ export function useSaveWithUploads<TFormValues extends FieldValues>({
 }: UseSaveWithUploadsOptions<TFormValues>) {
   const registryRef = useRef<UploadRegistry | null>(null);
   const { fileError, fileErrorOpen, setFileErrorOpen } = useFileErrorState();
+  const t = useTranslations("Toast");
 
   const hasFileChanges = useUploadStore((state) =>
     trackFileUploads
@@ -76,6 +78,7 @@ export function useSaveWithUploads<TFormValues extends FieldValues>({
         pending,
         updateAsync as any,
         label,
+        t,
       );
     } catch {
       // Form save errors handled by useMutations.error

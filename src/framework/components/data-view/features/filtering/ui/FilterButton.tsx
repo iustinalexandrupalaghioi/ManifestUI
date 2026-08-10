@@ -1,6 +1,7 @@
-import { Button } from "@/framework/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/framework/lib/utils"
 import { FilterIcon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { getFilteringStore } from "../filtering.store"
 
 interface FilterButtonProps {
@@ -10,6 +11,7 @@ interface FilterButtonProps {
 }
 
 export function FilterButton({ viewId, tableId, onOpen }: FilterButtonProps) {
+  const t = useTranslations("Filtering")
   const activeCount = getFilteringStore(tableId, viewId)((s) => s.rules.length)
 
   return (
@@ -17,12 +19,12 @@ export function FilterButton({ viewId, tableId, onOpen }: FilterButtonProps) {
       variant="outline"
       size="sm"
       onClick={() => onOpen()}
-      title="Filters"
+      title={t("filters")}
       className="relative"
       type="button"
     >
       <FilterIcon />
-      Filters
+      {t("filters")}
       {activeCount > 0 && (
         <span
           className={cn(

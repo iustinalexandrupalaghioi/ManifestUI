@@ -14,6 +14,7 @@ import { userSchema, type UserFormValues } from "./config/schema";
 import { userColumns } from "./config/columns";
 import { userTabs } from "./config/tabs";
 import { usersRelations } from "./config/relations";
+import { usersDescriptor } from "./config/descriptor";
 
 // Mirrors Supabase auth.users, kept in sync via
 // src/app/api/webhooks/auth-users/route.ts. No add/page.tsx route exists —
@@ -21,22 +22,14 @@ import { usersRelations } from "./config/relations";
 // unreachable through the UI even though defineResource always generates
 // an AddPage component for it.
 export const usersResource = defineResource<User, UserFormValues, string>({
-  id: "users",
-  noun: "user",
-  queryKey: ["users"],
+  id: usersDescriptor.id,
+  noun: usersDescriptor.noun,
+  queryKey: usersDescriptor.queryKey,
   schema: userSchema,
 
-  routes: {
-    list: "/users",
-    add: "/users/add",
-    detail: (id: string) => `/users/${id}`,
-  },
+  routes: usersDescriptor.routes,
 
-  labels: {
-    singular: "User",
-    plural: "Users",
-    new: "User",
-  },
+  labels: usersDescriptor,
 
   openMode: "page",
   addMode: "page",
@@ -55,14 +48,14 @@ export const usersResource = defineResource<User, UserFormValues, string>({
   form: usersForm,
   tabs: userTabs,
   relations: usersRelations,
-  overviewKey: "users-overview",
-  defaultViewName: "Users",
+  overviewKey: usersDescriptor.overviewKey,
+  defaultViewName: usersDescriptor.defaultViewName,
 });
 
 export const { hooks: userHooks, components: userComponents } = usersResource;
 
 export const userKeys = userHooks.keys;
-export const OVERVIEW_KEY = "users-overview";
+export const OVERVIEW_KEY = usersDescriptor.overviewKey;
 export const useUsersInfinite = userHooks.useList;
 export const useUser = userHooks.useDetail;
 

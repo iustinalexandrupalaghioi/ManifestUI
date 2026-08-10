@@ -2,6 +2,7 @@
 
 import type { FieldValues, UseFormHandleSubmit } from "react-hook-form"
 import type { ResourceId } from "@/framework/types/resource-hook-types"
+import { useTranslations } from "next-intl"
 import { useSaveWithUploads } from "./useSaveWithUploads"
 
 interface UseRecordSaveOptions<TFormValues extends FieldValues> {
@@ -14,6 +15,7 @@ interface UseRecordSaveOptions<TFormValues extends FieldValues> {
   }) => Promise<void>
   confirmSaved: (data: TFormValues) => void
   label: string
+  gender?: "masculine" | "feminine" | "neuter"
   onComplete: () => void
   trackFileUploads?: boolean
 }
@@ -30,9 +32,11 @@ export function useRecordSave<TFormValues extends FieldValues>({
   updateAsync,
   confirmSaved,
   label,
+  gender = "masculine",
   onComplete,
   trackFileUploads = true,
 }: UseRecordSaveOptions<TFormValues>) {
+  const t = useTranslations("Toast")
   return useSaveWithUploads<TFormValues>({
     formId,
     handleSubmit,
@@ -40,7 +44,7 @@ export function useRecordSave<TFormValues extends FieldValues>({
     onPersisted: confirmSaved,
     updateAsync,
     label,
-    successMessage: `${label} updated!`,
+    successMessage: t("updated", { label, gender }),
     onComplete,
     trackFileUploads,
   })

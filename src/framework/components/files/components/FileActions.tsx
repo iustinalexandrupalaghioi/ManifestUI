@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/framework/components/ui/button"
+import { useTranslations } from "next-intl"
+import { Button } from "@/components/ui/button"
 import { DownloadIcon, Trash2Icon } from "lucide-react"
 
 interface FileActionsProps {
@@ -17,6 +18,7 @@ export function FileActions({
   onDelete,
   disabled,
 }: FileActionsProps) {
+  const t = useTranslations("Files")
   const [deleting, setDeleting] = useState(false)
 
   const handleDownload = async () => {
@@ -47,7 +49,7 @@ export function FileActions({
         variant="ghost"
         size="icon"
         className="size-7"
-        title="Download"
+        title={t("download")}
         disabled={disabled}
         onClick={handleDownload}
       >
@@ -60,7 +62,7 @@ export function FileActions({
           variant="ghost"
           size="icon"
           className="size-7 text-destructive hover:text-destructive"
-          title="Delete"
+          title={t("delete")}
           disabled={deleting || disabled}
           onClick={handleDelete}
         >

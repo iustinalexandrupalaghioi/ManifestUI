@@ -1,0 +1,73 @@
+{
+  "or": "sau",
+  "continueWithGoogle": "Continuă cu Google",
+  "legal": {
+    "agreeTo": "Sunt de acord cu",
+    "termsAndConditions": "Termenii și condițiile",
+    "privacyPolicy": "Politica de confidențialitate",
+    "and": "și",
+    "cookiePolicy": "Politica de cookie-uri"
+  },
+  "validation": {
+    "invalidEmail": "Introduceți o adresă de email validă",
+    "passwordMinLength": "Parola trebuie să aibă cel puțin 8 caractere",
+    "passwordUppercase": "Parola trebuie să conțină cel puțin o literă mare",
+    "passwordNumber": "Parola trebuie să conțină cel puțin o cifră",
+    "passwordsDoNotMatch": "Parolele nu coincid",
+    "fullNameRequired": "Numele complet este obligatoriu",
+    "mustAcceptTerms": "Trebuie să accepți termenii pentru a continua"
+  },
+  "login": {
+    "title": "Autentifică-te în cont",
+    "description": "Introdu adresa de email pentru a accesa contul.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john.doe@example.com",
+    "forgotPassword": "Ai uitat parola?",
+    "passwordLabel": "Parolă",
+    "submitting": "Se autentifică...",
+    "submit": "Autentificare",
+    "noAccount": "Nu ai cont?",
+    "signUpLink": "Înregistrează-te"
+  },
+  "signup": {
+    "title": "Creează un cont nou",
+    "description": "Creează-ți contul completând detaliile de mai jos.",
+    "fullNameLabel": "Nume complet",
+    "fullNamePlaceholder": "ex. Ion Popescu",
+    "emailLabel": "Email",
+    "emailPlaceholder": "ex. ion.popescu@example.com",
+    "passwordLabel": "Parolă",
+    "confirmPasswordLabel": "Confirmă parola",
+    "submitting": "Se creează contul...",
+    "submit": "Înregistrează-te",
+    "haveAccount": "Ai deja un cont?",
+    "loginLink": "Autentificare"
+  },
+  "forgotPassword": {
+    "title": "Resetează-ți parola",
+    "description": "Introdu adresa de email și îți vom trimite un link pentru resetarea parolei",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john.doe@example.com",
+    "submitting": "Se trimite...",
+    "submit": "Trimite emailul de resetare",
+    "rememberedPassword": "Ți-ai amintit parola?",
+    "loginLink": "Autentificare",
+    "successTitle": "Verifică-ți emailul",
+    "successDescription": "Instrucțiunile de resetare a parolei au fost trimise",
+    "successMessage": "Dacă te-ai înregistrat folosind acest email, vei primi în scurt timp un email de resetare a parolei."
+  },
+  "updatePassword": {
+    "title": "Resetează-ți parola",
+    "description": "Introdu și confirmă noua parolă mai jos.",
+    "newPasswordLabel": "Parolă nouă",
+    "confirmPasswordLabel": "Confirmă parola",
+    "submitting": "Se salvează...",
+    "submit": "Salvează noua parolă"
+  },
+  "signupSuccess": {
+    "title": "Verifică-ți emailul",
+    "description": "Confirmă-ți contul pentru a continua",
+    "message": "Ți-am trimis un link de confirmare pe email. Accesează-l pentru a-ți activa contul, apoi revino și autentifică-te.",
+    "backToLogin": "Înapoi la autentificare"
+  }
+}

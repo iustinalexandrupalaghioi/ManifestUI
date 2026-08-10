@@ -1,0 +1,11 @@
+{
+  "sortAscending": "Sort ascending",
+  "removeSort": "Remove sort",
+  "sortDescending": "Sort descending",
+  "alsoSortAscending": "Also sort ascending",
+  "alsoSortDescending": "Also sort descending",
+  "addFilter": "Add filter",
+  "unpinColumn": "Unpin column",
+  "pinColumn": "Pin column",
+  "hideColumn": "Hide column"
+}

@@ -1,4 +1,5 @@
 import { type Column, type Row } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 import { useDataViewCore } from "../../core/stores/DataViewProvider";
 import { useSelection } from "../../features/selection/useSelection";
 import { DataListItem } from "./DataListItem";
@@ -26,6 +27,7 @@ export function DataListGrid<TData>({
   visibleListColumns,
   isLoading,
 }: DataListGridProps<TData>) {
+  const t = useTranslations("DataView");
   const { table, tableId } = useDataViewCore();
   const { handleRowClick } = useSelection(tableId, table);
 
@@ -42,7 +44,7 @@ export function DataListGrid<TData>({
   if (rows.length === 0) {
     return (
       <div className="py-12 text-center text-sm text-muted-foreground">
-        No results.
+        {t("noResults")}
       </div>
     );
   }

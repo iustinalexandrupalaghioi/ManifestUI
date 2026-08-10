@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/framework/components/ui/button";
-import { Input } from "@/framework/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/framework/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   ChevronDownIcon,
   Trash2,
@@ -21,6 +21,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { cn } from "@/framework/lib/utils";
+import { useTranslations } from "next-intl";
 import { DEFAULT_TABLE_VIEW_ID } from "../views.types";
 import { getSortingStore } from "../../sorting/sorting.store";
 import { getFilteringStore } from "../../filtering/filtering.store";
@@ -34,6 +35,7 @@ interface TableViewBarProps {
 }
 
 export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
+  const t = useTranslations("Views");
   const {
     views,
     activeView,
@@ -116,7 +118,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
                     <span className="flex shrink-0 items-center gap-1">
                       <button
                         type="button"
-                        title="Edit view"
+                        title={t("editView")}
                         className="rounded p-0.5"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -128,7 +130,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
                       </button>
                       <button
                         type="button"
-                        title="Delete view"
+                        title={t("deleteView")}
                         className="rounded p-0.5"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -150,7 +152,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
             <div className="flex items-center gap-1 px-2 py-1">
               <Input
                 autoFocus
-                placeholder="View name..."
+                placeholder={t("viewNamePlaceholder")}
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => {
@@ -190,7 +192,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
               className="text-muted-foreground"
             >
               <PlusIcon className="h-3 w-3" />
-              Save view
+              {t("saveView")}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -199,7 +201,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
       {hasChanges && (
         <div className="flex items-center gap-1">
           <Button
-            title="Save changes"
+            title={t("saveChanges")}
             variant="ghost"
             size="icon"
             type="button"
@@ -228,7 +230,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
           </Button>
           <Button
             type="button"
-            title="Discard changes"
+            title={t("discardChanges")}
             size="icon"
             variant="ghost"
             className="size-7"

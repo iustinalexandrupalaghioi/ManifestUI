@@ -1,17 +1,18 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
-import { Checkbox } from "@/framework/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/framework/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/framework/lib/utils";
 import { flexRender, type Column, type Row } from "@tanstack/react-table";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 const MAX_VISIBLE_ACTIONS = 2;
 const DROPDOWN_TRIGGER_WIDTH = 48;
@@ -67,6 +68,8 @@ export function DataListItem<TData>({
   visibleListColumns,
   onRowClick,
 }: DataListItemProps<TData>) {
+  const t = useTranslations("DataView");
+  const tc = useTranslations("Common");
   const [pendingActions, setPendingActions] = useState<Set<number>>(new Set());
   const [deletePending, setDeletePending] = useState(false);
   const [visibleCount, setVisibleCount] = useState<number>(MAX_VISIBLE_ACTIONS);
@@ -177,7 +180,7 @@ export function DataListItem<TData>({
           <button
             onClick={() => onSelect([row])}
             className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch border-r bg-muted/30 transition-colors hover:bg-primary/10"
-            aria-label="Select record"
+            aria-label={t("selectRecord")}
             type="button"
           >
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -187,7 +190,7 @@ export function DataListItem<TData>({
           <button
             onClick={() => onOpen([row])}
             className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch border-r bg-muted/30 transition-colors hover:bg-primary/10"
-            aria-label="Open record"
+            aria-label={t("openRecord")}
             type="button"
           >
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -208,7 +211,7 @@ export function DataListItem<TData>({
                   className="shrink-0 bg-muted"
                   checked={row.getIsSelected()}
                   onCheckedChange={() => row.toggleSelected()}
-                  aria-label="Select row"
+                  aria-label={t("selectRow")}
                 />
               </div>
             )}
@@ -303,7 +306,7 @@ export function DataListItem<TData>({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-1 px-2">
-                      +{overflowActions.length} more
+                      {t("moreCount", { count: overflowActions.length })}
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -340,7 +343,7 @@ export function DataListItem<TData>({
                   className="ml-auto"
                 >
                   <Trash2 className="mr-1 h-3 w-3" />
-                  Delete
+                  {tc("delete")}
                 </Button>
               )}
             </div>

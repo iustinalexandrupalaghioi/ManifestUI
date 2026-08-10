@@ -1,0 +1,5 @@
+{
+  "newItemBadge": "(new item)",
+  "failedToLoad": "Failed to load: {resource}.",
+  "selectResource": "Select {resource}"
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { BaseDialog } from "@/framework/components/dialog/BaseDialog";
 import { ResourceForm } from "@/framework/components/form/form-register/ResourceForm";
 import {
@@ -9,17 +9,18 @@ import {
 } from "@/framework/lib/actionResult";
 import type {
   ActionFormConfig,
-  ResourceLabels,
+  ResolvedResourceLabels,
 } from "@/framework/types/resource-hook-types";
 import { getItemId } from "@/framework/core/resource-id";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { FormProvider, useForm } from "react-hook-form";
 
 interface ActionFormDialogProps<TItem> {
   config: ActionFormConfig<TItem, any>;
-  labels: ResourceLabels;
+  labels: ResolvedResourceLabels;
   items: TItem[];
   idField?: string;
   open: boolean;
@@ -57,6 +58,8 @@ export function ActionFormDialog<TItem>({
   onClose,
   onError,
 }: ActionFormDialogProps<TItem>) {
+  const t = useTranslations("Common");
+  const tErr = useTranslations("Errors");
   const [isSaving, setIsSaving] = useState(false);
   const submit = config.useSubmit();
 
@@ -84,9 +87,9 @@ export function ActionFormDialog<TItem>({
               succeededIds: [],
               failures: items.map((i) => ({
                 id: String(getItemId(i as Record<string, unknown>, idField)),
-                message: err instanceof Error ? err.message : "Unknown error",
+                message: err instanceof Error ? err.message : tErr("unknownError"),
               })),
-              summary: err instanceof Error ? err.message : "Action failed.",
+              summary: err instanceof Error ? err.message : tErr("actionFailed"),
             };
       onError?.(result);
     } finally {
@@ -119,10 +122,10 @@ export function ActionFormDialog<TItem>({
             >
               {isSaving ? (
                 <>
-                  <Loader2Icon className="animate-spin" /> Saving...
+                  <Loader2Icon className="animate-spin" /> {t("saving")}
                 </>
               ) : (
-                "Save"
+                t("save")
               )}
             </Button>
             <Button
@@ -131,7 +134,7 @@ export function ActionFormDialog<TItem>({
               type="button"
               variant="outline"
             >
-              Cancel
+              {t("cancel")}
             </Button>
           </div>
         }

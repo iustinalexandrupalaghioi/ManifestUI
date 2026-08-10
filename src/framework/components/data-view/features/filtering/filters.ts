@@ -111,22 +111,6 @@ export const OPERATORS_BY_TYPE: Record<ColumnType, FilterOperator[]> = {
   json: [],
 };
 
-export const OPERATOR_LABELS: Record<FilterOperator, string> = {
-  contains: "Contains",
-  not_contains: "Does not contain",
-  equals: "Equals",
-  not_equals: "Does not equal",
-  gt: "Greater than",
-  gte: "Greater than or equal",
-  lt: "Less than",
-  lte: "Less than or equal",
-  is_empty: "Is empty",
-  is_not_empty: "Is not empty",
-  is_true: "Is true",
-  is_false: "Is false",
-  is_any_of: "Is any of",
-};
-
 export type OperatorDisplay = {
   symbol: string;
   valueWrap?: "quotes" | "brackets";

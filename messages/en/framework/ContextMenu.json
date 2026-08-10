@@ -1,0 +1,10 @@
+{
+  "open": "Open",
+  "openCount": "Open ({count})",
+  "actions": "Actions",
+  "filterByValue": "Filter by this value",
+  "excludeValue": "Exclude this value",
+  "copyToClipboard": "Copy to clipboard",
+  "copyLink": "Copy link",
+  "copyLinksCount": "Copy links ({count})"
+}

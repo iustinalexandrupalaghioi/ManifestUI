@@ -4,13 +4,13 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/framework/components/ui/popover";
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/framework/components/ui/tooltip";
+} from "@/components/ui/tooltip";
 import { useEffect, useState, type ReactNode } from "react";
 
 function useIsCoarsePointer() {

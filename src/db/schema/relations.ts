@@ -3,7 +3,6 @@ import { todos } from "./todos";
 import { relations } from "./relations-table";
 import { todo_attachments } from "./todo-attachments";
 import { roles } from "./roles";
-import { resources } from "./resources";
 import { user_roles } from "./user-roles";
 import { role_resource_permissions } from "./role-resource-permissions";
 
@@ -34,10 +33,6 @@ export const rolesRelations = defineRelations(roles, ({ many }) => ({
   role_resource_permissions: many(role_resource_permissions),
 }));
 
-export const resourcesRelations = defineRelations(resources, ({ many }) => ({
-  role_resource_permissions: many(role_resource_permissions),
-}));
-
 // No relation object for the auth.users side of user_roles — auth.users isn't
 // part of this Drizzle schema (owned by Supabase).
 export const userRolesRelations = defineRelations(user_roles, ({ one }) => ({
@@ -53,10 +48,6 @@ export const roleResourcePermissionsRelations = defineRelations(
     role: one(roles, {
       fields: [role_resource_permissions.role_id],
       references: [roles.id],
-    }),
-    resource: one(resources, {
-      fields: [role_resource_permissions.resource_id],
-      references: [resources.id],
     }),
   }),
 );

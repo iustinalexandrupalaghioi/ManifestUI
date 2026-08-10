@@ -1,7 +1,7 @@
 "use client"
 
-import { Button } from "@/framework/components/ui/button"
-import { DialogClose } from "@/framework/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { DialogClose } from "@/components/ui/dialog"
 import { useState } from "react"
 import { BaseDialog } from "../components/dialog/BaseDialog"
 

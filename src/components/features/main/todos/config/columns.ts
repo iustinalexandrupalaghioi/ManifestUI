@@ -2,20 +2,20 @@ import type { ColumnConfig } from "@/framework/components/data-view/core/ui/crea
 import { Gender } from "@/app/types/main/Relation";
 
 export const todoColumns: ColumnConfig[] = [
-  { field: "id", label: "Id", type: "number", size: 55, cardHidden: true },
-  { field: "title", label: "Title", type: "text", size: 300 },
-  { field: "completed", label: "Completed", type: "boolean", size: 90 },
-  { field: "notes", label: "Notes", type: "text", size: 300 },
+  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 55, cardHidden: true },
+  { field: "title", label: { en: "Title", ro: "Titlu" }, type: "text", size: 300 },
+  { field: "completed", label: { en: "Completed", ro: "Finalizat" }, type: "boolean", size: 90 },
+  { field: "notes", label: { en: "Notes", ro: "Note" }, type: "text", size: 300 },
   {
     field: "user_id",
-    label: "User id",
+    label: { en: "User id", ro: "Id utilizator" },
     type: "number",
     size: 70,
     hidden: true,
   },
   {
     field: "relation_username",
-    label: "Username",
+    label: { en: "Username", ro: "Nume utilizator" },
     type: "text",
     size: 110,
     columnName: "username",
@@ -26,7 +26,7 @@ export const todoColumns: ColumnConfig[] = [
   },
   {
     field: "relation_first_name",
-    label: "First name",
+    label: { en: "First name", ro: "Prenume" },
     type: "text",
     size: 90,
     columnName: "first_name",
@@ -36,7 +36,7 @@ export const todoColumns: ColumnConfig[] = [
   },
   {
     field: "relation_last_name",
-    label: "Last name",
+    label: { en: "Last name", ro: "Nume" },
     type: "text",
     size: 90,
     columnName: "last_name",
@@ -46,7 +46,7 @@ export const todoColumns: ColumnConfig[] = [
   },
   {
     field: "relation_email",
-    label: "Email",
+    label: { en: "Email", ro: "Email" },
     type: "text",
     size: 250,
     columnName: "email",
@@ -56,7 +56,7 @@ export const todoColumns: ColumnConfig[] = [
   },
   {
     field: "relation_gender",
-    label: "Gender",
+    label: { en: "Gender", ro: "Gen" },
     type: "select",
     size: 85,
     columnName: "gender",
@@ -67,7 +67,7 @@ export const todoColumns: ColumnConfig[] = [
   },
   {
     field: "created_at",
-    label: "Add time",
+    label: { en: "Add time", ro: "Data adăugării" },
     type: "datetime",
     size: 130,
     hidden: true,
@@ -75,9 +75,14 @@ export const todoColumns: ColumnConfig[] = [
 ];
 
 export const todoPickupColumns: ColumnConfig[] = [
-  { field: "id", label: "Id", type: "number", size: 70 },
-  { field: "title", label: "Title", type: "text", size: 300 },
-  { field: "completed", label: "Completed", type: "boolean", size: 80 },
-  { field: "notes", label: "Notes", type: "text", size: 300 },
-  { field: "created_at", label: "Created at", type: "datetime", size: 140 },
+  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 70 },
+  { field: "title", label: { en: "Title", ro: "Titlu" }, type: "text", size: 300 },
+  { field: "completed", label: { en: "Completed", ro: "Finalizat" }, type: "boolean", size: 80 },
+  { field: "notes", label: { en: "Notes", ro: "Note" }, type: "text", size: 300 },
+  {
+    field: "created_at",
+    label: { en: "Created at", ro: "Data creării" },
+    type: "datetime",
+    size: 140,
+  },
 ];

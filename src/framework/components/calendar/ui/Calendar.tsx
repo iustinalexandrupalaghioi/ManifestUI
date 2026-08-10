@@ -1,7 +1,8 @@
 "use client";
 
-import { Card } from "@/framework/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useCalendarViewMode } from "../hooks/useCalendarViewMode";
 import { useCalendarNavigation } from "../hooks/useCalendarNavigation";
 import { useCalendarHours } from "../hooks/useCalendarHours";
@@ -14,26 +15,6 @@ import {
 import { CalendarHeader } from "./CalendarHeader";
 import { CalendarMonthView } from "./CalendarMonthView";
 import { CalendarWeekView } from "./CalendarWeekView";
-
-const FALLBACK_TEMPLATE: EventTemplate = {
-  block: (ev) => (
-    <p className="truncate text-[12px] leading-tight font-medium text-primary-foreground">
-      {ev.title ?? "Untitled"}
-    </p>
-  ),
-  agenda: (ev) => (
-    <div className="flex w-full items-center justify-between">
-      <span className="text-sm font-medium text-primary-foreground">
-        {ev.title ?? "Untitled"}
-      </span>
-    </div>
-  ),
-  tooltip: (ev) => (
-    <p className="text-sm font-medium text-foreground">
-      {ev.title ?? "Untitled"}
-    </p>
-  ),
-};
 
 const DEFAULT_VIEWS: CalendarMode[] = ["month", "week", "day"];
 const DEFAULT_STORAGE_KEY = "calendar-view-mode";
@@ -83,12 +64,36 @@ export default function Calendar<TData = unknown>({
   onRangeChange,
   onSelectedDateChange,
   loading = false,
-  emptyLabel = "No events scheduled.",
+  emptyLabel,
   className = "",
   selectedIds,
   onToggleSelect,
   onSelectOnly,
 }: CalendarProps<TData>) {
+  const t = useTranslations("Calendar");
+  const resolvedEmptyLabel = emptyLabel ?? t("noEventsScheduled");
+  const FALLBACK_TEMPLATE: EventTemplate = useMemo(
+    () => ({
+      block: (ev) => (
+        <p className="truncate text-[12px] leading-tight font-medium text-primary-foreground">
+          {ev.title ?? t("untitled")}
+        </p>
+      ),
+      agenda: (ev) => (
+        <div className="flex w-full items-center justify-between">
+          <span className="text-sm font-medium text-primary-foreground">
+            {ev.title ?? t("untitled")}
+          </span>
+        </div>
+      ),
+      tooltip: (ev) => (
+        <p className="text-sm font-medium text-foreground">
+          {ev.title ?? t("untitled")}
+        </p>
+      ),
+    }),
+    [t],
+  );
   const [mode, setMode] = useCalendarViewMode(views, storageKey, initialMode);
 
   const {
@@ -154,7 +159,7 @@ export default function Calendar<TData = unknown>({
           selectedDate={selectedDate}
           events={events}
           maxDotsPerDay={maxDotsPerDay}
-          emptyLabel={emptyLabel}
+          emptyLabel={resolvedEmptyLabel}
           getTemplate={getTemplate}
           onSelectDate={setSelectedDate}
           selectedIds={selectedIds}

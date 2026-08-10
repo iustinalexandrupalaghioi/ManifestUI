@@ -1,8 +1,6 @@
 import { addDays, isSameDay } from "date-fns";
 import type { CalendarEvent, PlacedEvent, CalendarHours } from "./types";
 
-export const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
 export function startOfWeek(date: Date): Date {
   const day = (date.getDay() + 6) % 7;
   const d = addDays(date, -day);

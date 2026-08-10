@@ -1,15 +1,15 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/framework/components/ui/dialog";
+} from "@/components/ui/dialog";
 import { cn } from "@/framework/lib/utils";
 import { XIcon } from "lucide-react";
 import {
@@ -53,6 +53,7 @@ export function BaseDialog({
   contentClassName,
   footerClassName,
 }: BaseDialogProps) {
+  const t = useTranslations("Common");
   const handleClose = onClose ?? (() => setOpen(false));
 
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -134,7 +135,7 @@ export function BaseDialog({
             <div className="flex shrink-0 items-center gap-1">
               {headerAction}
               <Button
-                title="Close dialog"
+                title={t("close")}
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
@@ -159,15 +160,16 @@ export function BaseDialog({
         )}
 
         {footer && (
-          <DialogFooter
+          <div
+            data-slot="dialog-footer"
             className={cn(
-              "shrink-0 px-4",
+              "flex shrink-0 flex-col-reverse gap-2 px-4 sm:flex-row sm:justify-end",
               children && "border-t pt-3",
               footerClassName,
             )}
           >
             {footer}
-          </DialogFooter>
+          </div>
         )}
       </DialogContent>
     </Dialog>

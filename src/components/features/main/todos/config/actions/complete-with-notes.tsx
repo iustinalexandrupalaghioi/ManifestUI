@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type { ActionFormConfig } from "@/framework/types/resource-hook-types";
 import type { Todo } from "@/app/types/main/Todo";
 import { BookmarkCheck } from "lucide-react";
@@ -7,16 +8,26 @@ import {
   type CompleteWithNoteValues,
 } from "../schema";
 
+function CompleteWithNoteLabel() {
+  const t = useTranslations("Todos");
+  return (
+    <>
+      <BookmarkCheck /> {t("completeWithNote")}
+    </>
+  );
+}
+
+function CompleteWithNotesTitle() {
+  const t = useTranslations("Todos");
+  return t("completeWithNotesTitle");
+}
+
 export const completeWithNotes: ActionFormConfig<Todo, CompleteWithNoteValues> =
   {
     key: "complete-with-note",
-    title: "Complete with notes",
+    title: <CompleteWithNotesTitle />,
     isEligible: (todo) => !todo.completed,
-    label: (
-      <>
-        <BookmarkCheck /> Complete with note
-      </>
-    ),
+    label: <CompleteWithNoteLabel />,
 
     form: {
       layout: {
@@ -28,7 +39,7 @@ export const completeWithNotes: ActionFormConfig<Todo, CompleteWithNoteValues> =
               {
                 type: "textarea",
                 name: "notes",
-                label: "Completion notes",
+                label: { en: "Completion notes", ro: "Note de finalizare" },
                 placeholder: "Describe what was done...",
                 maxRows: 5,
               },

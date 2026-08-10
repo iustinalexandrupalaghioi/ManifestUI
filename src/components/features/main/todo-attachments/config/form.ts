@@ -15,11 +15,11 @@ export const attachmentsForm: FormConfig<AttachmentFormValues> = {
           {
             cols: 3,
             fields: [
-              { type: "readonly", name: "id", label: "Id", span: 1 },
+              { type: "readonly", name: "id", label: { en: "Id", ro: "Id" }, span: 1 },
               {
                 type: "input",
                 name: "filename",
-                label: "Filename",
+                label: { en: "Filename", ro: "Nume fișier" },
                 span: 2,
                 placeholder: "Filename",
               },
@@ -31,7 +31,7 @@ export const attachmentsForm: FormConfig<AttachmentFormValues> = {
               {
                 type: "input",
                 name: "todo_id",
-                label: "Todo",
+                label: { en: "Todo", ro: "Sarcină" },
                 inputType: "number",
                 span: 1,
                 pickup: {
@@ -42,14 +42,14 @@ export const attachmentsForm: FormConfig<AttachmentFormValues> = {
                   fillFields: [
                     {
                       from: "completed",
-                      label: "Completed",
+                      label: { en: "Completed", ro: "Finalizat" },
                       type: "switch",
                       span: 1,
                       readonly: true,
                     },
                     {
                       from: "title",
-                      label: "Title",
+                      label: { en: "Title", ro: "Titlu" },
                       type: "textarea",
                       span: 3,
                       readonly: true,
@@ -70,7 +70,7 @@ export const attachmentsForm: FormConfig<AttachmentFormValues> = {
               {
                 type: "file",
                 name: "path",
-                label: "File",
+                label: { en: "File", ro: "Fișier" },
                 bucket: BUCKET,
                 maxSize: 50 * 1024 * 1024,
               },

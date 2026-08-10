@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { FieldValues } from "react-hook-form";
 import { usePathname } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { popNavigationState } from "@/framework/lib/navigationHandoff";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
@@ -31,10 +33,9 @@ export function createAddPage<
   addTabs: FieldTabConfig<TFormValues>[] = [],
 ) {
   const Form = config.AddForm ?? config.Form;
-  if (!Form)
-    throw new Error(`No Form component provided for ${hooks.labels.singular}`);
+  if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
 
-  const { labels } = hooks;
+  const { noun, labels } = hooks;
   const hasAddTabs = addTabs.length > 0;
 
   return function AddPage() {
@@ -42,6 +43,15 @@ export function createAddPage<
     const router = useTransitionRouter();
 
     usePermissions();
+
+    const locale = useLocale();
+    const tr = useTranslations("Resource");
+    const resolvedLabels = {
+      singular: resolveLabel(labels.singular, locale),
+      plural: resolveLabel(labels.plural, locale),
+      new: resolveLabel(labels.new, locale),
+      gender: labels.gender,
+    };
 
     const canAdd = resolvePermission(config.permissions?.add);
 
@@ -54,7 +64,7 @@ export function createAddPage<
     const { form, isDirty, canSave, handleSubmit, reset } =
       hooks.useAddForm(initialState);
 
-    const formId = `${labels.singular}-add`;
+    const formId = `${noun}-add`;
     const [formOpen, setFormOpen] = useState(true);
     const [activeAddTab, setActiveAddTab] = useState(addTabs[0]?.value ?? "");
 
@@ -65,7 +75,8 @@ export function createAddPage<
         addAsync,
         updateAsync,
         reset,
-        label: labels.singular,
+        label: resolvedLabels.singular,
+        gender: labels.gender,
         onComplete: () => router.back(),
       });
 
@@ -85,8 +96,8 @@ export function createAddPage<
           <RecordFormShell
             hasTabs={hasAddTabs}
             isAddScreen
-            title={labels.new}
-            titleBadge={<span className="text-accent"> (new item)</span>}
+            title={resolvedLabels.new}
+            titleBadge={<span className="text-accent"> {tr("newItemBadge")}</span>}
             isOpen={formOpen}
             setOpen={setFormOpen}
             form={<Form layout="grid" readOnly={!canAdd} />}

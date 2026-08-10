@@ -1,11 +1,11 @@
 "use client";
 
-import { Input } from "@/framework/components/ui/input";
-import { Textarea } from "@/framework/components/ui/textarea";
-import { DateInput } from "@/framework/components/ui/date-input";
-import { TimeInput } from "@/framework/components/ui/time-input";
-import { DateTimeInput } from "@/framework/components/ui/date-time-input";
-import { YesNoSwitch } from "@/framework/components/ui/yes-no-switch";
+import { Input } from "@/components/ui/input";
+import { CustomTextarea } from "@/framework/components/ui/CustomTextarea";
+import { CustomDateInput } from "@/framework/components/ui/CustomDateInput";
+import { CustomTimeInput } from "@/framework/components/ui/CustomTimeInput";
+import { CustomDateTimeInput } from "@/framework/components/ui/CustomDateTimeInput";
+import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch";
 import { FormFieldBase } from "./FormFieldBase";
 import { cn } from "@/framework/lib/utils";
 import type { ReadonlyDataType } from "../types/types";
@@ -35,28 +35,28 @@ function FormReadOnlyInput({
     case "date":
       return (
         <FormFieldBase label={label} className={className}>
-          <DateInput value={raw as string} readOnly />
+          <CustomDateInput value={raw as string} readOnly />
         </FormFieldBase>
       );
 
     case "time":
       return (
         <FormFieldBase label={label} className={className}>
-          <TimeInput value={raw as string} readOnly className="w-full" />
+          <CustomTimeInput value={raw as string} readOnly className="w-full" />
         </FormFieldBase>
       );
 
     case "datetime":
       return (
         <FormFieldBase label={label} className={className}>
-          <DateTimeInput value={raw as string} readonly />
+          <CustomDateTimeInput value={raw as string} readonly />
         </FormFieldBase>
       );
 
     case "switch":
       return (
         <FormFieldBase label={label} className={className}>
-          <YesNoSwitch checked={!!raw} disabled />
+          <CustomYesNoSwitch checked={!!raw} disabled />
         </FormFieldBase>
       );
 
@@ -78,7 +78,7 @@ function FormReadOnlyInput({
     case "textarea":
       return (
         <FormFieldBase label={label} className={className}>
-          <Textarea
+          <CustomTextarea
             defaultValue={String(raw ?? "")}
             maxRows={maxRows}
             readOnly
@@ -99,7 +99,7 @@ function FormReadOnlyInput({
       }
       return (
         <FormFieldBase label={label} className={className}>
-          <Textarea
+          <CustomTextarea
             defaultValue={text}
             maxRows={maxRows}
             readOnly

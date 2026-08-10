@@ -12,27 +12,20 @@ import {
 } from "./config/api";
 import { attachmentsForm } from "./config/form";
 import { attachmentColumns } from "./config/columns";
+import { attachmentsDescriptor } from "./config/descriptor";
 
 export const attachmentsResource = defineResource<
   TodoAttachment,
   AttachmentFormValues
 >({
-  id: "attachments",
-  noun: "attachment",
-  queryKey: ["attachments"],
+  id: attachmentsDescriptor.id,
+  noun: attachmentsDescriptor.noun,
+  queryKey: attachmentsDescriptor.queryKey,
   schema: attachmentSchema,
 
-  routes: {
-    list: "/attachments",
-    add: "/attachments/add",
-    detail: (id: string) => `/attachments/${id}`,
-  },
+  routes: attachmentsDescriptor.routes,
 
-  labels: {
-    singular: "Attachment",
-    plural: "Attachments",
-    new: "Attachment",
-  },
+  labels: attachmentsDescriptor,
 
   openMode: "dialog",
   addMode: "dialog",
@@ -57,9 +50,9 @@ export const attachmentsResource = defineResource<
 
   form: attachmentsForm,
 
-  overviewKey: "attachments-overview",
+  overviewKey: attachmentsDescriptor.overviewKey,
 
-  defaultViewName: "Attachments",
+  defaultViewName: attachmentsDescriptor.defaultViewName,
 });
 
 // ─── Named exports ───────────────────────────
@@ -67,7 +60,7 @@ export const { hooks: attachmentHooks, components: attachmentComponents } =
   attachmentsResource;
 
 export const attachmentKeys = attachmentHooks.keys;
-export const OVERVIEW_KEY = "attachments-overview";
+export const OVERVIEW_KEY = attachmentsDescriptor.overviewKey;
 export const useAttachmentsInfinite = attachmentHooks.useList;
 export const useAttachment = attachmentHooks.useDetail;
 

@@ -1,19 +1,14 @@
 import { ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
-import { Button } from "@/framework/components/ui/button";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/framework/components/ui/select";
+} from "@/components/ui/select";
 import type { CalendarMode } from "../types";
-
-const MODE_LABELS: Record<CalendarMode, string> = {
-  month: "Month view",
-  week: "Week view",
-  day: "Day view",
-};
 
 interface CalendarHeaderProps {
   monthLabel: string;
@@ -38,6 +33,12 @@ export function CalendarHeader({
   onNext,
   onToday,
 }: CalendarHeaderProps) {
+  const t = useTranslations("Calendar");
+  const MODE_LABELS: Record<CalendarMode, string> = {
+    month: t("monthView"),
+    week: t("weekView"),
+    day: t("dayView"),
+  };
   return (
     <div className="shrink-0 border-b border-border px-5 pt-5 pb-4">
       <div className="mb-1 flex items-center justify-between">
@@ -58,7 +59,7 @@ export function CalendarHeader({
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="ghost" className="rounded-none" onClick={onToday}>
-            Today
+            {t("today")}
           </Button>
           <Button
             variant="ghost"

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/framework/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { cn } from "@/framework/lib/utils";
 import {
@@ -27,6 +27,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import ToolbarActions from "./ToolbarActions";
 import { useState, useEffect } from "react";
 import { FilterInput } from "../data-view/features/filtering";
@@ -115,6 +116,8 @@ export function Toolbar<TData>({
   popOutUrl,
   preFilters,
 }: ToolbarProps<TData>) {
+  const t = useTranslations("Toolbar");
+  const tc = useTranslations("Common");
   const router = useTransitionRouter();
   const [isNarrow, setIsNarrow] = useState(false);
   const { navigateTo } = useBrowserNavigation();
@@ -202,7 +205,7 @@ export function Toolbar<TData>({
                   disabled={!menuHasContent}
                 >
                   <MoreHorizontal className={styles.icon} />
-                  More
+                  {t("more")}
                 </Button>
               </DropdownMenuTrigger>
 
@@ -219,7 +222,7 @@ export function Toolbar<TData>({
                     onSelect={() => onOpen(selectedRows)}
                   >
                     <FileSearch className="size-4" />
-                    {selectedCount > 1 ? `Open ${selectedCount}` : "Open"}
+                    {selectedCount > 1 ? t("openCount", { count: selectedCount }) : t("open")}
                   </DropdownMenuItem>
                 )}
 
@@ -234,7 +237,7 @@ export function Toolbar<TData>({
                       )
                     }
                   >
-                    <ExternalLinkIcon className="size-4" /> Popout
+                    <ExternalLinkIcon className="size-4" /> {t("popout")}
                   </DropdownMenuItem>
                 )}
 
@@ -251,14 +254,14 @@ export function Toolbar<TData>({
                     ) : (
                       <Plus className="size-4" />
                     )}
-                    Add
+                    {t("add")}
                   </DropdownMenuItem>
                 )}
 
                 {reloadEnabled && (
                   <DropdownMenuItem onSelect={() => window.location.reload()}>
                     <RotateCcwIcon className="size-4" />
-                    Refresh
+                    {t("refresh")}
                   </DropdownMenuItem>
                 )}
 
@@ -267,7 +270,7 @@ export function Toolbar<TData>({
                     {hasPrimaryItems && <DropdownMenuSeparator />}
                     {isNarrow ? (
                       <>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                         {actions!.map((action, i) => {
                           const eligible = selectedRows.filter(
                             (r) => action.isEligible?.(r) ?? true,
@@ -301,7 +304,7 @@ export function Toolbar<TData>({
                           )}
                         >
                           <Settings className="size-4" />
-                          Actions
+                          {t("actions")}
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                           <DropdownMenuSubContent
@@ -347,7 +350,7 @@ export function Toolbar<TData>({
                       onSelect={() => onDelete(eligibleForDelete)}
                     >
                       <Trash2 className="size-4" />
-                      Delete
+                      {tc("delete")}
                       {selectedCount > 1 && (
                         <span className="ml-1 text-xs text-muted-foreground tabular-nums">
                           {eligibleForDelete.length}/{selectedCount}
@@ -378,7 +381,7 @@ export function Toolbar<TData>({
           {showBack &&
             (onBack ? (
               <Button
-                title="Back"
+                title={t("back")}
                 type="button"
                 variant="outline"
                 size="icon"
@@ -390,7 +393,7 @@ export function Toolbar<TData>({
             ) : (
               <Link href="/">
                 <Button
-                  title="Back"
+                  title={t("back")}
                   type="button"
                   variant="outline"
                   size="icon"
@@ -418,7 +421,11 @@ export function Toolbar<TData>({
 
               const button = (
                 <Button
-                  title={isMulti ? `Open ${selectedCount} selected` : "Open"}
+                  title={
+                    isMulti
+                      ? t("openSelectedCount", { count: selectedCount })
+                      : t("open")
+                  }
                   variant="outline"
                   type="button"
                   size={isMulti || styles.labeled ? "sm" : "icon"}
@@ -427,7 +434,7 @@ export function Toolbar<TData>({
                   onClick={handleClick}
                 >
                   <FileSearch className={cn(styles.icon, "shrink-0")} />
-                  {styles.labeled && "Open"}
+                  {styles.labeled && t("open")}
                   {isMulti && (
                     <span className="ml-1 text-xs text-muted-foreground tabular-nums">
                       {selectedCount}
@@ -459,7 +466,7 @@ export function Toolbar<TData>({
                   className={styles.button}
                 >
                   <MoreHorizontal className={styles.icon} />
-                  {styles.labeled && "More"}
+                  {styles.labeled && t("more")}
                 </Button>
               </DropdownMenuTrigger>
 
@@ -480,7 +487,7 @@ export function Toolbar<TData>({
                     }
                   >
                     <ExternalLinkIcon className="size-4" />
-                    Popout
+                    {t("popout")}
                   </DropdownMenuItem>
                 )}
 
@@ -497,14 +504,14 @@ export function Toolbar<TData>({
                     ) : (
                       <Plus className="size-4" />
                     )}
-                    Add
+                    {t("add")}
                   </DropdownMenuItem>
                 )}
 
                 {reloadEnabled && (
                   <DropdownMenuItem onSelect={() => window.location.reload()}>
                     <RotateCcwIcon className="size-4" />
-                    Refresh
+                    {t("refresh")}
                   </DropdownMenuItem>
                 )}
 
@@ -515,7 +522,7 @@ export function Toolbar<TData>({
                     )}
                     {isNarrow ? (
                       <>
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
                         {actions.map((action, i) => {
                           const eligible = selectedRows.filter(
                             (r) => action.isEligible?.(r) ?? true,
@@ -546,7 +553,7 @@ export function Toolbar<TData>({
                           )}
                         >
                           <Settings className="size-4" />
-                          Actions
+                          {t("actions")}
                         </DropdownMenuSubTrigger>
                         <DropdownMenuPortal>
                           <DropdownMenuSubContent
@@ -589,7 +596,7 @@ export function Toolbar<TData>({
                       onSelect={() => onDelete(eligibleForDelete)}
                     >
                       <Trash2 className="size-4" />
-                      Delete
+                      {tc("delete")}
                       {selectedCount > 1 && (
                         <span className="ml-1 text-xs text-muted-foreground tabular-nums">
                           {eligibleForDelete.length}/{selectedCount}

@@ -7,6 +7,7 @@ import { FormSwitch } from "./FormSwitch";
 import { FormTextarea } from "./FormTextarea";
 import { FormTimeInput } from "./FormTimeInput";
 import type { FieldConfig } from "../types/types";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 
 /**
  * The subset of FieldConfig variants that are "plain inputs" — they render a
@@ -39,6 +40,7 @@ export interface RenderFieldInputOptions {
   disabled?: boolean;
   readOnly?: boolean;
   className?: string;
+  locale: string;
 }
 
 /**
@@ -52,14 +54,16 @@ export interface RenderFieldInputOptions {
  */
 export function renderFieldInput<TFormValues>(
   field: BasicFieldConfig<TFormValues>,
-  { disabled, readOnly, className }: RenderFieldInputOptions,
+  { disabled, readOnly, className, locale }: RenderFieldInputOptions,
 ) {
+  const label = resolveLabel(field.label, locale);
+
   switch (field.type) {
     case "input":
       return (
         <FormInput
           name={field.name as any}
-          label={field.label}
+          label={label}
           type={field.inputType ?? "text"}
           placeholder={field.placeholder}
           min={field.min}
@@ -74,7 +78,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormTextarea
           name={field.name as any}
-          label={field.label}
+          label={label}
           placeholder={field.placeholder}
           maxRows={field.maxRows}
           disabled={disabled}
@@ -87,7 +91,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormSwitch
           name={field.name as any}
-          label={field.label}
+          label={label}
           disabled={disabled || readOnly}
           className={className}
         />
@@ -97,7 +101,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormSelect
           name={field.name as any}
-          label={field.label}
+          label={label}
           options={field.options}
           placeholder={field.placeholder}
           disabled={disabled || readOnly}
@@ -110,7 +114,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormCombobox
           name={field.name as any}
-          label={field.label}
+          label={label}
           options={field.options}
           placeholder={field.placeholder}
           disabled={disabled || readOnly}
@@ -123,7 +127,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormDate
           name={field.name as any}
-          label={field.label}
+          label={label}
           disabled={disabled}
           readOnly={readOnly}
           className={className}
@@ -134,7 +138,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormTimeInput
           name={field.name as any}
-          label={field.label}
+          label={label}
           disabled={disabled}
           readOnly={readOnly}
           className={className}
@@ -145,7 +149,7 @@ export function renderFieldInput<TFormValues>(
       return (
         <FormDateTime
           name={field.name as any}
-          label={field.label}
+          label={label}
           disabled={disabled}
           readOnly={readOnly}
           className={className}

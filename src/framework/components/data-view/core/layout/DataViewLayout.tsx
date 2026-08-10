@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
-import { Input } from "@/framework/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useBrowserNavigation } from "@/framework/components/screen/stores/useBrowserNavigationStore";
 import { SearchIcon, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { type RefObject, useMemo, useState } from "react";
 import type { DataViewFeature } from "../../core/contracts";
 import {
@@ -60,6 +61,7 @@ export function DataViewLayout({
   loadMoreRef,
   isLookup,
 }: DataViewLayoutProps) {
+  const t = useTranslations("DataView");
   const { table, tableId, scrollContainerRef, handleScroll, staticColumnIds } =
     useDataViewCore();
   const { height } = useDataViewLayout();
@@ -226,7 +228,7 @@ export function DataViewLayout({
           </span>
           <Input
             autoFocus
-            placeholder="Quick search..."
+            placeholder={t("quickSearch")}
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="pr-8 pl-10"

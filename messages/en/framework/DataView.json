@@ -1,0 +1,20 @@
+{
+  "quickSearch": "Quick search...",
+  "searchPlaceholder": "Search...",
+  "selectPlaceholder": "Select…",
+  "selectOption": "Select an option",
+  "noResultsFound": "No results found.",
+  "noResults": "No results.",
+  "lookup": "Lookup",
+  "pickFrom": "Pick from {resource}",
+  "selectAll": "Select all",
+  "selectRow": "Select row",
+  "selectRecord": "Select record",
+  "openRow": "Open row",
+  "openRecord": "Open record",
+  "moreCount": "+{count} more",
+  "selectedCount": "{count} selected",
+  "itemsCount": "{count} items",
+  "listView": "List view",
+  "tableView": "Table view"
+}

@@ -1,4 +1,5 @@
 export type Enum = {
-  value: string
-  label: string
-}
+  value: string;
+  label: string;
+  group?: string;
+};

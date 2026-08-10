@@ -1,0 +1,15 @@
+{
+  "toggleVisibility": "Toggle visibility of {name}",
+  "unpinNamed": "Unpin {name}",
+  "pinNamed": "Pin {name}",
+  "unpinColumn": "Unpin column",
+  "pinColumnLeft": "Pin column to left",
+  "listColumns": "List Columns",
+  "manageColumns": "Manage Columns",
+  "listColumnsDescription": "Choose which columns appear on list items",
+  "manageColumnsDescription": "Manage Columns Panel - Show, hide, order, pin columns",
+  "noConfigurableColumns": "No configurable columns",
+  "resetToDefault": "Reset to default",
+  "apply": "Apply",
+  "columns": "Columns"
+}

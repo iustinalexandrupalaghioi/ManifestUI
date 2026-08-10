@@ -1,6 +1,6 @@
 "use client";
 
-import { Combobox } from "@/framework/components/ui/combobox";
+import { CustomCombobox } from "@/framework/components/ui/CustomCombobox";
 import { cn } from "@/framework/lib/utils";
 import type { Enum } from "@/framework/types/global/Enum";
 import type { FieldValues, Path } from "react-hook-form";
@@ -41,7 +41,7 @@ export function FormCombobox<T extends FieldValues>({
           error={fieldState.error?.message}
           className={className}
         >
-          <Combobox
+          <CustomCombobox
             ref={field.ref}
             items={options}
             value={field.value}

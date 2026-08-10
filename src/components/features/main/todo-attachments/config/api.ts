@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { todo_attachments, todos } from "@/db/schema";
 import { defineResourceActions } from "@/framework/authorization/rbac";
-import { createResourceActions } from "@/framework/lib/transactionalAction";
+import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
@@ -17,6 +17,7 @@ import {
 import type { Cursor } from "@/framework/types/pagination";
 import type { TodoAttachment } from "@/app/types/main/Attachment";
 import { attachmentSchema, type AttachmentFormValues } from "./schema";
+import { attachmentsDescriptor } from "./descriptor";
 
 const PAGE_SIZE = 50;
 
@@ -39,7 +40,7 @@ const selection = {
   todos: { id: todos.id, title: todos.title, completed: todos.completed },
 };
 
-const crud = createResourceActions("attachments");
+const resourceAction = createResourceActions(attachmentsDescriptor.id);
 
 export const {
   fetchAttachmentList,
@@ -51,33 +52,33 @@ export const {
   fetchAttachmentList: [
     "read",
     async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
-      const where = buildWhereConditions(filters, filterColumns);
-      const sortColumns = resolveSortColumns(sorting, filterColumns, {
-        key: "id",
-        column: todo_attachments.id,
-      });
-      const orderBy = buildOrderBy(sortColumns);
-      const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
+    const where = buildWhereConditions(filters, filterColumns);
+    const sortColumns = resolveSortColumns(sorting, filterColumns, {
+      key: "id",
+      column: todo_attachments.id,
+    });
+    const orderBy = buildOrderBy(sortColumns);
+    const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
-      const [items, [{ count }]] = await Promise.all([
-        db
-          .select(selection)
-          .from(todo_attachments)
-          .innerJoin(todos, eq(todos.id, todo_attachments.todo_id))
-          .where(seekWhere)
-          .orderBy(...orderBy)
-          .limit(PAGE_SIZE),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(todo_attachments)
-          .innerJoin(todos, eq(todos.id, todo_attachments.todo_id))
-          .where(where),
-      ]);
+    const [items, [{ count }]] = await Promise.all([
+      db
+        .select(selection)
+        .from(todo_attachments)
+        .innerJoin(todos, eq(todos.id, todo_attachments.todo_id))
+        .where(seekWhere)
+        .orderBy(...orderBy)
+        .limit(PAGE_SIZE),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(todo_attachments)
+        .innerJoin(todos, eq(todos.id, todo_attachments.todo_id))
+        .where(where),
+    ]);
 
-      const nextCursor =
-        items.length === PAGE_SIZE
-          ? extractCursor(items[items.length - 1], sortColumns)
-          : null;
+    const nextCursor =
+      items.length === PAGE_SIZE
+        ? extractCursor(items[items.length - 1], sortColumns)
+        : null;
 
       return { items: items as TodoAttachment[], total: count ?? 0, nextCursor };
     },
@@ -97,7 +98,7 @@ export const {
     },
   ],
 
-  addAttachment: crud.add(async (tx, data: AttachmentFormValues) => {
+  addAttachment: resourceAction.add(async (tx, data: AttachmentFormValues) => {
     const parsed = attachmentSchema.parse(data);
     const [result] = await tx
       .insert(todo_attachments)
@@ -106,12 +107,17 @@ export const {
     return result.id;
   }),
 
-  updateAttachment: crud.update(async (tx, id: number, data: AttachmentFormValues) => {
-    const parsed = attachmentSchema.parse(data);
-    await tx.update(todo_attachments).set(parsed).where(eq(todo_attachments.id, id));
-  }),
+  updateAttachment: resourceAction.update(
+    async (tx, id: number, data: AttachmentFormValues) => {
+      const parsed = attachmentSchema.parse(data);
+      await tx
+        .update(todo_attachments)
+        .set(parsed)
+        .where(eq(todo_attachments.id, id));
+    },
+  ),
 
-  deleteAttachments: crud.delete((tx, id: number) =>
+  deleteAttachments: resourceAction.delete((tx, id: number) =>
     tx.delete(todo_attachments).where(eq(todo_attachments.id, id)),
   ),
 });

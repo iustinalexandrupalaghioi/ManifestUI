@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { Todo } from "@/app/types/main/Todo";
 import { CheckIcon } from "lucide-react";
 import { useCompleteTodos } from "../../hooks/useCompleteTodo";
 import { BulkActionError, type BulkActionResult } from "@/framework/lib/actionResult";
 
 export function useTodoBulkActions() {
+  const t = useTranslations("Todos");
   const complete = useCompleteTodos();
   const [bulkResult, setBulkResult] = useState<BulkActionResult | null>(null);
 
@@ -15,7 +17,7 @@ export function useTodoBulkActions() {
       key: "complete",
       label: (
         <>
-          <CheckIcon className="h-4 w-4" /> Complete
+          <CheckIcon className="h-4 w-4" /> {t("complete")}
         </>
       ),
       isEligible: (todo: Todo) => !todo.completed,

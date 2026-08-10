@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { SearchIcon } from "lucide-react";
-import { Button } from "@/framework/components/ui/button";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import { getResource } from "@/framework/registry/ResourceRegistry";
 import type { PickupFillField } from "../types/types";
 import { DisplayFieldRenderer } from "../form-register/LookupFieldRenderer";
@@ -21,6 +22,7 @@ export function PickupButton({
   fillFields,
   item,
 }: PickupButtonProps) {
+  const t = useTranslations("DataView");
   const [open, setOpen] = useState(false);
   const [displayValues, setDisplayValues] = useState<Record<string, unknown>>(
     {},
@@ -119,7 +121,7 @@ export function PickupButton({
         type="button"
         variant="ghost"
         size="icon"
-        title={`Pick from ${resource}`}
+        title={t("pickFrom", { resource })}
         onClick={() => setOpen(true)}
       >
         <SearchIcon className="h-4 w-4" />

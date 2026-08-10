@@ -1,4 +1,4 @@
-import { Table } from "@/framework/components/ui/table"
+import { CustomTable } from "@/framework/components/ui/CustomTable"
 import React from "react"
 import type {
   SortingState,
@@ -49,7 +49,7 @@ export function DataTable({
 
   return (
     <div style={columnSizeVars as React.CSSProperties}>
-      <Table
+      <CustomTable
         style={{ minWidth: fixedColumnsWidth }}
         className="w-full table-fixed border-separate border-spacing-0"
       >
@@ -81,7 +81,7 @@ export function DataTable({
           columnPinning={columnPinning}
           columnVisibility={columnVisibility}
         />
-      </Table>
+      </CustomTable>
     </div>
   )
 }

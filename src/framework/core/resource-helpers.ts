@@ -55,6 +55,7 @@ export async function runUploadsInBackground<
     data: TFormValues;
   }) => Promise<void>,
   label: string,
+  t: (key: string, values?: Record<string, string | number | Date>) => string,
 ): Promise<void> {
   if (!pending.length) {
     useUploadStore.getState().clearAll(formId);
@@ -62,7 +63,7 @@ export async function runUploadsInBackground<
   }
 
   useUploadStore.getState().setUploading(formId, true);
-  const toastId = toastLoading(`Uploading ${label} files...`);
+  const toastId = toastLoading(t("uploadingFiles", { label }));
   try {
     const patches: Record<string, string> = {};
     for (const entry of pending) {
@@ -76,9 +77,9 @@ export async function runUploadsInBackground<
       await updateAsync({ id, data: { ...data, ...patches } as TFormValues });
     }
     useUploadStore.getState().clearAll(formId);
-    toastUpdate(toastId, "success", `${label} files uploaded!`);
+    toastUpdate(toastId, "success", t("filesUploaded", { label }));
   } catch {
     useUploadStore.getState().setUploading(formId, false);
-    toastUpdate(toastId, "error", `Failed to upload ${label} files.`);
+    toastUpdate(toastId, "error", t("failedToUpload", { label }));
   }
 }

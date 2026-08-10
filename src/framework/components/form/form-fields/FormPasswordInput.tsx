@@ -7,7 +7,7 @@ import {
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "@/framework/components/ui/input-group";
+} from "@/components/ui/input-group";
 import { cn } from "@/framework/lib/utils";
 import type { ComponentProps } from "react";
 import type { FieldValues, Path } from "react-hook-form";

@@ -1,37 +1,42 @@
 import "server-only";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { getLocale } from "next-intl/server";
 import { db } from "@/db";
-import { resources } from "@/db/schema";
+import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
+import { resolveLabel } from "./resolveLabel";
 import { extractPgError, mapPgError } from "./mapPgError";
 import type { ActionError } from "./actionResult";
-import { getCurrentUserId, hasServerPermission } from "@/framework/authorization/rbac";
+import {
+  getCurrentUserId,
+  isAdministrator,
+} from "@/framework/authorization/rbac";
 
-async function getResourceRow(resourceId: string) {
-  const [row] = await db
-    .select({
-      name: resources.name,
-      label: resources.label,
-      singularLabel: resources.singular_label,
-    })
-    .from(resources)
-    .where(
-      and(eq(resources.name, resourceId), isNull(resources.parent_resource_id)),
-    )
-    .limit(1);
-  return row;
+function getResourceRow(
+  registry: ResourceDescriptor[],
+  resourceId: string,
+  locale: string,
+) {
+  const entry = registry.find((r) => r.id === resourceId);
+  if (!entry) return undefined;
+  return {
+    name: entry.id,
+    label: resolveLabel(entry.plural, locale),
+    singularLabel: resolveLabel(entry.singular, locale),
+  };
 }
 
-async function getResourceByTable(tableName: string) {
-  const [row] = await db
-    .select({
-      name: resources.name,
-      label: resources.label,
-      singularLabel: resources.singular_label,
-    })
-    .from(resources)
-    .where(eq(resources.table_name, tableName))
-    .limit(1);
-  return row;
+function getResourceByTable(
+  registry: ResourceDescriptor[],
+  tableName: string,
+  locale: string,
+) {
+  const entry = registry.find((r) => r.table === tableName);
+  if (!entry) return undefined;
+  return {
+    name: entry.id,
+    label: resolveLabel(entry.plural, locale),
+    singularLabel: resolveLabel(entry.singular, locale),
+  };
 }
 
 async function lookupFkColumn(
@@ -66,20 +71,21 @@ async function lookupPrimaryKeyColumns(tableName: string): Promise<string[]> {
 const quoteIdent = (name: string) => `"${name.replace(/"/g, '""')}"`;
 
 async function lookupReferencingRows(
+  registry: ResourceDescriptor[],
   tableName: string,
   constraintName: string | undefined,
   parentId: string | number,
+  locale: string,
 ) {
-  const child = await getResourceByTable(tableName);
+  const child = getResourceByTable(registry, tableName, locale);
   if (!child || !constraintName) return null;
 
-  // Don't leak referencing rows' ids/labels/links to a caller who doesn't
-  // have read access on the child resource — the FK-violation itself is
-  // already visible (via the generic message this falls back to), but the
-  // identity of the specific referencing records is not this caller's to see.
+  // Don't leak referencing rows' ids/labels/links to a non-administrator —
+  // the FK-violation itself is already visible (via the generic message
+  // this falls back to), but the identity of the specific referencing
+  // records is not this caller's to see.
   const userId = await getCurrentUserId();
-  const canReadChild = await hasServerPermission(userId, `${child.name}:read`);
-  if (!canReadChild) return null;
+  if (!userId || !(await isAdministrator(userId))) return null;
 
   const column = await lookupFkColumn(constraintName, tableName);
   if (!column) return null;
@@ -107,21 +113,25 @@ async function lookupReferencingRows(
 }
 
 export async function describeActionFailure(
+  registry: ResourceDescriptor[],
   err: unknown,
   resourceId: string,
   id: string | number | undefined,
   verb: string = "delete",
 ): Promise<ActionError> {
+  const locale = await getLocale();
   const pg = extractPgError(err);
-  const resource = await getResourceRow(resourceId);
+  const resource = getResourceRow(registry, resourceId, locale);
   const label = resource?.singularLabel ?? resource?.label ?? resourceId;
   const subject = id !== undefined ? `${label} #${id}` : label;
 
   if (id !== undefined && pg.code === "23503" && pg.table_name) {
     const refs = await lookupReferencingRows(
+      registry,
       pg.table_name,
       pg.constraint_name,
       id,
+      locale,
     );
     if (refs) {
       return {

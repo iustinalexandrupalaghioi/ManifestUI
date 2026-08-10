@@ -1,0 +1,20 @@
+{
+  "quickSearch": "Căutare rapidă...",
+  "searchPlaceholder": "Căutare...",
+  "selectPlaceholder": "Selectează…",
+  "selectOption": "Selectează o opțiune",
+  "noResultsFound": "Niciun rezultat găsit.",
+  "noResults": "Niciun rezultat.",
+  "lookup": "Căutare",
+  "pickFrom": "Alege din {resource}",
+  "selectAll": "Selectează tot",
+  "selectRow": "Selectează rândul",
+  "selectRecord": "Selectează înregistrarea",
+  "openRow": "Deschide rândul",
+  "openRecord": "Deschide înregistrarea",
+  "moreCount": "+{count} încă",
+  "selectedCount": "{count} selectate",
+  "itemsCount": "{count} elemente",
+  "listView": "Vizualizare listă",
+  "tableView": "Vizualizare tabel"
+}

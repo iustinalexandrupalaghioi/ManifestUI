@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { getResource } from "../../../registry/ResourceRegistry";
+import type { TranslatableText } from "@/framework/types/i18n-types";
 
 export interface DisplayField<TRelated = any> {
   from: string;
-  label: string;
+  label: TranslatableText;
   span?: number;
   type?:
     | "input"

@@ -1,4 +1,4 @@
-import { Label } from "@/framework/components/ui/label"
+import { Label } from "@/components/ui/label"
 import { cn } from "@/framework/lib/utils"
 import type { ReactNode } from "react"
 

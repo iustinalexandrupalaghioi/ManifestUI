@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/framework/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import type { MenuSection } from "./types";
 

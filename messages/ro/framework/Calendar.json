@@ -1,0 +1,22 @@
+{
+  "dayLabels": [
+    "Lun",
+    "Mar",
+    "Mie",
+    "Joi",
+    "Vin",
+    "Sâm",
+    "Dum"
+  ],
+  "hour": "Oră",
+  "minute": "Minut",
+  "second": "Secundă",
+  "monthView": "Vizualizare lunară",
+  "weekView": "Vizualizare săptămânală",
+  "dayView": "Vizualizare zilnică",
+  "today": "Astăzi",
+  "noEventsScheduled": "Niciun eveniment programat.",
+  "untitled": "Fără titlu",
+  "moreCount": "încă {count}",
+  "selectTime": "Selectează ora"
+}

@@ -3,7 +3,6 @@ export * from "./todos";
 export * from "./users";
 export * from "./relations-table";
 export * from "./roles";
-export * from "./resources";
 export * from "./user-roles";
 export * from "./role-resource-permissions";
 export * from "./relations";

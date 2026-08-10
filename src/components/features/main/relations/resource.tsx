@@ -15,23 +15,16 @@ import { relationsRelations } from "./config/relations";
 import { relationSchema, type RelationFormValues } from "./config/schema";
 import { relationColumns } from "./config/columns";
 import { relationsDetailSlots } from "./config/detailSlots";
+import { relationsDescriptor } from "./config/descriptor";
 
 export const relationsResource = defineResource<Relation, RelationFormValues>({
-  id: "relations",
-  noun: "relation",
-  queryKey: ["relations"],
+  id: relationsDescriptor.id,
+  noun: relationsDescriptor.noun,
+  queryKey: relationsDescriptor.queryKey,
   schema: relationSchema,
-  routes: {
-    list: "/relations",
-    add: "/relations/add",
-    detail: (id: string) => `/relations/${id}`,
-  },
+  routes: relationsDescriptor.routes,
 
-  labels: {
-    singular: "Relation",
-    plural: "Relations",
-    new: "Relation",
-  },
+  labels: relationsDescriptor,
 
   openMode: "page",
   addMode: "page",
@@ -79,15 +72,15 @@ export const relationsResource = defineResource<Relation, RelationFormValues>({
   defaultTab: "todos",
   defaultFormOpen: true,
 
-  overviewKey: "relations-overview",
-  defaultViewName: "Relations",
+  overviewKey: relationsDescriptor.overviewKey,
+  defaultViewName: relationsDescriptor.defaultViewName,
 });
 
 export const { hooks: relationHooks, components: relationComponents } =
   relationsResource;
 
 export const relationKeys = relationHooks.keys;
-export const OVERVIEW_KEY = "relations-overview";
+export const OVERVIEW_KEY = relationsDescriptor.overviewKey;
 export const useRelationsInfinite = relationHooks.useList;
 export const useRelation = relationHooks.useDetail;
 

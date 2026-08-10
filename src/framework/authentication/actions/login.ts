@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { getSupabase } from "@/lib/supabase/getSupabase";
 import type { ActionResult } from "@/framework/lib/actionResult";
-import { isSafeRedirect } from "@/framework/authentication/isSafeRedirect";
+import { isSafeRedirect } from "@/framework/authentication/lib/isSafeRedirect";
 
 export async function login(
   email: string,

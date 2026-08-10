@@ -8,12 +8,12 @@ export const rolesForm: FormConfig<RoleFormValues> = {
       {
         cols: 1,
         fields: [
-          { type: "readonly", name: "id", label: "Id" },
-          { type: "input", name: "name", label: "Name" },
+          { type: "readonly", name: "id", label: { en: "Id", ro: "Id" } },
+          { type: "input", name: "name", label: { en: "Name", ro: "Nume" } },
           {
             type: "textarea",
             name: "description",
-            label: "Description",
+            label: { en: "Description", ro: "Descriere" },
             maxRows: 4,
           },
         ],

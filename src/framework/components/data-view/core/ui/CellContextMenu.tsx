@@ -10,7 +10,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "@/framework/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/framework/lib/utils";
 import {
   Clipboard,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { memo, useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { useDataViewCore } from "../stores/DataViewProvider";
 import type { ContextMenuState, ResolvedAction } from "../types";
 import type { FilterRule } from "../../features/filtering/filters";
@@ -106,6 +107,8 @@ function CellContextMenuInner<TData>({
   selectedCellValuesRef,
   allSelectedIds,
 }: CellContextMenuProps<TData>) {
+  const t = useTranslations("ContextMenu");
+  const tc = useTranslations("Common");
   const { tableId, staticColumnIds } = useDataViewCore();
   const [open, setOpen] = useState(false);
 
@@ -158,8 +161,8 @@ function CellContextMenuInner<TData>({
     const text =
       typeof copyValue === "boolean"
         ? copyValue
-          ? "Yes"
-          : "No"
+          ? tc("yes")
+          : tc("no")
         : String(copyValue);
     navigator.clipboard.writeText(text);
   };
@@ -216,7 +219,9 @@ function CellContextMenuInner<TData>({
           <>
             <DropdownMenuItem onSelect={() => onOpen(effectiveRows)}>
               <ExternalLink className="h-4 w-4" />
-              {isMulti ? `Open (${effectiveRows.length})` : "Open"}
+              {isMulti
+                ? t("openCount", { count: effectiveRows.length })
+                : t("open")}
             </DropdownMenuItem>
           </>
         )}
@@ -226,7 +231,7 @@ function CellContextMenuInner<TData>({
           (isNarrow ? (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
               {actions.map((action, i) => {
                 const isEligible = !action.disabled;
                 if (isEligible)
@@ -255,7 +260,7 @@ function CellContextMenuInner<TData>({
                 disabled={countEligibleActions(actions) === 0}
               >
                 <Settings className="h-4 w-4" />
-                Actions
+                {t("actions")}
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {actions.map((action, i) => {
@@ -297,7 +302,7 @@ function CellContextMenuInner<TData>({
                 onSelect={() => dispatchFilterEvent(filterRule, tableId)}
               >
                 <ListFilter className="h-4 w-4" />
-                Filter by this value
+                {t("filterByValue")}
               </DropdownMenuItem>
             )}
             {excludeRule && (
@@ -305,7 +310,7 @@ function CellContextMenuInner<TData>({
                 onSelect={() => dispatchFilterEvent(excludeRule, tableId)}
               >
                 <FilterX className="h-4 w-4" />
-                Exclude this value
+                {t("excludeValue")}
               </DropdownMenuItem>
             )}
           </>
@@ -318,7 +323,7 @@ function CellContextMenuInner<TData>({
           disabled={copyValue == null}
         >
           <Clipboard className="h-4 w-4" />
-          Copy to clipboard
+          {t("copyToClipboard")}
         </DropdownMenuItem>
         {/* ── Copy link ── */}
         {copyUrl && (
@@ -341,7 +346,9 @@ function CellContextMenuInner<TData>({
             }}
           >
             <Link className="h-4 w-4" />
-            {isMulti ? `Copy links (${effectiveRows.length})` : "Copy link"}
+            {isMulti
+              ? t("copyLinksCount", { count: effectiveRows.length })
+              : t("copyLink")}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

@@ -1,9 +1,9 @@
 import { format } from "date-fns";
-import { Checkbox } from "@/framework/components/ui/checkbox";
+import { useTranslations } from "next-intl";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   sameDay,
   sortKey,
-  DAY_LABELS,
   resolveSelectionClick,
 } from "../calendar-utils";
 import { CalendarEvent, EventTemplate } from "../types";
@@ -38,6 +38,8 @@ export function CalendarMonthView<TData>({
   onToggleSelect,
   onSelectOnly,
 }: CalendarMonthViewProps<TData>) {
+  const t = useTranslations("Calendar");
+  const dayLabels = t.raw("dayLabels") as string[];
   const isToday = (d: Date) => sameDay(d, today);
 
   const selectedDayEvents = events
@@ -47,7 +49,7 @@ export function CalendarMonthView<TData>({
   return (
     <div className="scrollbar-thumb-rounded scrollbar-thin min-h-0 flex-1 overflow-y-auto scrollbar-thumb-primary scrollbar-track-muted/80">
       <div className="grid grid-cols-7 border-b border-border">
-        {DAY_LABELS.map((label) => (
+        {dayLabels.map((label) => (
           <div
             key={label}
             className="py-3 text-center text-[11px] tracking-wide text-muted-foreground uppercase"
@@ -111,7 +113,7 @@ export function CalendarMonthView<TData>({
               </div>
               {overflow > 0 && (
                 <span className="mt-1 block text-[10px] text-muted-foreground">
-                  {overflow} more
+                  {t("moreCount", { count: overflow })}
                 </span>
               )}
             </div>

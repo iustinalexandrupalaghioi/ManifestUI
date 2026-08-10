@@ -15,6 +15,7 @@ import {
   BulkActionResult,
 } from "../lib/actionResult";
 import type { Cursor } from "./pagination";
+import type { TranslatableText } from "./i18n-types";
 import { ReactNode } from "react";
 
 export type ResourceId = number | string;
@@ -26,9 +27,24 @@ export interface ResourceRoutes {
 }
 
 export interface ResourceLabels {
+  singular: TranslatableText;
+  plural: TranslatableText;
+  new: TranslatableText;
+  // Grammatical gender of the resource's noun — only meaningful for
+  // languages that inflect past participles for it (e.g. Romanian: "creat"
+  // vs "creată"). Toast messages select the right form via this; ignored by
+  // languages (like English) whose participles don't inflect.
+  gender?: "masculine" | "feminine" | "neuter";
+}
+
+// The display-ready form of `ResourceLabels`, once resolved to the current
+// locale — what components should receive once they're past the resolution
+// point (see resolveLabel.ts and its call sites in the factory layer).
+export interface ResolvedResourceLabels {
   singular: string;
   plural: string;
   new: string;
+  gender?: "masculine" | "feminine" | "neuter";
 }
 
 // Result of a per-id transactional action (see runPerId/runWithProgress):
@@ -105,7 +121,7 @@ export interface ResourceActions<TItem> {
 export interface ActionFormConfig<TItem, TFormValues> {
   key: string;
   label: React.ReactNode;
-  title: string;
+  title: React.ReactNode;
   successMessage: string;
   form: FormConfig<TFormValues> | ((item: TItem) => FormConfig<TFormValues>);
   actionSchema: ZodType<TFormValues, any, any>;

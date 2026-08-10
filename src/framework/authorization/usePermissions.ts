@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { queryClient } from "@/framework/lib/queryClient";
+import { getQueryClient } from "@/framework/lib/queryClient";
 import { getMyPermissions } from "./getMyPermissions";
 import { ALL_PERMISSIONS } from "./constants";
 
@@ -18,6 +18,6 @@ export function usePermissions() {
 // PermissionValue closures defineResourceComponents builds at module-eval
 // time). Fails closed: hidden, not shown, while unresolved.
 export function hasPermission(name: string): boolean {
-  const data = queryClient.getQueryData<Set<string>>(PERMISSIONS_QUERY_KEY);
+  const data = getQueryClient().getQueryData<Set<string>>(PERMISSIONS_QUERY_KEY);
   return data?.has(ALL_PERMISSIONS) || data?.has(name) || false;
 }

@@ -11,6 +11,8 @@ import {
 import { useAddSave } from "@/framework/components/screen/hooks/useAddSave";
 import { useState } from "react";
 import type { FieldValues } from "react-hook-form";
+import { useLocale, useTranslations } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { ResourceComponentsConfig } from "../../types/resource-components-types";
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { FieldTabConfig } from "../../types/tab-config-type";
@@ -28,10 +30,9 @@ export function createAddDialog<
   addTabs: FieldTabConfig<TFormValues>[] = [],
 ) {
   const Form = config.AddForm ?? config.Form;
-  if (!Form)
-    throw new Error(`No Form component provided for ${hooks.labels.singular}`);
+  if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
 
-  const { labels } = hooks;
+  const { noun, labels } = hooks;
   const hasAddTabs = addTabs.length > 0;
 
   return function AddDialog({
@@ -45,6 +46,15 @@ export function createAddDialog<
   }) {
     usePermissions();
 
+    const locale = useLocale();
+    const tr = useTranslations("Resource");
+    const resolvedLabels = {
+      singular: resolveLabel(labels.singular, locale),
+      plural: resolveLabel(labels.plural, locale),
+      new: resolveLabel(labels.new, locale),
+      gender: labels.gender,
+    };
+
     const canAdd = resolvePermission(config.permissions?.add);
     const hasInitial = initial && Object.keys(initial).length > 0;
 
@@ -53,7 +63,7 @@ export function createAddDialog<
     const { form, isDirty, canSave, handleSubmit, reset } =
       hooks.useAddForm(initial);
 
-    const formId = `${labels.singular}-add`;
+    const formId = `${noun}-add`;
     const [formOpen, setFormOpen] = useState(true);
     const [activeAddTab, setActiveAddTab] = useState(addTabs[0]?.value ?? "");
 
@@ -64,7 +74,8 @@ export function createAddDialog<
         addAsync,
         updateAsync,
         reset,
-        label: labels.singular,
+        label: resolvedLabels.singular,
+        gender: labels.gender,
         onComplete: () => setOpen(false),
       });
 
@@ -75,7 +86,7 @@ export function createAddDialog<
           <FormDialog
             open={open}
             setOpen={setOpen}
-            title={labels.new}
+            title={resolvedLabels.new}
             itemId="new"
             popOutPath={hooks.routes.add}
             popOutState={
@@ -103,8 +114,8 @@ export function createAddDialog<
             <RecordFormShell
               hasTabs={hasAddTabs}
               isAddScreen
-              title={labels.new}
-              titleBadge={<span className="text-muted"> (new item)</span>}
+              title={resolvedLabels.new}
+              titleBadge={<span className="text-muted"> {tr("newItemBadge")}</span>}
               titleClassName="dark:bg-card"
               collapsibleClassName="px-4"
               collapsibleTriggerClassName="dark:bg-card"

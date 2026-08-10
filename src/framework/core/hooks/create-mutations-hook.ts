@@ -2,9 +2,11 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { toBulkActionResult, unwrapAction } from "@/framework/lib/actionResult";
 import { dismissToast, toastLoading, toastLoadingUpdate, toastUpdate } from "@/framework/lib/toast";
 import { runWithProgress } from "@/framework/hooks/runWithProgress";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { mapErr } from "../resource-helpers";
 import type { AppError } from "@/framework/types/global/AppError";
 import type { FieldValues } from "react-hook-form";
@@ -24,6 +26,12 @@ export function createMutationsHook<
   return function useMutations() {
     const queryClient = useQueryClient();
     const [error, setError] = useState<AppError | null>(null);
+    const locale = useLocale();
+    const t = useTranslations("Toast");
+    const resolvedLabels = {
+      singular: resolveLabel(config.labels.singular, locale),
+      plural: resolveLabel(config.labels.plural, locale),
+    };
 
     const handleError = (err: unknown) => {
       setError(mapErr(err));
@@ -75,8 +83,12 @@ export function createMutationsHook<
         const total = ids.length;
         const loadingText = (completed: number) =>
           total === 1
-            ? `Deleting ${config.labels.singular.toLowerCase()}...`
-            : `Deleting ${completed} of ${total} ${config.labels.plural.toLowerCase()}...`;
+            ? t("deletingSingle", { label: resolvedLabels.singular.toLowerCase() })
+            : t("deletingMulti", {
+                completed,
+                total,
+                label: resolvedLabels.plural.toLowerCase(),
+              });
 
         const toastId = toastLoading(loadingText(0));
         const result = await runWithProgress(
@@ -85,12 +97,16 @@ export function createMutationsHook<
           (completed) => toastLoadingUpdate(toastId, loadingText(completed)),
         );
 
-        const bulkResult = toBulkActionResult(
-          total,
-          result,
-          { infinitive: "delete", pastTense: "Deleted" },
-          config.labels,
-        );
+        const noun = (n: number) =>
+          (n === 1 ? resolvedLabels.singular : resolvedLabels.plural).toLowerCase();
+        const gender = config.labels.gender ?? "masculine";
+
+        const bulkResult = toBulkActionResult(total, result, {
+          success: (count) => t("deleted", { count, label: noun(count), gender }),
+          partial: (succeeded, total) =>
+            t("deletedOf", { succeeded, total, label: noun(total), gender }),
+          failure: (count) => t("failedToDelete", { count, label: noun(count) }),
+        });
 
         if (bulkResult.failures.length === 0) {
           toastUpdate(toastId, "success", bulkResult.summary);

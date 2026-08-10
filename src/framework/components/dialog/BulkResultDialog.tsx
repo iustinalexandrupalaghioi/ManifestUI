@@ -1,15 +1,16 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/framework/components/ui/collapsible";
-import { DialogClose } from "@/framework/components/ui/dialog";
+} from "@/components/ui/collapsible";
+import { DialogClose } from "@/components/ui/dialog";
 import type { BulkActionFailure, BulkActionResult } from "@/framework/lib/actionResult";
-import { renderErrorExtra } from "./ErrorDialog";
+import { renderErrorDetails } from "./ErrorDialog";
 import { AlertTriangleIcon, ChevronDownIcon } from "lucide-react";
 import { BaseDialog } from "./BaseDialog";
 
@@ -26,18 +27,23 @@ export function BulkResultDialog({
   open,
   setOpen,
   result,
-  itemLabel = "item",
+  itemLabel,
   pluralLabel,
   getItemHref,
 }: BulkResultDialogProps) {
+  const t = useTranslations("BulkResult");
+  const tc = useTranslations("Common");
+  const tErr = useTranslations("ErrorDialog");
+
   if (!result) return null;
 
-  const plural = pluralLabel ?? `${itemLabel}s`;
+  const resolvedItemLabel = itemLabel ?? t("defaultItemLabel");
+  const plural = pluralLabel ?? `${resolvedItemLabel}s`;
 
   const footer = (
     <DialogClose asChild>
       <Button type="button" className="w-full">
-        Close
+        {tc("close")}
       </Button>
     </DialogClose>
   );
@@ -50,20 +56,23 @@ export function BulkResultDialog({
         onClick={(e) => e.stopPropagation()}
         className="underline underline-offset-2"
       >
-        {itemLabel} #{id}
+        {resolvedItemLabel} #{id}
       </Link>
     ) : (
       <span>
-        {itemLabel} #{id}
+        {resolvedItemLabel} #{id}
       </span>
     );
 
   const failureExtra = (failure: BulkActionFailure) =>
-    renderErrorExtra({
-      message: failure.message,
-      originalMessage: failure.message,
-      meta: failure.meta,
-    });
+    renderErrorDetails(
+      {
+        message: failure.message,
+        originalMessage: failure.message,
+        meta: failure.meta,
+      },
+      tErr,
+    );
 
   return (
     <BaseDialog
@@ -77,8 +86,12 @@ export function BulkResultDialog({
         {result.failures.length > 0 && (
           <div className="flex flex-col gap-2">
             <p className="text-xs font-medium text-muted-foreground">
-              Failed{" "}
-              {(result.failures.length === 1 ? itemLabel : plural).toLowerCase()}
+              {t("failed", {
+                label: (result.failures.length === 1
+                  ? resolvedItemLabel
+                  : plural
+                ).toLowerCase(),
+              })}
             </p>
 
             {result.failures.length === 1 ? (

@@ -1,0 +1,12 @@
+{
+  "deletingSingle": "Se șterge {label}...",
+  "deletingMulti": "Se șterg {completed} din {total} {label}...",
+  "deleted": "{gender, select, feminine {{count, plural, one {# {label} ștearsă!} few {# {label} șterse!} other {# de {label} șterse!}}} neuter {{count, plural, one {# {label} șters!} few {# {label} șterse!} other {# de {label} șterse!}}} other {{count, plural, one {# {label} șters!} few {# {label} șterși!} other {# de {label} șterși!}}}}",
+  "deletedOf": "{gender, select, feminine {{succeeded} din {total} {label} șterse.} neuter {{succeeded} din {total} {label} șterse.} other {{succeeded} din {total} {label} șterși.}}",
+  "failedToDelete": "Nu s-a putut șterge {count} {label}.",
+  "uploadingFiles": "Se încarcă fișierele pentru {label}...",
+  "filesUploaded": "Fișierele pentru {label} au fost încărcate!",
+  "failedToUpload": "Nu s-au putut încărca fișierele pentru {label}.",
+  "created": "{gender, select, feminine {{label} creată!} other {{label} creat!}}",
+  "updated": "{gender, select, feminine {{label} actualizată!} other {{label} actualizat!}}"
+}

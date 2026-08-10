@@ -3,7 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { relations } from "@/db/schema";
 import { defineResourceActions } from "@/framework/authorization/rbac";
-import { createResourceActions } from "@/framework/lib/transactionalAction";
+import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
@@ -17,6 +17,7 @@ import {
 import type { Cursor } from "@/framework/types/pagination";
 import type { Relation } from "@/app/types/main/Relation";
 import { relationSchema, type RelationFormValues } from "./schema";
+import { relationsDescriptor } from "./descriptor";
 
 const PAGE_SIZE = 50;
 
@@ -69,7 +70,7 @@ function toRelationRow(data: RelationFormValues) {
   };
 }
 
-const crud = createResourceActions("relations");
+const resourceAction = createResourceActions(relationsDescriptor.id);
 
 export const {
   fetchRelationList,
@@ -81,31 +82,31 @@ export const {
   fetchRelationList: [
     "read",
     async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
-      const where = buildWhereConditions(filters, filterColumns);
-      const sortColumns = resolveSortColumns(sorting, filterColumns, {
-        key: "id",
-        column: relations.id,
-      });
-      const orderBy = buildOrderBy(sortColumns);
-      const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
+    const where = buildWhereConditions(filters, filterColumns);
+    const sortColumns = resolveSortColumns(sorting, filterColumns, {
+      key: "id",
+      column: relations.id,
+    });
+    const orderBy = buildOrderBy(sortColumns);
+    const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
-      const [items, [{ count }]] = await Promise.all([
-        db
-          .select(selection)
-          .from(relations)
-          .where(seekWhere)
-          .orderBy(...orderBy)
-          .limit(PAGE_SIZE),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(relations)
-          .where(where),
-      ]);
+    const [items, [{ count }]] = await Promise.all([
+      db
+        .select(selection)
+        .from(relations)
+        .where(seekWhere)
+        .orderBy(...orderBy)
+        .limit(PAGE_SIZE),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(relations)
+        .where(where),
+    ]);
 
-      const nextCursor =
-        items.length === PAGE_SIZE
-          ? extractCursor(items[items.length - 1], sortColumns)
-          : null;
+    const nextCursor =
+      items.length === PAGE_SIZE
+        ? extractCursor(items[items.length - 1], sortColumns)
+        : null;
 
       return { items: items as Relation[], total: count ?? 0, nextCursor };
     },
@@ -124,7 +125,7 @@ export const {
     },
   ],
 
-  addRelation: crud.add(async (tx, data: RelationFormValues) => {
+  addRelation: resourceAction.add(async (tx, data: RelationFormValues) => {
     const parsed = relationSchema.parse(data);
     const [result] = await tx
       .insert(relations)
@@ -133,15 +134,17 @@ export const {
     return result.id;
   }),
 
-  updateRelation: crud.update(async (tx, id: number, data: RelationFormValues) => {
-    const parsed = relationSchema.parse(data);
-    await tx
-      .update(relations)
-      .set(toRelationRow(parsed))
-      .where(eq(relations.id, id));
-  }),
+  updateRelation: resourceAction.update(
+    async (tx, id: number, data: RelationFormValues) => {
+      const parsed = relationSchema.parse(data);
+      await tx
+        .update(relations)
+        .set(toRelationRow(parsed))
+        .where(eq(relations.id, id));
+    },
+  ),
 
-  deleteRelations: crud.delete((tx, id: number) =>
+  deleteRelations: resourceAction.delete((tx, id: number) =>
     tx.delete(relations).where(eq(relations.id, id)),
   ),
 });

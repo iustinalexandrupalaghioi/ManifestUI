@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import {
   sameDay,
-  DAY_LABELS,
   layoutDayEvents,
   formatHour24,
   resolveSelectionClick,
 } from "../calendar-utils";
 import { CalendarEvent, CalendarHours, EventTemplate } from "../types";
 import { EventHoverCard } from "./EventHoverCard";
-import { Checkbox } from "@/framework/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const TIME_COL_WIDTH = 56;
 const MIN_DAY_COL_WIDTH = 120;
@@ -48,6 +48,8 @@ export function CalendarWeekView<TData>({
   onToggleSelect,
   onSelectOnly,
 }: CalendarWeekViewProps<TData>) {
+  const t = useTranslations("Calendar");
+  const dayLabels = t.raw("dayLabels") as string[];
   const isToday = (d: Date) => sameDay(d, today);
   const endHour = hours[hours.length - 1] ?? startHour;
   const totalHeight = (hours.length - 1) * hourHeight;
@@ -85,7 +87,7 @@ export function CalendarWeekView<TData>({
                 }`}
               >
                 <div className="text-[11px] tracking-wide text-muted-foreground uppercase">
-                  {DAY_LABELS[(d.getDay() + 6) % 7]}
+                  {dayLabels[(d.getDay() + 6) % 7]}
                 </div>
                 <div
                   className={`mt-1 inline-flex h-7 w-7 items-center justify-center rounded-md text-sm ${

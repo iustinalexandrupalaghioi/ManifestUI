@@ -12,6 +12,8 @@ import { useRecordSave } from "@/framework/components/screen/hooks/useRecordSave
 import { useNavigatorStore } from "@/framework/components/screen/stores/useNavigatorStore";
 import { useEffect } from "react";
 import type { FieldValues } from "react-hook-form";
+import { useLocale } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { ResourceComponentsConfig } from "../../types/resource-components-types";
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
@@ -28,10 +30,9 @@ export function createDetailDialog<
   config: ResourceComponentsConfig<TItem, TFormValues>,
 ) {
   const Form = config.Form;
-  if (!Form)
-    throw new Error(`No Form component provided for ${hooks.labels.singular}`);
+  if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
 
-  const { idField, labels, tabs, relations } = hooks;
+  const { idField, noun, labels, tabs, relations } = hooks;
 
   return function DetailDialog({
     item,
@@ -43,6 +44,14 @@ export function createDetailDialog<
     setOpen: (o: boolean) => void;
   }) {
     usePermissions();
+
+    const locale = useLocale();
+    const resolvedLabels = {
+      singular: resolveLabel(labels.singular, locale),
+      plural: resolveLabel(labels.plural, locale),
+      new: resolveLabel(labels.new, locale),
+      gender: labels.gender,
+    };
 
     const canUpdate = resolvePermission(config.permissions?.update);
 
@@ -60,7 +69,7 @@ export function createDetailDialog<
     const { formOpen, setFormOpen, activeTab, setActiveTab, hasTabs } =
       hooks.useDetailTabs();
 
-    const formId = `${labels.singular}-${itemId}`;
+    const formId = `${noun}-${itemId}`;
     const formKey = `${itemId}-${JSON.stringify(item)}`;
 
     const { registryRef, hasFileChanges, onSave, onReset } =
@@ -70,7 +79,7 @@ export function createDetailDialog<
         handleSubmit,
         updateAsync,
         confirmSaved,
-        label: labels.singular,
+        label: resolvedLabels.singular,
         onComplete: () => setOpen(false),
       });
 
@@ -83,7 +92,7 @@ export function createDetailDialog<
           <FormDialog
             open={open}
             setOpen={setOpen}
-            title={labels.singular}
+            title={resolvedLabels.singular}
             itemId={itemId}
             popOutPath={hooks.routes.detail(itemId.toString())}
             className={config.dialog?.className}
@@ -107,7 +116,7 @@ export function createDetailDialog<
           >
             <RecordFormShell
               hasTabs={hasTabs}
-              title={labels.singular}
+              title={resolvedLabels.singular}
               isOpen={formOpen}
               setOpen={setFormOpen}
               titleClassName="dark:bg-card"

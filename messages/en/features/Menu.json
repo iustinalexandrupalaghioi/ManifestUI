@@ -1,0 +1,20 @@
+{
+  "main": "Main",
+  "administration": "Administration",
+  "todos": "To dos",
+  "todosDescription": "View all todos",
+  "attachments": "Attachments",
+  "attachmentsDescription": "View all todo attachments",
+  "relations": "Relations",
+  "relationsDescription": "View all relations (demo data)",
+  "users": "Users",
+  "usersDescription": "View signed-up users",
+  "roles": "Roles",
+  "rolesDescription": "Manage roles",
+  "resources": "Resources",
+  "resourcesDescription": "Manage grantable resources and actions",
+  "rolePermissions": "Role permissions",
+  "rolePermissionsDescription": "Manage what each role can do",
+  "userRoles": "User roles",
+  "userRolesDescription": "Assign roles to users"
+}

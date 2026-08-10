@@ -1,10 +1,11 @@
 "use client";
 
-import { TableBody, TableCell, TableRow } from "@/framework/components/ui/table";
+import { CustomTableBody, CustomTableCell, CustomTableRow } from "@/framework/components/ui/CustomTable";
 import { cn } from "@/framework/lib/utils";
 import { flexRender } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { memo, useEffect, useRef, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import type { VirtualDataTableBodyProps } from "../../core/types";
 
 const SKELETON_ROW_COUNT = 12;
@@ -19,13 +20,13 @@ function SkeletonRows({
   return (
     <>
       {Array.from({ length: SKELETON_ROW_COUNT }).map((_, rowIndex) => (
-        <TableRow key={rowIndex} className="odd:bg-muted/60">
+        <CustomTableRow key={rowIndex} className="odd:bg-muted/60">
           {Array.from({ length: columnsLength }).map((_, colIndex) => {
             const isLast = colIndex === columnsLength - 1;
             const colId = isLast ? lastColumnId : `col-${colIndex}`;
 
             return (
-              <TableCell
+              <CustomTableCell
                 key={colIndex}
                 style={{
                   width: isLast
@@ -51,10 +52,10 @@ function SkeletonRows({
                     colIndex === 1 && "w-3",
                   )}
                 />
-              </TableCell>
+              </CustomTableCell>
             );
           })}
-        </TableRow>
+        </CustomTableRow>
       ))}
     </>
   );
@@ -76,6 +77,7 @@ function VirtualTableBodyInner<TData>({
   onCellClick,
   columnStateKey,
 }: VirtualDataTableBodyProps<TData>) {
+  const t = useTranslations("DataView");
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => scrollContainerRef.current,
@@ -99,43 +101,43 @@ function VirtualTableBodyInner<TData>({
 
   if (isLoading) {
     return (
-      <TableBody>
+      <CustomTableBody>
         <SkeletonRows
           columnsLength={columnsLength}
           lastColumnId={lastColumnId}
         />
-      </TableBody>
+      </CustomTableBody>
     );
   }
 
   if (!rows.length) {
     return (
-      <TableBody>
-        <TableRow>
-          <TableCell colSpan={columnsLength} className="h-24 text-center">
-            No results.
-          </TableCell>
-        </TableRow>
-      </TableBody>
+      <CustomTableBody>
+        <CustomTableRow>
+          <CustomTableCell colSpan={columnsLength} className="h-24 text-center">
+            {t("noResults")}
+          </CustomTableCell>
+        </CustomTableRow>
+      </CustomTableBody>
     );
   }
 
   return (
-    <TableBody>
+    <CustomTableBody>
       {paddingTop > 0 && (
-        <TableRow>
-          <TableCell
+        <CustomTableRow>
+          <CustomTableCell
             colSpan={columnsLength}
             style={{ height: paddingTop, padding: 0, border: 0 }}
           />
-        </TableRow>
+        </CustomTableRow>
       )}
 
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
 
         return (
-          <TableRow
+          <CustomTableRow
             key={row.id}
             data-index={virtualRow.index}
             ref={(node) => {
@@ -156,7 +158,7 @@ function VirtualTableBodyInner<TData>({
               const isPinned = cell.column.getIsPinned();
 
               return (
-                <TableCell
+                <CustomTableCell
                   key={cell.id}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -207,22 +209,22 @@ function VirtualTableBodyInner<TData>({
                   <div className="min-w-0 truncate">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>
-                </TableCell>
+                </CustomTableCell>
               );
             })}
-          </TableRow>
+          </CustomTableRow>
         );
       })}
 
       {paddingBottom > 0 && (
-        <TableRow>
-          <TableCell
+        <CustomTableRow>
+          <CustomTableCell
             colSpan={columnsLength}
             style={{ height: paddingBottom, padding: 0, border: 0 }}
           />
-        </TableRow>
+        </CustomTableRow>
       )}
-    </TableBody>
+    </CustomTableBody>
   );
 }
 export const VirtualDataTableBody = memo(VirtualTableBodyInner) as <TData>(

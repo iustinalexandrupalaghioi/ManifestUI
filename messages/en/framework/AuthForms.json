@@ -1,0 +1,73 @@
+{
+  "or": "or",
+  "continueWithGoogle": "Continue with Google",
+  "legal": {
+    "agreeTo": "I agree to the",
+    "termsAndConditions": "Terms & Conditions",
+    "privacyPolicy": "Privacy Policy",
+    "and": "and",
+    "cookiePolicy": "Cookie Policy"
+  },
+  "validation": {
+    "invalidEmail": "Please enter a valid email",
+    "passwordMinLength": "Password must be at least 8 characters long",
+    "passwordUppercase": "Password must contain at least one uppercase letter",
+    "passwordNumber": "Password must contain at least one number",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "fullNameRequired": "Full name is required",
+    "mustAcceptTerms": "You must accept the terms to continue"
+  },
+  "login": {
+    "title": "Login to your account",
+    "description": "Please enter your email to access your account.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john.doe@example.com",
+    "forgotPassword": "Forgot your password?",
+    "passwordLabel": "Password",
+    "submitting": "Logging in...",
+    "submit": "Login",
+    "noAccount": "Don't have an account?",
+    "signUpLink": "Sign up"
+  },
+  "signup": {
+    "title": "Sign up with a new account",
+    "description": "Create your account by filling in the details below.",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "e.g. John Doe",
+    "emailLabel": "Email",
+    "emailPlaceholder": "e.g. john.doe@example.com",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm password",
+    "submitting": "Creating account...",
+    "submit": "Sign up",
+    "haveAccount": "Already have an account?",
+    "loginLink": "Login"
+  },
+  "forgotPassword": {
+    "title": "Reset your password",
+    "description": "Type in your email and we'll send you a link to reset your password",
+    "emailLabel": "Email",
+    "emailPlaceholder": "john.doe@example.com",
+    "submitting": "Sending...",
+    "submit": "Send reset email",
+    "rememberedPassword": "Remembered your password?",
+    "loginLink": "Login",
+    "successTitle": "Check your email",
+    "successDescription": "Password reset instructions sent",
+    "successMessage": "If you registered using your email, you will receive a password reset email shortly."
+  },
+  "updatePassword": {
+    "title": "Reset your password",
+    "description": "Please enter and confirm your new password below.",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm password",
+    "submitting": "Saving...",
+    "submit": "Save new password"
+  },
+  "signupSuccess": {
+    "title": "Check your email",
+    "description": "Confirm your account to continue",
+    "message": "We've sent a confirmation link to your email. Click it to activate your account, then come back and log in.",
+    "backToLogin": "Back to login"
+  }
+}

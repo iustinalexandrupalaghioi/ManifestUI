@@ -1,8 +1,9 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { ExternalLinkIcon, Loader2Icon } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { BaseDialog } from "./BaseDialog";
 import { usePendingChanges } from "@/framework/hooks/usePendingChanges";
@@ -51,6 +52,7 @@ export function FormDialog({
   onPopOut,
   popOutState,
 }: FormDialogProps) {
+  const t = useTranslations("Common");
   const router = useRouter();
   const pathname = usePathname();
   const { guard, pendingChangesDialog } = usePendingChanges(isDirty);
@@ -86,7 +88,7 @@ export function FormDialog({
             size="icon"
             className="h-7 w-7"
             onClick={popOut}
-            title="Open in full screen"
+            title={t("openFullScreen")}
           >
             <ExternalLinkIcon className="h-4 w-4" />
           </Button>
@@ -95,7 +97,7 @@ export function FormDialog({
           readOnly ? (
             <div className="flex w-full">
               <Button className="w-full" onClick={close} type="button">
-                Ok
+                {t("ok")}
               </Button>
             </div>
           ) : (
@@ -107,10 +109,10 @@ export function FormDialog({
               >
                 {isSaving ? (
                   <>
-                    <Loader2Icon className="animate-spin" /> Saving...
+                    <Loader2Icon className="animate-spin" /> {t("saving")}
                   </>
                 ) : (
-                  "Save"
+                  t("save")
                 )}
               </Button>
               <Button
@@ -119,7 +121,7 @@ export function FormDialog({
                 type="button"
                 variant="outline"
               >
-                Cancel
+                {t("cancel")}
               </Button>
             </div>
           )

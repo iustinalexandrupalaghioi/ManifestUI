@@ -1,0 +1,6 @@
+{
+  "dateFormat": "Date must be in dd-MM-yyyy format",
+  "dateTimeFormat": "Date or time format is invalid",
+  "timeFormat": "Time must be in HH:mm:ss format",
+  "invalidJson": "Invalid JSON"
+}

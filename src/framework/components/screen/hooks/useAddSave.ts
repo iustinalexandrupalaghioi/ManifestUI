@@ -1,6 +1,7 @@
 "use client";
 
 import type { FieldValues, UseFormHandleSubmit } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { useSaveWithUploads } from "./useSaveWithUploads";
 
 interface UseAddSaveOptions<TFormValues extends FieldValues> {
@@ -13,6 +14,7 @@ interface UseAddSaveOptions<TFormValues extends FieldValues> {
   }) => Promise<void>;
   reset: () => void;
   label: string;
+  gender?: "masculine" | "feminine" | "neuter";
   onComplete: () => void;
   trackFileUploads?: boolean;
 }
@@ -28,9 +30,11 @@ export function useAddSave<TFormValues extends FieldValues>({
   updateAsync,
   reset,
   label,
+  gender = "masculine",
   onComplete,
   trackFileUploads = true,
 }: UseAddSaveOptions<TFormValues>) {
+  const t = useTranslations("Toast");
   return useSaveWithUploads<TFormValues>({
     formId,
     handleSubmit,
@@ -38,7 +42,7 @@ export function useAddSave<TFormValues extends FieldValues>({
     onPersisted: () => reset(),
     updateAsync,
     label,
-    successMessage: `${label} created!`,
+    successMessage: t("created", { label, gender }),
     onComplete,
     trackFileUploads,
   });

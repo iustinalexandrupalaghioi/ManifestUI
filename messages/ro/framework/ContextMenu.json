@@ -1,0 +1,10 @@
+{
+  "open": "Deschide",
+  "openCount": "Deschide ({count})",
+  "actions": "Acțiuni",
+  "filterByValue": "Filtrează după această valoare",
+  "excludeValue": "Exclude această valoare",
+  "copyToClipboard": "Copiază în clipboard",
+  "copyLink": "Copiază linkul",
+  "copyLinksCount": "Copiază linkurile ({count})"
+}

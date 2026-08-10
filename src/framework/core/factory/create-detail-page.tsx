@@ -21,6 +21,8 @@ import type { ActionFormConfig } from "@/framework/types/resource-hook-types";
 import { useEffect, useState } from "react";
 import type { FieldValues } from "react-hook-form";
 import { useParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { ResourceComponentsConfig } from "../../types/resource-components-types";
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
@@ -43,10 +45,9 @@ export function createDetailPage<
 ) {
   const Form = config.Form;
   if (!Form)
-    throw new Error(`No Form component provided for ${hooks.labels.singular}`);
+    throw new Error(`No Form component provided for ${hooks.noun}`);
 
   const {
-    id,
     idField,
     keys,
     noun,
@@ -85,6 +86,14 @@ export function createDetailPage<
         : undefined;
 
     const router = useTransitionRouter();
+    const locale = useLocale();
+    const tr = useTranslations("Resource");
+    const resolvedLabels = {
+      singular: resolveLabel(labels.singular, locale),
+      plural: resolveLabel(labels.plural, locale),
+      new: resolveLabel(labels.new, locale),
+      gender: labels.gender,
+    };
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
     const [actionFormError, setActionFormError] =
@@ -137,7 +146,7 @@ export function createDetailPage<
     const itemId = item
       ? getItemId<TId>(item as Record<string, unknown>, idField)
       : undefined;
-    const formId = item ? `${labels.singular}-${itemId}` : "";
+    const formId = item ? `${noun}-${itemId}` : "";
 
     const { registryRef, hasFileChanges, onSave, onReset } =
       useRecordSave<TFormValues>({
@@ -146,7 +155,8 @@ export function createDetailPage<
         handleSubmit,
         updateAsync,
         confirmSaved,
-        label: labels.singular,
+        label: resolvedLabels.singular,
+        gender: labels.gender,
         onComplete: () => {
           if (nextId) router.replace(routes.detail(nextId));
         },
@@ -166,7 +176,7 @@ export function createDetailPage<
 
     const detailPageActionForms = actionForms.filter(
       (a) =>
-        hasPermission(`${id}:${a.key}`) &&
+        hasPermission(`${config.id}:${a.key}`) &&
         (!a.isEligible || !item || a.isEligible(item)),
     );
 
@@ -202,7 +212,7 @@ export function createDetailPage<
 
           <RecordFormShell
             hasTabs={hasTabs}
-            title={labels.singular}
+            title={resolvedLabels.singular}
             isOpen={formOpen}
             setOpen={setFormOpen}
             navProps={navProps}
@@ -241,13 +251,17 @@ export function createDetailPage<
           />
 
           {isError && (
-            <p className="text-sm text-destructive">Failed to load {noun}.</p>
+            <p className="text-sm text-destructive">
+              {tr("failedToLoad", { resource: resolvedLabels.singular.toLowerCase() })}
+            </p>
           )}
           {item && (
             <DeleteDialog
               open={deleteOpen}
               setOpen={setDeleteOpen}
-              noun={noun}
+              itemLabel={resolvedLabels.singular}
+              pluralLabel={resolvedLabels.plural}
+              gender={resolvedLabels.gender}
               id={[itemId!]}
               queryKeys={[keys.all]}
               deleteFn={() => removeAsync([itemId!])}
@@ -260,7 +274,7 @@ export function createDetailPage<
               config={activeActionForm as ActionFormConfig<TItem, any>}
               items={[item]}
               idField={idField}
-              labels={labels}
+              labels={resolvedLabels}
               open={!!activeActionKey}
               onClose={() => setActiveActionKey(null)}
               onError={setActionFormError}
@@ -271,8 +285,8 @@ export function createDetailPage<
             open={!!activeBulkResult}
             setOpen={(o) => !o && clearActiveBulkResult()}
             result={activeBulkResult}
-            itemLabel={labels.singular}
-            pluralLabel={labels.plural}
+            itemLabel={resolvedLabels.singular}
+            pluralLabel={resolvedLabels.plural}
             getItemHref={routes.detail}
           />
 

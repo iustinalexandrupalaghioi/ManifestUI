@@ -33,8 +33,9 @@ export function unwrapAction<T>(result: ActionResult<T>): T {
 
 // Thrown server-side by `withTransaction` (see transactionalAction.ts) once
 // a failure has already been described via `describeActionFailure` — lets
-// `withPermission` (rbac.ts) forward that friendly ActionError as-is instead
-// of re-mapping it through the generic `mapCaughtError` catalog.
+// `withAdminAction` (framework/authorization/lib/withAdminAction.ts) forward
+// that friendly ActionError as-is instead of re-mapping it through the
+// generic `mapCaughtError` catalog.
 export class DescribedActionError extends Error {
   error: ActionError;
   constructor(error: ActionError) {
@@ -68,22 +69,24 @@ export class BulkActionError extends Error {
 
 // Builds the summary/ok fields for a per-id result (see runPerId /
 // runWithProgress) — the one place bulk-result wording is computed, shared
-// by every bulk action (delete, complete, ...).
+// by every bulk action (delete, complete, ...). Callers supply already
+// locale-resolved wording so the summary isn't hardcoded to English.
 export function toBulkActionResult(
   total: number,
   result: { succeededIds: string[]; failures: BulkActionFailure[] },
-  verb: { infinitive: string; pastTense: string },
-  label: { singular: string; plural: string },
+  format: {
+    success: (count: number) => string;
+    partial: (succeeded: number, total: number) => string;
+    failure: (count: number) => string;
+  },
 ): BulkActionResult {
   const { succeededIds, failures } = result;
-  const noun = (n: number) =>
-    (n === 1 ? label.singular : label.plural).toLowerCase();
   const summary =
     failures.length === 0
-      ? `${verb.pastTense} ${total} ${noun(total)}!`
+      ? format.success(total)
       : succeededIds.length === 0
-        ? `Failed to ${verb.infinitive} ${failures.length} ${noun(failures.length)}.`
-        : `${verb.pastTense} ${succeededIds.length} of ${total} ${noun(total)}.`;
+        ? format.failure(failures.length)
+        : format.partial(succeededIds.length, total);
 
   return { ok: failures.length === 0, succeededIds, failures, summary };
 }

@@ -1,5 +1,6 @@
-import { Checkbox } from "@/framework/components/ui/checkbox";
-import type { ColumnDef } from "@tanstack/react-table";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { ColumnDef, Table } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 // ─────────────────────────────────────────────
 // createSelectionColumn
@@ -8,28 +9,49 @@ import type { ColumnDef } from "@tanstack/react-table";
 // Always column [0] — before the actions column.
 // ─────────────────────────────────────────────
 
+function SelectAllCheckbox<TData>({ table }: { table: Table<TData> }) {
+  const t = useTranslations("DataView");
+  return (
+    <Checkbox
+      className="ms-1"
+      checked={
+        table.getIsAllPageRowsSelected() ||
+        (table.getIsSomePageRowsSelected() && "indeterminate")
+      }
+      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      aria-label={t("selectAll")}
+    />
+  );
+}
+
+function SelectRowCheckbox({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  onCheckedChange: (value: boolean) => void;
+}) {
+  const t = useTranslations("DataView");
+  return (
+    <div data-checkbox className="ms-1">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(value) => onCheckedChange(!!value)}
+        aria-label={t("selectRow")}
+      />
+    </div>
+  );
+}
+
 export function createSelectionColumn<TData>(): ColumnDef<TData> {
   return {
     id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        className="ms-1"
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
+    header: ({ table }) => <SelectAllCheckbox table={table} />,
     cell: ({ row }) => (
-      <div data-checkbox className="ms-1">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
+      <SelectRowCheckbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(value)}
+      />
     ),
     enableSorting: false,
     enableResizing: false,

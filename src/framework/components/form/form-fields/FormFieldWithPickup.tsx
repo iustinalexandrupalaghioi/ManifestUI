@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { SearchIcon } from "lucide-react";
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/framework/lib/utils";
 import { getResource } from "@/framework/registry/ResourceRegistry";
 
@@ -28,6 +28,7 @@ interface FieldWithPickupProps<TFormValues> {
   readOnly?: boolean;
   className: string;
   activeCols?: number;
+  locale: string;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -89,9 +90,10 @@ function renderPickupField<TFormValues>(
   disabled: boolean | undefined,
   readOnly: boolean | undefined,
   className: string,
+  locale: string,
 ) {
   if (!isBasicFieldConfig(field)) return null;
-  return renderFieldInput(field, { disabled, readOnly, className });
+  return renderFieldInput(field, { disabled, readOnly, className, locale });
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -103,6 +105,7 @@ export function FieldWithPickup<TFormValues>({
   readOnly,
   className,
   activeCols,
+  locale,
 }: FieldWithPickupProps<TFormValues>) {
   const [open, setOpen] = useState(false);
   const { setValue, getValues } = useFormContext();
@@ -204,7 +207,7 @@ export function FieldWithPickup<TFormValues>({
     <>
       <div className={cn("flex items-start gap-1", className)}>
         <div className="flex-1">
-          {renderPickupField(field, disabled, readOnly, className)}
+          {renderPickupField(field, disabled, readOnly, className, locale)}
         </div>
         {LookupDialog && !disabled && !readOnly && (
           <Button

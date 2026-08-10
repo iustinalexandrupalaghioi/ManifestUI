@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/framework/lib/utils";
 import {
   ChevronLeftIcon,
@@ -9,6 +9,7 @@ import {
   ChevronsRightIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { useFormPageContext } from "../../page/FormPage";
 
@@ -35,6 +36,7 @@ export function FormHeader({
 }: FormHeaderProps) {
   const hasNav = prevPath !== undefined || nextPath !== undefined;
   const router = useTransitionRouter();
+  const t = useTranslations("Pagination");
 
   const formPage = (() => {
     try {
@@ -67,7 +69,7 @@ export function FormHeader({
             variant="ghost"
             size="icon"
             disabled={!firstPath || router.isPending}
-            title="First"
+            title={t("first")}
             type="button"
             onClick={() => firstPath && go(firstPath)}
           >
@@ -77,7 +79,7 @@ export function FormHeader({
             variant="ghost"
             size="icon"
             disabled={!prevPath || router.isPending}
-            title="Previous"
+            title={t("previous")}
             type="button"
             onClick={() => prevPath && go(prevPath)}
           >
@@ -92,7 +94,7 @@ export function FormHeader({
             variant="ghost"
             size="icon"
             disabled={!nextPath || router.isPending}
-            title="Next"
+            title={t("next")}
             type="button"
             onClick={() => nextPath && go(nextPath)}
           >
@@ -102,7 +104,7 @@ export function FormHeader({
             variant="ghost"
             size="icon"
             disabled={!lastPath || router.isPending}
-            title="Last"
+            title={t("last")}
             type="button"
             onClick={() => lastPath && go(lastPath)}
           >

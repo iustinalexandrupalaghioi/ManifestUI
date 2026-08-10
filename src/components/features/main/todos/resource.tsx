@@ -18,28 +18,21 @@ import { todosTabs } from "./config/tabs";
 import { todosRelations } from "./config/relations";
 import { todoColumns, todoPickupColumns } from "./config/columns";
 import { todosDetailSlots } from "./config/detailSlots";
+import { todosDescriptor } from "./config/descriptor";
 
 // ─────────────────────────────────────────────
 // Resource
 // ─────────────────────────────────────────────
 
 export const todosResource = defineResource<Todo, TodoFormValues>({
-  id: "todos",
-  noun: "todo",
-  queryKey: ["todos"],
+  id: todosDescriptor.id,
+  noun: todosDescriptor.noun,
+  queryKey: todosDescriptor.queryKey,
   schema: todoSchema,
 
-  routes: {
-    list: "/todos",
-    add: "/todos/add",
-    detail: (id: string) => `/todos/${id}`,
-  },
+  routes: todosDescriptor.routes,
 
-  labels: {
-    singular: "To do",
-    plural: "To dos",
-    new: "To do",
-  },
+  labels: todosDescriptor,
 
   openMode: "page",
   addMode: "page",
@@ -71,14 +64,14 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
   defaultTab: "attachments",
   defaultFormOpen: true,
 
-  overviewKey: "todos-overview",
-  defaultViewName: "To do's",
+  overviewKey: todosDescriptor.overviewKey,
+  defaultViewName: todosDescriptor.defaultViewName,
 });
 
 export const { hooks: todoHooks, components: todoComponents } = todosResource;
 
 export const todoKeys = todoHooks.keys;
-export const OVERVIEW_KEY = "todos-overview";
+export const OVERVIEW_KEY = todosDescriptor.overviewKey;
 export const useTodosInfinite = todoHooks.useList;
 export const useTodo = todoHooks.useDetail;
 

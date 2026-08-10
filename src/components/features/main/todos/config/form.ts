@@ -14,14 +14,18 @@ export const todosForm: FormConfig<TodoFormValues> = {
           {
             cols: 1,
             fields: [
-              { type: "readonly", name: "id", label: "Id" },
+              { type: "readonly", name: "id", label: { en: "Id", ro: "Id" } },
               {
                 type: "textarea",
                 name: "title",
-                label: "Title",
+                label: { en: "Title", ro: "Titlu" },
                 maxRows: 5,
               },
-              { type: "switch", name: "completed", label: "Completed" },
+              {
+                type: "switch",
+                name: "completed",
+                label: { en: "Completed", ro: "Finalizat" },
+              },
             ],
           },
         ],
@@ -35,7 +39,7 @@ export const todosForm: FormConfig<TodoFormValues> = {
               {
                 type: "input",
                 name: "user_id",
-                label: "User",
+                label: { en: "User", ro: "Utilizator" },
                 inputType: "number",
                 span: 1,
                 pickup: {
@@ -47,20 +51,30 @@ export const todosForm: FormConfig<TodoFormValues> = {
                   fillFields: [
                     {
                       from: "username",
-                      label: "Username",
+                      label: { en: "Username", ro: "Nume utilizator" },
                       span: 2,
                       readonly: true,
                     },
                     {
                       from: "gender",
-                      label: "Gender",
+                      label: { en: "Gender", ro: "Gen" },
                       type: "select",
                       options: Gender.options,
                       span: 1,
                       readonly: true,
                     },
-                    { from: "email", label: "Email", span: 2, readonly: true },
-                    { from: "age", label: "Age", span: 1, readonly: true },
+                    {
+                      from: "email",
+                      label: { en: "Email", ro: "Email" },
+                      span: 2,
+                      readonly: true,
+                    },
+                    {
+                      from: "age",
+                      label: { en: "Age", ro: "Vârstă" },
+                      span: 1,
+                      readonly: true,
+                    },
                   ],
                 },
               },
@@ -77,7 +91,7 @@ export const todosForm: FormConfig<TodoFormValues> = {
               {
                 type: "textarea",
                 name: "notes",
-                label: "Notes",
+                label: { en: "Notes", ro: "Note" },
                 maxRows: 5,
                 hidden: (item) => !item?.completed,
               },

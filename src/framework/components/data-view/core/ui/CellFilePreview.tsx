@@ -1,14 +1,15 @@
+import { useTranslations } from "next-intl"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/framework/components/ui/popover"
+} from "@/components/ui/popover"
 import {
   TooltipContent,
   Tooltip,
   TooltipProvider,
   TooltipTrigger,
-} from "@/framework/components/ui/tooltip"
+} from "@/components/ui/tooltip"
 import { useCoarsePointer } from "../../../files"
 import {
   getMimeTypeFromPath,
@@ -29,8 +30,9 @@ export function CellFilePreview({
   filename,
   mimeType,
 }: CellFilePreviewProps) {
+  const t = useTranslations("Files")
   const isCoarse = useCoarsePointer()
-  const resolvedFilename = filename || path.split("/").pop() || "file"
+  const resolvedFilename = filename || path.split("/").pop() || t("file")
   const resolvedMimeType = mimeType || getMimeTypeFromPath(path)
   const category = getFileCategory(resolvedMimeType)
 
@@ -69,7 +71,7 @@ export function CellFilePreview({
       )}
       {category === "other" && (
         <div className="p-3 text-xs text-muted-foreground">
-          No preview available
+          {t("noPreviewAvailable")}
         </div>
       )}
     </div>

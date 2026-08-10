@@ -1,4 +1,4 @@
-import { TableHead, TableHeader, TableRow } from "@/framework/components/ui/table"
+import { CustomTableHead, CustomTableHeader, CustomTableRow } from "@/framework/components/ui/CustomTable"
 import { cn } from "@/framework/lib/utils"
 import type { SortingState } from "@tanstack/react-table"
 import { flexRender } from "@tanstack/react-table"
@@ -65,9 +65,9 @@ export function DataTableHeader({
   }
 
   return (
-    <TableHeader className="top-0 z-10 bg-background">
+    <CustomTableHeader className="top-0 z-10 bg-background">
       {table.getHeaderGroups().map((headerGroup) => (
-        <TableRow key={headerGroup.id}>
+        <CustomTableRow key={headerGroup.id}>
           {headerGroup.headers.map((header) => {
             const isLast = header.column.id === lastLeafColumnId
             const canSort = header.column.getCanSort()
@@ -87,7 +87,7 @@ export function DataTableHeader({
             const isMultiSort = sorting.length > 1
 
             return (
-              <TableHead
+              <CustomTableHead
                 key={header.id}
                 style={{
                   top: 0,
@@ -154,11 +154,11 @@ export function DataTableHeader({
                     className="absolute top-0 right-0 h-full w-1 cursor-col-resize bg-transparent"
                   />
                 )}
-              </TableHead>
+              </CustomTableHead>
             )
           })}
-        </TableRow>
+        </CustomTableRow>
       ))}
-    </TableHeader>
+    </CustomTableHeader>
   )
 }

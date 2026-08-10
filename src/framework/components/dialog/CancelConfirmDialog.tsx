@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Button } from "@/framework/components/ui/button";
-import { DialogClose } from "@/framework/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { DialogClose } from "@/components/ui/dialog";
 import { BaseDialog } from "./BaseDialog";
 
 interface ConfirmDialogProps {

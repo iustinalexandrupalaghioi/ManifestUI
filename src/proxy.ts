@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSafeRedirect } from "@/framework/authentication/isSafeRedirect";
+import { isSafeRedirect } from "@/framework/authentication/lib/isSafeRedirect";
 
 // Keeps the Supabase session cookie fresh on every request. Per @supabase/ssr's
 // own docs this is mandatory for SSR: without it, a page rendered on the server

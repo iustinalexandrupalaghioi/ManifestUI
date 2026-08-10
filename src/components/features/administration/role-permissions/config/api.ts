@@ -1,14 +1,14 @@
 "use server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { role_resource_permissions, roles, resources } from "@/db/schema";
+import { role_resource_permissions, roles } from "@/db/schema";
 import {
   assertHasAllPermissions,
   defineResourceActions,
   getCurrentUserId,
   permissionStringsForResourceGrant,
 } from "@/framework/authorization/rbac";
-import { createResourceActions } from "@/framework/lib/transactionalAction";
+import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import { buildWhereConditions } from "@/framework/components/data-view/features/filtering/drizzle-filters";
@@ -37,15 +37,7 @@ const selection = {
   can_delete: role_resource_permissions.can_delete,
   allowed: role_resource_permissions.allowed,
   role: { id: roles.id, name: roles.name },
-  resource: { id: resources.id, name: resources.name, type: resources.type },
 };
-
-// Strip the UI-only `resource_type` field (see config/schema.ts) before it
-// hits the DB.
-function toRow(data: RolePermissionFormValues) {
-  const { resource_type: _resource_type, ...row } = data;
-  return row;
-}
 
 // Holding "role-permissions:add"/"update" alone must not let a caller grant
 // a role permissions beyond their own — otherwise it's a confused-deputy
@@ -56,7 +48,7 @@ async function assertCanGrantResourcePermission(
 ): Promise<void> {
   const callerId = await getCurrentUserId();
   if (!callerId) throw new Error("Not authenticated");
-  const grantedPermissions = await permissionStringsForResourceGrant(
+  const grantedPermissions = permissionStringsForResourceGrant(
     data.resource_id,
     data,
   );
@@ -90,12 +82,8 @@ export const {
           .select(selection)
           .from(role_resource_permissions)
           .innerJoin(roles, eq(role_resource_permissions.role_id, roles.id))
-          .innerJoin(
-            resources,
-            eq(role_resource_permissions.resource_id, resources.id),
-          )
           .where(where)
-          .orderBy(roles.name, resources.id)
+          .orderBy(roles.name, role_resource_permissions.resource_id)
           .limit(PAGE_SIZE),
         db
           .select({ count: sql<number>`count(*)::int` })
@@ -118,10 +106,6 @@ export const {
         .select(selection)
         .from(role_resource_permissions)
         .innerJoin(roles, eq(role_resource_permissions.role_id, roles.id))
-        .innerJoin(
-          resources,
-          eq(role_resource_permissions.resource_id, resources.id),
-        )
         .where(eq(role_resource_permissions.id, id))
         .limit(1);
       if (!row) throw new Error(`RolePermission ${id} not found`);
@@ -134,7 +118,7 @@ export const {
     await assertCanGrantResourcePermission(parsed);
     const [result] = await tx
       .insert(role_resource_permissions)
-      .values(toRow(parsed))
+      .values(parsed)
       .returning({ id: role_resource_permissions.id });
     return result.id;
   }),
@@ -145,7 +129,7 @@ export const {
       await assertCanGrantResourcePermission(parsed);
       await tx
         .update(role_resource_permissions)
-        .set(toRow(parsed))
+        .set(parsed)
         .where(eq(role_resource_permissions.id, id));
     },
   ),

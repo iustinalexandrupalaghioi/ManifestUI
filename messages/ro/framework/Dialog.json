@@ -1,0 +1,5 @@
+{
+  "deleteTitle": "Șterge {label}",
+  "deleteConfirmSingle": "Sigur doriți să ștergeți {gender, select, feminine {o} other {un}} {label}?",
+  "deleteConfirmMulti": "Sigur doriți să ștergeți {count} {label}?"
+}

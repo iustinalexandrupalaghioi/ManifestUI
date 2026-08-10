@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/framework/components/ui/tabs";
+import { CustomTabs, CustomTabsContent, CustomTabsList, CustomTabsTrigger } from "@/framework/components/ui/CustomTabs";
 import { TabTriggerLabel } from "./TabTriggerLabel";
 import type {
   FieldTabConfig,
@@ -26,29 +26,29 @@ export function AddTabs<TItem, TFormValues extends FieldValues>({
   readOnly,
 }: AddTabsProps<TItem, TFormValues>) {
   return (
-    <Tabs
+    <CustomTabs
       value={activeTab}
       onValueChange={setActiveTab}
       className="mt-2 w-full gap-0"
     >
       <div className="flex items-center gap-1 overflow-x-auto">
-        <TabsList>
+        <CustomTabsList>
           {addTabs.map((tab, index) => {
             const globalIndex = allTabs.findIndex((t) => t.value === tab.value);
             const displayIndex = globalIndex >= 0 ? globalIndex : index;
             return (
-              <TabsTrigger key={tab.value} value={tab.value}>
+              <CustomTabsTrigger key={tab.value} value={tab.value}>
                 <TabTriggerLabel icon={tab.icon} label={tab.label} index={displayIndex} />
-              </TabsTrigger>
+              </CustomTabsTrigger>
             );
           })}
-        </TabsList>
+        </CustomTabsList>
       </div>
       {addTabs.map((tab) => (
-        <TabsContent key={tab.value} value={tab.value} className="py-6">
+        <CustomTabsContent key={tab.value} value={tab.value} className="py-6">
           <Form sections={tab.sections} readOnly={readOnly} />
-        </TabsContent>
+        </CustomTabsContent>
       ))}
-    </Tabs>
+    </CustomTabs>
   );
 }

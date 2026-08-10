@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/framework/components/ui/button";
-import { DialogClose } from "@/framework/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { DialogClose } from "@/components/ui/dialog";
 import type { BulkActionResult } from "@/framework/lib/actionResult";
 import {
   type QueryKey,
@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { useTranslations } from "next-intl";
 import { BaseDialog } from "./BaseDialog";
 import { ErrorDialog } from "./ErrorDialog";
 import { mapErr } from "@/framework/core/resource-helpers";
@@ -18,7 +19,9 @@ import type { AppError } from "@/framework/types/global/AppError";
 interface DeleteDialogProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-  noun?: string;
+  itemLabel?: string;
+  pluralLabel?: string;
+  gender?: "masculine" | "feminine" | "neuter";
   confirmationMessage?: ReactNode;
   id: string | number | (string | number)[];
   queryKeys: QueryKey[];
@@ -31,23 +34,32 @@ export function DeleteDialog({
   open,
   setOpen,
   id,
-  noun,
+  itemLabel,
+  pluralLabel,
+  gender,
   confirmationMessage,
   queryKeys,
   deleteFn,
   onSuccess,
   onBulkResult,
 }: DeleteDialogProps) {
+  const t = useTranslations("Dialog");
+  const tc = useTranslations("Common");
+  const tBulk = useTranslations("BulkResult");
   const queryClient = useQueryClient();
   const ids = Array.isArray(id) ? id : [id];
   const isMulti = ids.length > 1;
 
-  const label = noun ?? "item";
-  const labelPlural = `${label}s`;
+  const label = (itemLabel ?? tBulk("defaultItemLabel")).toLowerCase();
+  const labelPlural = (pluralLabel ?? itemLabel ?? tBulk("defaultItemLabel")).toLowerCase();
 
   const defaultConfirmation = isMulti
-    ? `Are you sure you want to delete ${ids.length} ${labelPlural}?`
-    : `Are you sure you want to delete this ${label}?`;
+    ? t("deleteConfirmMulti", {
+        count: ids.length,
+        label: labelPlural,
+        gender: gender ?? "masculine",
+      })
+    : t("deleteConfirmSingle", { label, gender: gender ?? "masculine" });
 
   const [error, setError] = useState<AppError | null>(null);
   const [errorOpen, setErrorOpen] = useState(false);
@@ -83,12 +95,12 @@ export function DeleteDialog({
           mutate();
         }}
       >
-        Delete
+        {tc("delete")}
       </Button>
 
       <DialogClose className="w-full md:flex-1" asChild>
         <Button type="button" variant="outline">
-          Cancel
+          {tc("cancel")}
         </Button>
       </DialogClose>
     </div>
@@ -99,7 +111,7 @@ export function DeleteDialog({
       <BaseDialog
         open={open}
         setOpen={setOpen}
-        title={isMulti ? `Delete ${labelPlural}` : `Delete ${label}`}
+        title={t("deleteTitle", { label: isMulti ? labelPlural : label })}
         description={confirmationMessage ?? defaultConfirmation}
         className="md:min-w-2xl"
         footer={footer}

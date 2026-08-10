@@ -7,6 +7,7 @@ import type {
   FilterRule,
 } from "../components/data-view/features/filtering";
 import type { FormConfig, SectionConfig } from "../components/form/types/types";
+import type { TranslatableText } from "./i18n-types";
 
 export interface FormProps<TItem, TFormValues> {
   item?: TItem;
@@ -38,13 +39,17 @@ export interface ResourcePermissions {
 }
 
 export interface ResourceComponentsConfig<TItem, TFormValues> {
+  id: string;
   Form?: ComponentType<FormProps<TItem, TFormValues>>;
   AddForm?: ComponentType<FormProps<TItem, TFormValues>>;
   formConfig?: FormConfig<TFormValues>;
-  createColumns?: (params?: any) => ColumnDef<TItem>[];
-  createPickupColumns?: (onSelect: (item: TItem) => void) => ColumnDef<TItem>[];
+  createColumns?: (locale: string) => ColumnDef<TItem>[];
+  createPickupColumns?: (
+    onSelect: (item: TItem) => void,
+    locale: string,
+  ) => ColumnDef<TItem>[];
   overviewKey: string;
-  defaultViewName: string;
+  defaultViewName: TranslatableText;
   getOverviewTitle?: (preFilters: FilterInput[]) => string;
   dialog?: DialogConfig;
   columnVisibility?: VisibilityState;

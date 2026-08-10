@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { describeActionFailure } from "./describeActionFailure";
 import { DescribedActionError, type ActionError } from "./actionResult";
 import { ForbiddenError } from "@/framework/authorization/rbac";
+import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 
 type Tx = Parameters<typeof db.transaction>[0] extends (tx: infer T) => any
   ? T
@@ -19,6 +20,7 @@ export interface PerIdResult {
 
 async function runTransaction<T>(
   fn: (tx: Tx) => Promise<T>,
+  registry: ResourceDescriptor[],
   resourceId: string,
   id: string | number | undefined,
   verb: string,
@@ -27,16 +29,17 @@ async function runTransaction<T>(
     return await db.transaction(fn);
   } catch (err) {
     // A permission guard thrown from inside `fn` (e.g. "can't strip your
-    // own admin flag") is not a DB failure — let it reach withPermission
+    // own admin flag") is not a DB failure — let it reach withAdminAction
     // unchanged instead of getting rephrased as "Not able to update ...".
     if (err instanceof ForbiddenError) throw err;
-    const described = await describeActionFailure(err, resourceId, id, verb);
+    const described = await describeActionFailure(registry, err, resourceId, id, verb);
     throw new DescribedActionError(described);
   }
 }
 
 async function runPerIdImpl<TId extends string | number>(
   ids: TId[],
+  registry: ResourceDescriptor[],
   resourceId: string,
   fn: (tx: Tx, id: TId) => Promise<unknown>,
   verb: string,
@@ -49,7 +52,7 @@ async function runPerIdImpl<TId extends string | number>(
       await db.transaction((tx) => fn(tx, id));
       succeededIds.push(String(id));
     } catch (err) {
-      const described = await describeActionFailure(err, resourceId, id, verb);
+      const described = await describeActionFailure(registry, err, resourceId, id, verb);
       failures.push({ id: String(id), ...described });
     }
   }
@@ -57,11 +60,16 @@ async function runPerIdImpl<TId extends string | number>(
   return { succeededIds, failures };
 }
 
-// Builds `[action, fn]` entries for defineResourceActions — resourceId
-// (bound here, once per file) and the verb (implied by which of
-// add/update/delete you call, matching the very key defineResourceActions
-// stores the entry under) never need to be repeated at the call site.
-export function createResourceActions(resourceId: string) {
+// Builds `[verb, fn]` entries for defineResourceActions (rbac.ts) —
+// resourceId (bound here, once per file) and the verb (implied by which of
+// add/update/delete you call) never need to be repeated at the call site.
+// Each entry slots directly into defineResourceActions' object literal,
+// which wraps it with withPermission(resourceId, verb, fn) — this layer
+// only handles the DB transaction + failure description, not permissions.
+export function createResourceActions(
+  resourceId: string,
+  registry: ResourceDescriptor[],
+) {
   return {
     // `getId` is only useful when the id is knowable before insert (e.g. a
     // composite key built from the payload, as with user-roles) — omit it
@@ -75,6 +83,7 @@ export function createResourceActions(resourceId: string) {
         (...args: TArgs) =>
           runTransaction(
             (tx) => fn(tx, ...args),
+            registry,
             resourceId,
             getId?.(...args),
             "add",
@@ -88,31 +97,36 @@ export function createResourceActions(resourceId: string) {
       return [
         "update",
         (id: TId, ...args: TArgs) =>
-          runTransaction((tx) => fn(tx, id, ...args), resourceId, id, "update"),
+          runTransaction(
+            (tx) => fn(tx, id, ...args),
+            registry,
+            resourceId,
+            id,
+            "update",
+          ),
       ] as const;
     },
 
     delete<TId extends string | number>(fn: (tx: Tx, id: TId) => Promise<unknown>) {
       return [
         "delete",
-        (ids: TId[]) => runPerIdImpl(ids, resourceId, fn, "delete"),
+        (ids: TId[]) => runPerIdImpl(ids, registry, resourceId, fn, "delete"),
       ] as const;
     },
 
-    // Escape hatch for bulk actions whose permission/verb aren't the plain
-    // "delete" (e.g. todos' "complete-with-note" → "complete"). `build`
-    // receives the action's own extra args once (e.g. the note payload) and
-    // returns the per-id transactional body — mirrors how the id-less parts
-    // of `data` only need parsing once, not once per id.
+    // Escape hatch for bulk actions whose verb isn't the plain "delete"
+    // (e.g. todos' completeTodos → "complete"). `build` receives the
+    // action's own extra args once (e.g. the note payload) and returns the
+    // per-id transactional body — mirrors how the id-less parts of `data`
+    // only need parsing once, not once per id.
     action<TId extends string | number, TArgs extends unknown[]>(
-      permission: string,
       verb: string,
       build: (...args: TArgs) => (tx: Tx, id: TId) => Promise<unknown>,
     ) {
       return [
-        permission,
+        verb,
         (ids: TId[], ...args: TArgs) =>
-          runPerIdImpl(ids, resourceId, build(...args), verb),
+          runPerIdImpl(ids, registry, resourceId, build(...args), verb),
       ] as const;
     },
   };

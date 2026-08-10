@@ -1,11 +1,12 @@
 "use client";
 
-import { Checkbox } from "@/framework/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Table as TTable } from "@tanstack/react-table";
 import { DataListGrid } from "./ui/DataListGrid";
 import { DataListColumnManager } from "../core/ui/ColumnManager";
 import type { DataListFeatureApi } from "./DataList.contract";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface DataListProps {
   table: TTable<any>;
@@ -15,6 +16,7 @@ interface DataListProps {
 }
 
 export function DataList({ table, isLoading, list, isLookup }: DataListProps) {
+  const t = useTranslations("DataView");
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
   const rows = table.getRowModel().rows;
   const hasVisibleList = list.visibleListColumns.length > 0;
@@ -36,13 +38,15 @@ export function DataList({ table, isLoading, list, isLookup }: DataListProps) {
               onCheckedChange={(checked) =>
                 table.toggleAllRowsSelected(!!checked)
               }
-              aria-label="Select all"
+              aria-label={t("selectAll")}
             />
           </div>
           <span className="text-xs text-muted-foreground">
             {table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()
-              ? `${Object.keys(table.getState().rowSelection).length} selected`
-              : `${rows.length} items`}
+              ? t("selectedCount", {
+                  count: Object.keys(table.getState().rowSelection).length,
+                })
+              : t("itemsCount", { count: rows.length })}
           </span>
         </div>
       )}

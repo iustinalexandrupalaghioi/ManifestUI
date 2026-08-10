@@ -1,5 +1,6 @@
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { LayoutGridIcon, TableIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   getViewModeStore,
   useActiveMode,
@@ -24,6 +25,7 @@ export function DataListModeToggle({
   tableId,
   hasList,
 }: DataListModeToggleProps) {
+  const t = useTranslations("DataView");
   const activeMode = useActiveMode(tableId);
 
   if (!hasList) return null;
@@ -46,7 +48,7 @@ export function DataListModeToggle({
         variant="ghost"
         size="icon-sm"
         type="button"
-        title="List view"
+        title={t("listView")}
         onClick={switchToList}
         className={`${isList ? "text-primary" : "text-muted-foreground"}`}
       >
@@ -56,7 +58,7 @@ export function DataListModeToggle({
         variant="ghost"
         size="icon-sm"
         type="button"
-        title="Table view"
+        title={t("tableView")}
         onClick={switchToTable}
         className={`${!isList ? "text-primary" : "text-muted-foreground"}`}
       >

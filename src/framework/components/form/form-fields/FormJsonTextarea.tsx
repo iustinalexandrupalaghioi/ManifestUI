@@ -1,15 +1,16 @@
 "use client";
 
-import { Textarea } from "@/framework/components/ui/textarea";
+import { CustomTextarea } from "@/framework/components/ui/CustomTextarea";
 import { cn } from "@/framework/lib/utils";
 import type { ComponentProps } from "react";
 import { useEffect, useState } from "react";
 import type { FieldValues, Path } from "react-hook-form";
 import { Controller, useFormContext } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { FormFieldBase } from "./FormFieldBase";
 
 interface FormJsonTextareaProps<T extends FieldValues> extends Omit<
-  ComponentProps<typeof Textarea>,
+  ComponentProps<typeof CustomTextarea>,
   "name" | "id" | "value" | "onChange"
 > {
   name: Path<T>;
@@ -85,10 +86,11 @@ function JsonTextareaField({
   className?: string;
   inputClassName?: string;
   textareaProps: Omit<
-    ComponentProps<typeof Textarea>,
+    ComponentProps<typeof CustomTextarea>,
     "name" | "id" | "value" | "onChange"
   >;
 }) {
+  const t = useTranslations("Validation");
   const [text, setText] = useState(() => stringify(field.value));
   const [parseError, setParseError] = useState<string | null>(null);
 
@@ -112,7 +114,7 @@ function JsonTextareaField({
       setParseError(null);
       field.onChange(parsed);
     } catch {
-      setParseError("Invalid JSON");
+      setParseError(t("invalidJson"));
     }
   }
 
@@ -123,7 +125,7 @@ function JsonTextareaField({
       error={fieldState.error?.message ?? parseError ?? undefined}
       className={className}
     >
-      <Textarea
+      <CustomTextarea
         {...textareaProps}
         id={id}
         name={field.name}

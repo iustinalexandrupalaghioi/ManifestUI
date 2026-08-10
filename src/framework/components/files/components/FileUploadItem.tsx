@@ -1,5 +1,6 @@
-import { Button } from "@/framework/components/ui/button"
-import { Progress } from "@/framework/components/ui/progress"
+import { useTranslations } from "next-intl"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import type { UploadedFile } from "../storage/types"
 import { X } from "lucide-react"
 import { FileCategoryIcon } from "./FileUtils"
@@ -15,6 +16,7 @@ export function FileUploadItem({
   onRemove,
   disabled,
 }: FileUploadItemProps) {
+  const t = useTranslations("Files")
   const { file, status, progress, error } = entry
 
   return (
@@ -33,7 +35,7 @@ export function FileUploadItem({
           <Progress value={progress} className="mt-1 h-1" />
         )}
         {status === "done" && (
-          <p className="mt-0.5 text-xs text-muted-foreground">Uploaded</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{t("uploaded")}</p>
         )}
         {status === "error" && (
           <p className="mt-0.5 text-xs text-destructive">{error}</p>

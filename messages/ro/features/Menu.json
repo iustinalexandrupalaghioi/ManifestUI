@@ -1,0 +1,20 @@
+{
+  "main": "Principal",
+  "administration": "Administrare",
+  "todos": "Sarcini",
+  "todosDescription": "Vizualizează toate sarcinile",
+  "attachments": "Atașamente",
+  "attachmentsDescription": "Vizualizează toate atașamentele sarcinilor",
+  "relations": "Relații",
+  "relationsDescription": "Vizualizează toate relațiile (date demonstrative)",
+  "users": "Utilizatori",
+  "usersDescription": "Vizualizează utilizatorii înregistrați",
+  "roles": "Roluri",
+  "rolesDescription": "Administrează rolurile",
+  "resources": "Resurse",
+  "resourcesDescription": "Administrează resursele și acțiunile care pot fi acordate",
+  "rolePermissions": "Permisiuni rol",
+  "rolePermissionsDescription": "Administrează ce poate face fiecare rol",
+  "userRoles": "Roluri utilizator",
+  "userRolesDescription": "Atribuie roluri utilizatorilor"
+}

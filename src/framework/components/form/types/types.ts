@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { DisplayField } from "../hooks/useLookupfield";
 import type { FileFieldConfig } from "../hooks/useFileField";
 import type { FilterInput } from "@/framework/components/data-view/features/filtering";
+import type { TranslatableText } from "@/framework/types/i18n-types";
 
 // ─────────────────────────────────────────────
 // Field configs
@@ -45,7 +46,7 @@ export interface PickupConfig<TFormValues> {
 
 export interface BaseField<TFormValues> {
   name: string;
-  label: string;
+  label: TranslatableText;
   span?: number;
   className?: string;
   disabled?: boolean | FieldCondition;
@@ -120,7 +121,7 @@ export interface ReadonlyFieldConfig<
 > extends BaseField<TFormValues> {
   type: "readonly";
   name: string;
-  label: string;
+  label: TranslatableText;
   dataType?: ReadonlyDataType;
   maxRows?: number;
   options?: { value: string; label: string }[];

@@ -1,16 +1,17 @@
-import { DateInput } from "@/framework/components/ui/date-input"
-import { DateTimeInput } from "@/framework/components/ui/date-time-input"
-import { Input } from "@/framework/components/ui/input"
-import { Label } from "@/framework/components/ui/label"
+import { CustomDateInput } from "@/framework/components/ui/CustomDateInput"
+import { CustomDateTimeInput } from "@/framework/components/ui/CustomDateTimeInput"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/framework/components/ui/select"
-import { TimeInput } from "@/framework/components/ui/time-input"
-import { YesNoSwitch } from "@/framework/components/ui/yes-no-switch"
+} from "@/components/ui/select"
+import { CustomTimeInput } from "@/framework/components/ui/CustomTimeInput"
+import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch"
+import { useTranslations } from "next-intl"
 import type { Enum } from "@/framework/types/global/Enum"
 import type { ColumnType, FilterOperator } from "../filters"
 import { FilterTagInput } from "./FilterTagInput"
@@ -30,6 +31,7 @@ export function FilterValueInput({
   onChange,
   selectOptions,
 }: FilterValueInputProps) {
+  const t = useTranslations("Filtering")
   const noValueNeeded =
     operator === "is_empty" ||
     operator === "is_not_empty" ||
@@ -45,7 +47,9 @@ export function FilterValueInput({
         value={selected}
         onChange={onChange}
         placeholder={
-          columnType === "number" ? "1, 2, 3..." : "value1, value2..."
+          columnType === "number"
+            ? t("numberListPlaceholder")
+            : t("valueListPlaceholder")
         }
         validate={
           columnType === "number" ? (v) => !isNaN(Number(v)) : undefined
@@ -74,7 +78,7 @@ export function FilterValueInput({
             >
               {opt.label}
             </Label>
-            <YesNoSwitch
+            <CustomYesNoSwitch
               id={`opt-${opt.value}`}
               checked={selected.includes(opt.value)}
               onCheckedChange={() => toggle(opt.value)}
@@ -82,7 +86,7 @@ export function FilterValueInput({
           </div>
         ))}
         {!selectOptions?.length && (
-          <p className="text-xs text-muted-foreground">No options available.</p>
+          <p className="text-xs text-muted-foreground">{t("noOptionsAvailable")}</p>
         )}
       </div>
     )
@@ -95,7 +99,7 @@ export function FilterValueInput({
         onValueChange={(v) => onChange(v)}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select value..." />
+          <SelectValue placeholder={t("selectValuePlaceholder")} />
         </SelectTrigger>
         <SelectContent>
           {(selectOptions ?? []).map((opt) => (
@@ -114,7 +118,7 @@ export function FilterValueInput({
     return (
       <div className="flex flex-col gap-1">
         <Input
-          placeholder="Value..."
+          placeholder={t("valuePlaceholder")}
           value={strValue}
           onChange={(e) => onChange(e.target.value)}
           aria-invalid={isInvalid}
@@ -123,7 +127,7 @@ export function FilterValueInput({
           }
         />
         {isInvalid && (
-          <p className="text-xs text-destructive">Must be a number</p>
+          <p className="text-xs text-destructive">{t("mustBeNumber")}</p>
         )}
       </div>
     )
@@ -131,7 +135,7 @@ export function FilterValueInput({
 
   if (columnType === "date") {
     return (
-      <DateInput
+      <CustomDateInput
         value={Array.isArray(value) ? "" : value}
         onChange={onChange}
       />
@@ -140,7 +144,7 @@ export function FilterValueInput({
 
   if (columnType === "datetime") {
     return (
-      <DateTimeInput
+      <CustomDateTimeInput
         value={Array.isArray(value) ? "" : value}
         onChange={onChange}
       />
@@ -149,7 +153,7 @@ export function FilterValueInput({
 
   if (columnType === "time") {
     return (
-      <TimeInput
+      <CustomTimeInput
         value={Array.isArray(value) ? "" : value}
         onChange={onChange}
       />
@@ -158,7 +162,7 @@ export function FilterValueInput({
 
   return (
     <Input
-      placeholder="Value..."
+      placeholder={t("valuePlaceholder")}
       value={Array.isArray(value) ? "" : value}
       onChange={(e) => onChange(e.target.value)}
     />

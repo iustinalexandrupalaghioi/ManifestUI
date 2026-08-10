@@ -8,9 +8,10 @@ import { useSortable } from "@dnd-kit/react/sortable";
 import type { Column, Table, VisibilityState } from "@tanstack/react-table";
 import { GripVertical, PinIcon, XIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
-import { Button } from "@/framework/components/ui/button";
-import { Checkbox } from "@/framework/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sheet,
   SheetClose,
@@ -19,7 +20,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/framework/components/ui/sheet";
+} from "@/components/ui/sheet";
 import { cn } from "@/framework/lib/utils";
 
 // ─────────────────────────────────────────────
@@ -66,6 +67,7 @@ function SortableColumnRow({
   onToggleVisible,
   onTogglePin,
 }: SortableColumnRowProps) {
+  const t = useTranslations("ColumnManager");
   const { ref, isDragging } = useSortable({ id: col.id, index });
 
   return (
@@ -84,7 +86,7 @@ function SortableColumnRow({
         id={`col-vis-${col.id}`}
         checked={col.visible}
         onCheckedChange={() => onToggleVisible(col.id)}
-        aria-label={`Toggle visibility of ${col.name}`}
+        aria-label={t("toggleVisibility", { name: col.name })}
       />
 
       <label
@@ -99,8 +101,12 @@ function SortableColumnRow({
         size="icon"
         className="h-7 w-7 shrink-0"
         onClick={() => onTogglePin(col.id)}
-        aria-label={col.pinned ? `Unpin ${col.name}` : `Pin ${col.name}`}
-        title={col.pinned ? "Unpin column" : "Pin column to left"}
+        aria-label={
+          col.pinned
+            ? t("unpinNamed", { name: col.name })
+            : t("pinNamed", { name: col.name })
+        }
+        title={col.pinned ? t("unpinColumn") : t("pinColumnLeft")}
       >
         <PinIcon
           className={cn(
@@ -124,6 +130,7 @@ interface ListColumnRowProps {
 }
 
 function ListColumnRow({ col, index, onToggleVisible }: ListColumnRowProps) {
+  const t = useTranslations("ColumnManager");
   const { ref, isDragging } = useSortable({ id: col.id, index });
 
   return (
@@ -142,7 +149,7 @@ function ListColumnRow({ col, index, onToggleVisible }: ListColumnRowProps) {
         id={`col-vis-${col.id}`}
         checked={col.visible}
         onCheckedChange={() => onToggleVisible(col.id)}
-        aria-label={`Toggle visibility of ${col.name}`}
+        aria-label={t("toggleVisibility", { name: col.name })}
       />
 
       <label
@@ -262,6 +269,8 @@ export function DataListColumnManager<TData>({
   defaultListColumnVisibility = {},
   onApplyListColumns,
 }: DataListColumnManagerProps<TData>) {
+  const t = useTranslations("ColumnManager");
+  const tc = useTranslations("Common");
   const [cols, setCols] = useState<ManagedColumn[]>([]);
   const isList = mode === "list";
 
@@ -373,13 +382,11 @@ export function DataListColumnManager<TData>({
         <SheetHeader className="flex shrink-0 flex-row items-center justify-between border-b px-4 py-3">
           <div className="flex flex-col gap-0.5">
             <SheetTitle className="text-sm font-medium">
-              {isList ? "List Columns" : "Manage Columns"}
+              {isList ? t("listColumns") : t("manageColumns")}
             </SheetTitle>
           </div>
           <SheetDescription className="hidden">
-            {isList
-              ? "Choose which columns appear on list items"
-              : "Manage Columns Panel - Show, hide, order, pin columns"}
+            {isList ? t("listColumnsDescription") : t("manageColumnsDescription")}
           </SheetDescription>
           <SheetClose asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -391,7 +398,7 @@ export function DataListColumnManager<TData>({
         <div className="scrollbar-thumb-rounded scrollbar-thin flex-1 overflow-y-auto scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80">
           {cols.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No configurable columns
+              {t("noConfigurableColumns")}
             </p>
           ) : (
             <DragDropProvider sensors={sensors} onDragEnd={handleDragEnd}>
@@ -419,7 +426,7 @@ export function DataListColumnManager<TData>({
 
         <SheetFooter className="flex shrink-0 flex-row justify-between border-t px-4 py-3">
           <Button variant="ghost" size="sm" onClick={handleReset}>
-            Reset to default
+            {t("resetToDefault")}
           </Button>
           <div className="flex gap-2">
             <Button
@@ -427,10 +434,10 @@ export function DataListColumnManager<TData>({
               size="sm"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {tc("cancel")}
             </Button>
             <Button size="sm" onClick={handleApply}>
-              Apply
+              {t("apply")}
             </Button>
           </div>
         </SheetFooter>

@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 
-import { Combobox } from "@/framework/components/ui/combobox";
-import { Input } from "@/framework/components/ui/input";
-import { Textarea } from "@/framework/components/ui/textarea";
-import { YesNoSwitch } from "@/framework/components/ui/yes-no-switch";
+import { CustomCombobox } from "@/framework/components/ui/CustomCombobox";
+import { Input } from "@/components/ui/input";
+import { CustomTextarea } from "@/framework/components/ui/CustomTextarea";
+import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch";
 import { cn } from "@/framework/lib/utils";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
+import type { TranslatableText } from "@/framework/types/i18n-types";
 
-import { DateInput } from "@/framework/components/ui/date-input";
+import { CustomDateInput } from "@/framework/components/ui/CustomDateInput";
 import { FormFieldBase } from "../form-fields/FormFieldBase";
 import { FormLookupInput } from "../form-fields/FormLookupInput";
 import {
@@ -18,13 +21,13 @@ import {
 } from "../hooks/useLookupfield";
 import type { FieldCondition } from "../types/types";
 import { spanClass } from "./FieldRenderer";
-import { DateTimeInput } from "@/framework/components/ui/date-time-input";
-import { TimeInput } from "@/framework/components/ui/time-input";
+import { CustomDateTimeInput } from "@/framework/components/ui/CustomDateTimeInput";
+import { CustomTimeInput } from "@/framework/components/ui/CustomTimeInput";
 
 export interface LookupFieldConfig {
   type: "lookup";
   name: string;
-  label: string;
+  label: TranslatableText;
   span?: number;
   className?: string;
   disabled?: boolean | FieldCondition;
@@ -41,21 +44,23 @@ export function DisplayFieldRenderer({
   value: unknown;
   activeCols?: number;
 }) {
+  const locale = useLocale();
+  const label = resolveLabel(field.label, locale);
   const strValue = value !== null && value !== undefined ? String(value) : "";
   const className = cn(spanClass(field.span, activeCols));
 
   if (field.type === "switch") {
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <YesNoSwitch checked={value === true || strValue === "true"} disabled />
+      <FormFieldBase label={label} className={className}>
+        <CustomYesNoSwitch checked={value === true || strValue === "true"} disabled />
       </FormFieldBase>
     );
   }
 
   if (field.type === "combobox" && field.options) {
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <Combobox
+      <FormFieldBase label={label} className={className}>
+        <CustomCombobox
           items={field.options}
           value={strValue}
           readOnly
@@ -69,7 +74,7 @@ export function DisplayFieldRenderer({
     const selectedLabel =
       field.options.find((o) => o.value === strValue)?.label ?? strValue;
     return (
-      <FormFieldBase label={field.label} className={className}>
+      <FormFieldBase label={label} className={className}>
         <Input
           value={selectedLabel}
           readOnly
@@ -81,8 +86,8 @@ export function DisplayFieldRenderer({
 
   if (field.type === "textarea") {
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <Textarea
+      <FormFieldBase label={label} className={className}>
+        <CustomTextarea
           className="bg-muted text-muted-foreground cursor-default"
           maxRows={field.maxRows}
           value={strValue}
@@ -93,24 +98,24 @@ export function DisplayFieldRenderer({
   }
   if (field.type === "date") {
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <DateInput value={strValue} readOnly />
+      <FormFieldBase label={label} className={className}>
+        <CustomDateInput value={strValue} readOnly />
       </FormFieldBase>
     );
   }
 
   if (field.type === "time") {
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <TimeInput value={strValue} readOnly />
+      <FormFieldBase label={label} className={className}>
+        <CustomTimeInput value={strValue} readOnly />
       </FormFieldBase>
     );
   }
 
   if (field.type === "datetime") {
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <DateTimeInput value={strValue} readonly />
+      <FormFieldBase label={label} className={className}>
+        <CustomDateTimeInput value={strValue} readonly />
       </FormFieldBase>
     );
   }
@@ -125,8 +130,8 @@ export function DisplayFieldRenderer({
     }
 
     return (
-      <FormFieldBase label={field.label} className={className}>
-        <Textarea
+      <FormFieldBase label={label} className={className}>
+        <CustomTextarea
           className="bg-muted text-muted-foreground cursor-default font-mono text-xs"
           maxRows={field.maxRows}
           value={formatted}
@@ -137,7 +142,7 @@ export function DisplayFieldRenderer({
   }
 
   return (
-    <FormFieldBase label={field.label} className={className}>
+    <FormFieldBase label={label} className={className}>
       <Input
         className="bg-muted text-muted-foreground cursor-default"
         value={strValue}
@@ -161,6 +166,7 @@ export function LookupFieldRenderer({
   activeCols?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const locale = useLocale();
   const rawDisabled = typeof disabled === "function" ? disabled() : disabled;
   const isDisabled =
     rawDisabled ||
@@ -182,7 +188,7 @@ export function LookupFieldRenderer({
     <>
       <FormLookupInput
         name={field.name}
-        label={field.label}
+        label={resolveLabel(field.label, locale)}
         displayKey="id"
         disabled={isDisabled}
         className={cn(spanClass(field.span, activeCols), field.className)}

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { Providers } from "./providers";
+import { AppNavBar } from "@/components/AppNavbar";
 import { getMyPermissions } from "@/framework/authorization/getMyPermissions";
 import { getCurrentUserId } from "@/framework/authorization/rbac";
 import "./globals.css";
@@ -15,21 +18,25 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const [initialPermissions, userId] = await Promise.all([
+  const [initialPermissions, userId, locale, messages] = await Promise.all([
     getMyPermissions(),
     getCurrentUserId(),
+    getLocale(),
+    getMessages(),
   ]);
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className="flex h-screen w-screen flex-col">
-        <Providers
-          initialPermissions={initialPermissions}
-          isAuthenticated={!!userId}
-          userId={userId}
-        >
-          {children}
-        </Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers
+            initialPermissions={initialPermissions}
+            userId={userId}
+            appNavBar={<AppNavBar isAuthenticated={!!userId} />}
+          >
+            {children}
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

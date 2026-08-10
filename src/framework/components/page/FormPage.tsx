@@ -2,7 +2,7 @@
 
 import type { TableAction } from "@/framework/components/toolbar/Toolbar";
 import { Toolbar } from "@/framework/components/toolbar/Toolbar";
-import { Button } from "@/framework/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/framework/lib/utils";
 import { Loader2Icon, RotateCcwIcon, SaveIcon } from "lucide-react";
 import type { ReactNode } from "react";
