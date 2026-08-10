@@ -6,7 +6,7 @@ export const todosTabs: TabConfig<Todo, TodoFormValues>[] = [
   {
     type: "relation",
     value: "attachments",
-    label: "Attachments",
+    label: { en: "Attachments", ro: "Atașamente" },
     relationKey: "attachments",
   },
 ];

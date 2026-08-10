@@ -16,6 +16,8 @@ import type { RelationConfig } from "@/framework/types/relation-config-type";
 import type { ComponentType } from "react";
 import type { FieldValues } from "react-hook-form";
 import { usePathname } from "next/navigation";
+import { useLocale } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 
 interface RecordTabsProps<TItem, TFormValues extends FieldValues> {
   tabs: TabConfig<TItem, TFormValues>[];
@@ -43,6 +45,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
   readOnly,
 }: RecordTabsProps<TItem, TFormValues>) {
   const pathname = usePathname();
+  const locale = useLocale();
   const itemId = getItemId(item as Record<string, unknown>, idField);
   const formKey = `${itemId}-${JSON.stringify(item)}`;
 
@@ -54,17 +57,20 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
     >
       <div className="flex items-center gap-1 overflow-x-auto">
         <CustomTabsList>
-          {tabs.map((tab, index) => (
-            <div key={tab.value} className="flex items-center">
-              <CustomTabsTrigger value={tab.value} title={tab.label}>
-                <TabTriggerLabel
-                  icon={tab.icon}
-                  label={tab.label}
-                  index={index}
-                />
-              </CustomTabsTrigger>
-            </div>
-          ))}
+          {tabs.map((tab, index) => {
+            const label = resolveLabel(tab.label, locale);
+            return (
+              <div key={tab.value} className="flex items-center">
+                <CustomTabsTrigger value={tab.value} title={label}>
+                  <TabTriggerLabel
+                    icon={tab.icon}
+                    label={label}
+                    index={index}
+                  />
+                </CustomTabsTrigger>
+              </div>
+            );
+          })}
         </CustomTabsList>
       </div>
       {tabs.map((tab) => {

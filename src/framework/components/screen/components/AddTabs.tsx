@@ -7,6 +7,8 @@ import type {
 import type { ComponentType } from "react";
 import type { FieldValues } from "react-hook-form";
 import type { FormProps } from "@/framework/types/resource-components-types";
+import { useLocale } from "next-intl";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
 
 interface AddTabsProps<TItem, TFormValues extends FieldValues> {
   addTabs: FieldTabConfig<TFormValues>[];
@@ -25,6 +27,8 @@ export function AddTabs<TItem, TFormValues extends FieldValues>({
   Form,
   readOnly,
 }: AddTabsProps<TItem, TFormValues>) {
+  const locale = useLocale();
+
   return (
     <CustomTabs
       value={activeTab}
@@ -38,7 +42,11 @@ export function AddTabs<TItem, TFormValues extends FieldValues>({
             const displayIndex = globalIndex >= 0 ? globalIndex : index;
             return (
               <CustomTabsTrigger key={tab.value} value={tab.value}>
-                <TabTriggerLabel icon={tab.icon} label={tab.label} index={displayIndex} />
+                <TabTriggerLabel
+                  icon={tab.icon}
+                  label={resolveLabel(tab.label, locale)}
+                  index={displayIndex}
+                />
               </CustomTabsTrigger>
             );
           })}

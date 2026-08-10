@@ -6,7 +6,7 @@ export const userTabs: TabConfig<User, UserFormValues>[] = [
   {
     type: "relation",
     value: "roles",
-    label: "Roles",
+    label: { en: "Roles", ro: "Roluri" },
     relationKey: "roles",
   },
 ];

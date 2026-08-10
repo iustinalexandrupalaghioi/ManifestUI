@@ -1,6 +1,7 @@
 import type { FieldValues } from "react-hook-form"
 import type { ReactNode } from "react"
 import type { SectionConfig } from "../components/form/types/types"
+import type { TranslatableText } from "./i18n-types"
 
 export interface TabRenderContext {
   formOpen: boolean
@@ -10,7 +11,7 @@ export interface TabRenderContext {
 
 export interface FieldTabConfig<TFormValues extends FieldValues> {
   value: string
-  label: string
+  label: TranslatableText
   icon?: ReactNode
   sections: SectionConfig<TFormValues>[]
 }
@@ -22,7 +23,7 @@ export type TabConfig<TItem, TFormValues extends FieldValues> =
        *  instead so the tab and the relation stay decoupled. */
       type?: "list"
       value: string
-      label: string
+      label: TranslatableText
       icon?: ReactNode
       render: (item: TItem, ctx: TabRenderContext) => ReactNode
     }
@@ -33,7 +34,7 @@ export type TabConfig<TItem, TFormValues extends FieldValues> =
        *  also be rendered outside of tabs via `<RelationList>`. */
       type: "relation"
       value: string
-      label: string
+      label: TranslatableText
       icon?: ReactNode
       relationKey: string
       height?: number

@@ -6,13 +6,13 @@ export const rolesTabs: TabConfig<Role, RoleFormValues>[] = [
   {
     type: "relation",
     value: "permissions",
-    label: "Permissions",
+    label: { en: "Permissions", ro: "Permisiuni" },
     relationKey: "permissions",
   },
   {
     type: "relation",
     value: "users",
-    label: "Users",
+    label: { en: "Users", ro: "Utilizatori" },
     relationKey: "users",
   },
 ];

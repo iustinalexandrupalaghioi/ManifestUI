@@ -1,11 +1,15 @@
+"use client";
+
 import * as React from "react";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
+import { useTranslations } from "next-intl";
 import { cn } from "@/framework/lib/utils";
 
 function CustomYesNoSwitch({
   className,
   ...props
 }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
+  const t = useTranslations("Common");
   return (
     <SwitchPrimitive.Root
       data-slot="switch"
@@ -28,20 +32,30 @@ function CustomYesNoSwitch({
         data-slot="switch-thumb"
         className={cn(
           // Base thumb
-          "pointer-events-none relative block size-6 rounded-md transition-transform",
+          "group pointer-events-none relative flex size-6 items-center justify-center rounded-md transition-transform",
           // Move thumb
           "data-[state=checked]:translate-x-[90%] data-[state=unchecked]:translate-x-0",
           // Light mode colors
           "bg-background data-[state=checked]:bg-background",
           // Dark mode colors
           "dark:data-[state=checked]:bg-primary-foreground dark:data-[state=unchecked]:bg-foreground",
-          // Label text inside thumb
-          "before:absolute before:top-1/2 before:left-1/2 before:-translate-x-1/2 before:-translate-y-1/2 before:text-[10px] before:font-semibold",
-          "data-[state=checked]:before:content-['YES'] data-[state=unchecked]:before:content-['NO']",
           // Text color contrast
           "text-foreground dark:text-background",
         )}
-      />
+      >
+        <span
+          aria-hidden
+          className="hidden text-[10px] font-semibold uppercase group-data-[state=checked]:inline"
+        >
+          {t("yes")}
+        </span>
+        <span
+          aria-hidden
+          className="hidden text-[10px] font-semibold uppercase group-data-[state=unchecked]:inline"
+        >
+          {t("no")}
+        </span>
+      </SwitchPrimitive.Thumb>
     </SwitchPrimitive.Root>
   );
 }

@@ -80,6 +80,7 @@ export function createDetailDialog<
         updateAsync,
         confirmSaved,
         label: resolvedLabels.singular,
+        gender: resolvedLabels.gender,
         onComplete: () => setOpen(false),
       });
 

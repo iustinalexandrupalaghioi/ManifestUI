@@ -7,7 +7,7 @@ export const relationsTabs: TabConfig<Relation, RelationFormValues>[] = [
   {
     type: "relation",
     value: "todos",
-    label: "To do's",
+    label: { en: "To do's", ro: "Sarcini" },
     relationKey: "todos",
   },
 

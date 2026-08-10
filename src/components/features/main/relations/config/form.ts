@@ -167,17 +167,17 @@ const physicalSections: FieldTabConfig<RelationFormValues>["sections"] = [
 export const relationsFieldTabs: FieldTabConfig<RelationFormValues>[] = [
   {
     value: "contact",
-    label: "Contact",
+    label: { en: "Contact", ro: "Contact" },
     sections: contactSections,
   },
   {
     value: "profile",
-    label: "Profile image",
+    label: { en: "Profile image", ro: "Imagine de profil" },
     sections: profileSections,
   },
   {
     value: "physical",
-    label: "Physical",
+    label: { en: "Physical", ro: "Date fizice" },
     sections: physicalSections,
   },
 ];
@@ -187,7 +187,7 @@ export const relationsFieldTabs: FieldTabConfig<RelationFormValues>[] = [
 export const relationsAddTabs: FieldTabConfig<RelationFormValues>[] = [
   {
     value: "contact",
-    label: "Contact",
+    label: { en: "Contact", ro: "Contact" },
     sections: [
       {
         cols: 2,
@@ -214,12 +214,12 @@ export const relationsAddTabs: FieldTabConfig<RelationFormValues>[] = [
   },
   {
     value: "profile",
-    label: "Profile image",
+    label: { en: "Profile image", ro: "Imagine de profil" },
     sections: profileSections,
   },
   {
     value: "physical",
-    label: "Physical",
+    label: { en: "Physical", ro: "Date fizice" },
     sections: physicalSections,
   },
 ];
