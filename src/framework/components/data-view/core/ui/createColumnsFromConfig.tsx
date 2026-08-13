@@ -1,16 +1,15 @@
 import TableCellContent from "@/framework/components/data-view/core/ui/TableCellContent";
 import type { ColumnType } from "@/framework/components/data-view/features/filtering/filters";
-import type { Enum } from "@/framework/types/global/Enum";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import type { TranslatableText } from "@/framework/types/i18n-types";
-import { resolveLabel } from "@/framework/lib/resolveLabel";
+import { resolveLabel, resolveOptions, type EnumOptions } from "@/framework/lib/resolveLabel";
 
 export interface ColumnConfig {
   field: string;
   label: TranslatableText;
   columnLabel?: TranslatableText;
   columnName?: string;
-  accessorFn?: (row: any) => any;
+  accessorFn?: (row: any, locale: string) => any;
   type: ColumnType;
   size?: number;
   minSize?: number;
@@ -21,7 +20,7 @@ export interface ColumnConfig {
   pickupHidden?: boolean;
   sortable?: boolean;
   filterable?: boolean;
-  selectOptions?: Enum[];
+  selectOptions?: EnumOptions;
   bucket?: string;
   origin?: string;
   cardGroup?: string;
@@ -46,32 +45,37 @@ export function createColumnsFromConfig<TItem>(
   columns: ColumnConfig[],
   locale: string,
 ): ColumnDef<TItem>[] {
-  return columns.map((col) => ({
-    id: col.field,
-    ...(col.accessorFn
-      ? { accessorFn: col.accessorFn }
-      : { accessorKey: col.field }),
-    header: undefined,
-    size: col.size ?? DEFAULT_SIZE_BY_TYPE[col.type],
-    minSize: col.minSize ?? 30,
-    enableSorting: col.sortable ?? true,
-    enableColumnFilter: col.filterable ?? true,
-    cell: TableCellContent(col.type, col.selectOptions, col.bucket),
-    meta: {
-      columnId: col.field,
-      columnName: col.columnName ?? col.field,
-      columnLabel: resolveLabel(col.columnLabel ?? col.label, locale),
-      columnType: col.type,
-      origin: col.origin,
-      selectOptions: col.selectOptions,
-      cardGroup: col.cardGroup,
-      cardGroupLabel: col.cardGroupLabel
-        ? resolveLabel(col.cardGroupLabel, locale)
-        : undefined,
-      cardLabel: col.cardLabel ? resolveLabel(col.cardLabel, locale) : undefined,
-      cardLabelPosition: col.cardLabelPosition,
-    },
-  }));
+  return columns.map((col) => {
+    const selectOptions = resolveOptions(col.selectOptions, locale);
+    return {
+      id: col.field,
+      ...(col.accessorFn
+        ? { accessorFn: (row: TItem) => col.accessorFn!(row, locale) }
+        : { accessorKey: col.field }),
+      header: undefined,
+      size: col.size ?? DEFAULT_SIZE_BY_TYPE[col.type],
+      minSize: col.minSize ?? 30,
+      enableSorting: col.sortable ?? true,
+      enableColumnFilter: col.filterable ?? true,
+      cell: TableCellContent(col.type, selectOptions, col.bucket),
+      meta: {
+        columnId: col.field,
+        columnName: col.columnName ?? col.field,
+        columnLabel: resolveLabel(col.columnLabel ?? col.label, locale),
+        columnType: col.type,
+        origin: col.origin,
+        selectOptions,
+        cardGroup: col.cardGroup,
+        cardGroupLabel: col.cardGroupLabel
+          ? resolveLabel(col.cardGroupLabel, locale)
+          : undefined,
+        cardLabel: col.cardLabel
+          ? resolveLabel(col.cardLabel, locale)
+          : undefined,
+        cardLabelPosition: col.cardLabelPosition,
+      },
+    };
+  });
 }
 
 export function createVisibilityFromConfig(

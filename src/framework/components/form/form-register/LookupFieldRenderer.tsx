@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { CustomTextarea } from "@/framework/components/ui/CustomTextarea";
 import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch";
 import { cn } from "@/framework/lib/utils";
-import { resolveLabel } from "@/framework/lib/resolveLabel";
+import { resolveLabel, resolveOptions } from "@/framework/lib/resolveLabel";
 import type { TranslatableText } from "@/framework/types/i18n-types";
 
 import { CustomDateInput } from "@/framework/components/ui/CustomDateInput";
@@ -48,6 +48,7 @@ export function DisplayFieldRenderer({
   const label = resolveLabel(field.label, locale);
   const strValue = value !== null && value !== undefined ? String(value) : "";
   const className = cn(spanClass(field.span, activeCols));
+  const options = resolveOptions(field.options, locale);
 
   if (field.type === "switch") {
     return (
@@ -57,11 +58,11 @@ export function DisplayFieldRenderer({
     );
   }
 
-  if (field.type === "combobox" && field.options) {
+  if (field.type === "combobox" && options) {
     return (
       <FormFieldBase label={label} className={className}>
         <CustomCombobox
-          items={field.options}
+          items={options}
           value={strValue}
           readOnly
           className="bg-muted text-muted-foreground cursor-default"
@@ -70,9 +71,9 @@ export function DisplayFieldRenderer({
     );
   }
 
-  if (field.type === "select" && field.options) {
+  if (field.type === "select" && options) {
     const selectedLabel =
-      field.options.find((o) => o.value === strValue)?.label ?? strValue;
+      options.find((o) => o.value === strValue)?.label ?? strValue;
     return (
       <FormFieldBase label={label} className={className}>
         <Input

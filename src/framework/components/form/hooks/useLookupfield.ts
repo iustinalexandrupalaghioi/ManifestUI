@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { getResource } from "../../../registry/ResourceRegistry";
 import type { TranslatableText } from "@/framework/types/i18n-types";
+import type { EnumOptions } from "@/framework/lib/resolveLabel";
 
 export interface DisplayField<TRelated = any> {
   from: string;
@@ -19,7 +20,7 @@ export interface DisplayField<TRelated = any> {
     | "time"
     | "datetime"
     | "json";
-  options?: { value: string; label: string }[];
+  options?: EnumOptions;
   targetField?: string;
   maxRows?: number;
   accessorFn?: (record: TRelated) => unknown;

@@ -2,9 +2,6 @@ import { z } from "zod";
 
 export const rolePermissionSchema = z.object({
   role_id: z.coerce.number().min(1, "Role is required"),
-  // A code-level id from grantableResourceOptions() (see
-  // src/app/grantablePermissions.ts) — e.g. "todos" or
-  // "todos:complete-with-note" — not a DB foreign key.
   resource_id: z.string().trim().min(1, "Resource is required"),
   can_read: z.boolean().default(false),
   can_add: z.boolean().default(false),

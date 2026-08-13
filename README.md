@@ -429,10 +429,6 @@ grammatically correct Romanian noun form and gender (see `ResourceDescriptor.gen
   `actionForms`/`bulkActions` automatically. Adding a new custom action and forgetting to add
   its entry there means it'll work for administrators but can never be granted to a
   role-based user.
-- **`grantableResourceOptions()`/`describeGrantResource()` (same file) are English-only** —
-  the role-permissions picker's resource/action labels aren't run through the `{ en, ro }`
-  resolution the rest of the UI uses, by design (see the code comment), so they won't
-  translate if you add a `ro` UI for managing roles.
 - **No migration files exist yet** (`drizzle/` is empty/absent) — this project has only ever
   used `pnpm db:push`. The first time someone runs `db:generate` against a DB that's only
   seen pushes, review the generated SQL closely before migrating.

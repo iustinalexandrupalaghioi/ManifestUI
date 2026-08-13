@@ -23,9 +23,9 @@ export type Relation = {
 }
 
 export const Gender = createEnum({
-  male: "Male",
-  female: "Female",
-  other: "Other",
+  male: { en: "Male", ro: "Masculin" },
+  female: { en: "Female", ro: "Feminin" },
+  other: { en: "Other", ro: "Altul" },
 })
 
 export type Gender = keyof typeof Gender.labels

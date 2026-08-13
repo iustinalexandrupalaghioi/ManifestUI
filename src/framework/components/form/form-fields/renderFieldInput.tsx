@@ -7,7 +7,7 @@ import { FormSwitch } from "./FormSwitch";
 import { FormTextarea } from "./FormTextarea";
 import { FormTimeInput } from "./FormTimeInput";
 import type { FieldConfig } from "../types/types";
-import { resolveLabel } from "@/framework/lib/resolveLabel";
+import { resolveLabel, resolveOptions } from "@/framework/lib/resolveLabel";
 
 /**
  * The subset of FieldConfig variants that are "plain inputs" — they render a
@@ -102,7 +102,7 @@ export function renderFieldInput<TFormValues>(
         <FormSelect
           name={field.name as any}
           label={label}
-          options={field.options}
+          options={resolveOptions(field.options, locale) ?? []}
           placeholder={field.placeholder}
           disabled={disabled || readOnly}
           readOnly={readOnly}
@@ -115,7 +115,7 @@ export function renderFieldInput<TFormValues>(
         <FormCombobox
           name={field.name as any}
           label={label}
-          options={field.options}
+          options={resolveOptions(field.options, locale) ?? []}
           placeholder={field.placeholder}
           disabled={disabled || readOnly}
           readOnly={readOnly}

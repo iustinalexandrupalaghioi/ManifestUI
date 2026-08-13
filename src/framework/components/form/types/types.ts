@@ -3,6 +3,7 @@ import type { DisplayField } from "../hooks/useLookupfield";
 import type { FileFieldConfig } from "../hooks/useFileField";
 import type { FilterInput } from "@/framework/components/data-view/features/filtering";
 import type { TranslatableText } from "@/framework/types/i18n-types";
+import type { EnumOptions } from "@/framework/lib/resolveLabel";
 
 // ─────────────────────────────────────────────
 // Field configs
@@ -77,7 +78,7 @@ export interface SwitchFieldConfig<TFormValues> extends BaseField<TFormValues> {
 
 export interface SelectFieldConfig<TFormValues> extends BaseField<TFormValues> {
   type: "select";
-  options: { value: string; label: string }[];
+  options: EnumOptions;
   placeholder?: string;
 }
 
@@ -85,7 +86,7 @@ export interface ComboboxFieldConfig<
   TFormValues,
 > extends BaseField<TFormValues> {
   type: "combobox";
-  options: { value: string; label: string }[];
+  options: EnumOptions;
   placeholder?: string;
 }
 
@@ -124,7 +125,7 @@ export interface ReadonlyFieldConfig<
   label: TranslatableText;
   dataType?: ReadonlyDataType;
   maxRows?: number;
-  options?: { value: string; label: string }[];
+  options?: EnumOptions;
 }
 
 export interface LookupFieldConfig<TFormValues> extends BaseField<TFormValues> {

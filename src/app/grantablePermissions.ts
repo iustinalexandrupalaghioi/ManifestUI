@@ -26,32 +26,35 @@ export function isGrantableAction(resourceId: string): boolean {
   return resourceId.includes(":");
 }
 
-function parentResourceLabel(parentId: string): string {
+function parentResourceLabel(parentId: string, locale: string): string {
   const parent = resourceDescriptors.find((d) => d.id === parentId);
-  return parent ? resolveLabel(parent.singular, "en") : parentId;
+  return parent ? resolveLabel(parent.singular, locale) : parentId;
 }
 
-export function describeGrantResource(resourceId: string): string {
+export function describeGrantResource(resourceId: string, locale: string): string {
   const asAction = grantableActions.find((a) => a.id === resourceId);
   if (asAction) {
-    return `${parentResourceLabel(asAction.parentId)} - ${resolveLabel(asAction.label, "en")}`;
+    return `${parentResourceLabel(asAction.parentId, locale)} - ${resolveLabel(asAction.label, locale)}`;
   }
   const asResource = resourceDescriptors.find((d) => d.id === resourceId);
-  if (asResource) return resolveLabel(asResource.singular, "en");
+  if (asResource) return resolveLabel(asResource.singular, locale);
   return resourceId;
 }
 
-export function grantableResourceOptions(): Enum[] {
+const RESOURCES_GROUP: TranslatableText = { en: "Resources", ro: "Resurse" };
+const ACTIONS_GROUP: TranslatableText = { en: "Actions", ro: "Acțiuni" };
+
+export function grantableResourceOptions(locale: string): Enum[] {
   return [
     ...resourceDescriptors.map((d) => ({
       value: d.id,
-      label: resolveLabel(d.singular, "en"),
-      group: "Resources",
+      label: resolveLabel(d.singular, locale),
+      group: resolveLabel(RESOURCES_GROUP, locale),
     })),
     ...grantableActions.map((a) => ({
       value: a.id,
-      label: describeGrantResource(a.id),
-      group: "Actions",
+      label: describeGrantResource(a.id, locale),
+      group: resolveLabel(ACTIONS_GROUP, locale),
     })),
   ];
 }

@@ -1,7 +1,7 @@
 import { cn } from "@/framework/lib/utils";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useLocale } from "next-intl";
-import { resolveLabel } from "@/framework/lib/resolveLabel";
+import { resolveLabel, resolveOptions } from "@/framework/lib/resolveLabel";
 import type { FieldConfig } from "../types/types";
 import { FileFieldRenderer } from "./FileFieldRenderer";
 import { LookupFieldRenderer } from "./LookupFieldRenderer";
@@ -131,7 +131,7 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
         className={className}
         dataType={field.dataType}
         maxRows={field.maxRows}
-        options={field.options}
+        options={resolveOptions(field.options, locale)}
       />
     );
   }

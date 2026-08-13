@@ -4,6 +4,8 @@ import { format, parseISO } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { twMerge } from "tailwind-merge";
 import type { ColumnType } from "../components/data-view/features/filtering";
+import type { TranslatableText } from "@/framework/types/i18n-types";
+import { resolveLabel } from "./resolveLabel";
 
 const TZ = process.env.NEXT_PUBLIC_APP_TIMEZONE ?? "Europe/Bucharest";
 
@@ -55,11 +57,12 @@ function safeJsonParse(value: string): unknown {
   }
 }
 
-export function createEnum<T extends string>(config: Record<T, string>) {
+export function createEnum<T extends string>(config: Record<T, TranslatableText>) {
   const values = Object.keys(config) as T[];
   return {
     values,
-    labels: config as Record<T, string>,
-    options: values.map((v) => ({ value: v, label: config[v] })),
+    labels: config as Record<T, TranslatableText>,
+    options: (locale: string): Enum[] =>
+      values.map((v) => ({ value: v, label: resolveLabel(config[v], locale) })),
   };
 }

@@ -65,7 +65,7 @@ export const rolePermissionsForm: FormConfig<RolePermissionFormValues> = {
             type: "combobox",
             name: "resource_id",
             label: { en: "Resource", ro: "Resursă" },
-            options: grantableResourceOptions(),
+            options: grantableResourceOptions,
           },
         ],
       },

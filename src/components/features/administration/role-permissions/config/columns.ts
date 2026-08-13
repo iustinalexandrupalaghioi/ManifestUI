@@ -28,7 +28,7 @@ export const rolePermissionColumns: ColumnConfig[] = [
     label: { en: "Resource", ro: "Resursă" },
     type: "text",
     size: 200,
-    accessorFn: (row) => describeGrantResource(row.resource_id),
+    accessorFn: (row, locale) => describeGrantResource(row.resource_id, locale),
     cardGroup: "resource",
     cardGroupLabel: { en: "Resource", ro: "Resursă" },
   },
