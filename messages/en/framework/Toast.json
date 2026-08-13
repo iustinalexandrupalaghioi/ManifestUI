@@ -6,8 +6,8 @@
   "failedToDelete": "{count, plural, one {Failed to delete this {label}.} other {Failed to delete {count} {label}.}}",
   "uploadingFiles": "{count, plural, one {Uploading {label} file...} other {Uploading {label} files...}}",
   "deletingFiles": "{count, plural, one {Deleting {label} file...} other {Deleting {label} files...}}",
-  "filesUploaded": "{count, plural, one {{label} file uploaded!} other {{label} files uploaded!}}",
-  "filesDeleted": "{count, plural, one {{label} file deleted!} other {{label} files deleted!}}",
+  "filesUploaded": "{count, plural, one {The {label} file has been uploaded!} other {The {label} files have been uploaded!}}",
+  "filesDeleted": "{count, plural, one {The {label} file has been deleted!} other {The {label} files have been deleted!}}",
   "failedToUpload": "Failed to upload {label} files.",
   "created": "{label} created!",
   "updated": "{label} updated!"
