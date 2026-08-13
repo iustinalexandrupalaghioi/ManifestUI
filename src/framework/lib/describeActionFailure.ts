@@ -1,15 +1,13 @@
 import "server-only";
 import { sql } from "drizzle-orm";
 import { getLocale, getTranslations } from "next-intl/server";
-import { db } from "@/db";
+import { getDbClient } from "./dbClient";
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 import { resolveLabel } from "./resolveLabel";
 import { extractPgError, mapPgError } from "./mapPgError";
 import type { ActionError } from "./actionResult";
-import {
-  getCurrentUserId,
-  isAdministrator,
-} from "@/framework/authorization/rbac";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
+import { isAdministrator } from "@/framework/authorization/lib/isAdministrator";
 
 function getResourceRow(
   registry: ResourceDescriptor[],
@@ -45,7 +43,7 @@ async function lookupFkColumn(
   constraintName: string,
   tableName: string,
 ): Promise<string | undefined> {
-  const rows = await db.execute<{ column_name: string }>(sql`
+  const rows = await getDbClient().execute<{ column_name: string }>(sql`
     SELECT column_name FROM information_schema.key_column_usage
     WHERE constraint_name = ${constraintName} AND table_name = ${tableName}
     LIMIT 1
@@ -58,7 +56,7 @@ async function lookupFkColumn(
 // assuming "id", matching the "<col>_<col>" convention resource ids use for
 // composite keys elsewhere (see user-roles api.ts's parseId/selection.id).
 async function lookupPrimaryKeyColumns(tableName: string): Promise<string[]> {
-  const rows = await db.execute<{ column_name: string }>(sql`
+  const rows = await getDbClient().execute<{ column_name: string }>(sql`
     SELECT kcu.column_name
     FROM information_schema.table_constraints tc
     JOIN information_schema.key_column_usage kcu
@@ -96,7 +94,7 @@ async function lookupReferencingRows(
   if (pkColumns.length === 0) return null;
   const pkIdent = pkColumns.map(quoteIdent).join(", ");
 
-  const rows = await db.execute<Record<string, string | number>>(sql`
+  const rows = await getDbClient().execute<Record<string, string | number>>(sql`
     SELECT ${sql.raw(pkIdent)} FROM ${sql.raw(quoteIdent(tableName))}
     WHERE ${sql.raw(quoteIdent(column))} = ${parentId}
     ORDER BY ${sql.raw(pkIdent)} LIMIT 6

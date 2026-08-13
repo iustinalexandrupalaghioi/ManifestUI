@@ -335,7 +335,7 @@ signed in as an administrator.
   granted every permission (see `ALL_PERMISSIONS` below), including on resources nobody has
   written a `role_resource_permissions` row for yet.
 
-**Server-side enforcement** (`src/framework/authorization/rbac.ts`):
+**Server-side enforcement** (`src/framework/authorization/lib/`):
 
 - `getUserPermissions(userId)` — resolves a user's full permission-string list: `["*"]`
   (the `ALL_PERMISSIONS` sentinel) if they're an administrator or `ENABLE_RBAC=false`,
@@ -350,7 +350,7 @@ signed in as an administrator.
   [Server actions & ActionResult](#server-actions--actionresult)). This is what
   `createResourceActions(...)` uses under the hood for every resource's `add`/`update`/
   `delete`/custom actions.
-- `ResourceGuard` (`src/framework/authorization/ResourceGuard.tsx`) — the server component
+- `ResourceGuard` (`src/framework/authorization/ui/ResourceGuard.tsx`) — the server component
   that gates a whole route the same way: redirects to `/auth/login` if not signed in,
   renders `AccessDeniedDialog` if signed in but missing the permission. Every route under
   `src/app/<resource>/` wraps its page in one, e.g.
@@ -362,7 +362,8 @@ signed in as an administrator.
   root-equivalent, since it could otherwise assign a more privileged role to anyone, or grant
   a role permissions its own creator doesn't have.
 
-**Client-side** (`src/framework/authorization/usePermissions.ts`):
+**Client-side** (`src/framework/authorization/hooks/usePermissions.ts`,
+`src/framework/authorization/cache/permissions.ts`):
 
 - `usePermissions()` — a React Query hook caching the signed-in user's permission set
   (fetched via the `getMyPermissions` server action, seeded from the layout's initial

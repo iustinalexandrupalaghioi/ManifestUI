@@ -4,8 +4,10 @@
   "deleted": "{gender, select, feminine {{count, plural, one {# {label} ștearsă!} few {# {label} șterse!} other {# de {label} șterse!}}} neuter {{count, plural, one {# {label} șters!} few {# {label} șterse!} other {# de {label} șterse!}}} other {{count, plural, one {# {label} șters!} few {# {label} șterși!} other {# de {label} șterși!}}}}",
   "deletedOf": "{gender, select, feminine {{succeeded} din {total} {label} șterse.} neuter {{succeeded} din {total} {label} șterse.} other {{succeeded} din {total} {label} șterși.}}",
   "failedToDelete": "{count, plural, one {{gender, select, feminine {Nu s-a putut șterge o {label}.} other {Nu s-a putut șterge un {label}.}}} few {Nu s-au putut șterge # {label}.} other {Nu s-au putut șterge # de {label}.}}",
-  "uploadingFiles": "Se încarcă fișierele pentru {label}...",
-  "filesUploaded": "Fișierele pentru {label} au fost încărcate!",
+  "uploadingFiles": "{count, plural, one {Se încarcă fișierul pentru {label}...} other {Se încarcă fișierele pentru {label}...}}",
+  "deletingFiles": "{count, plural, one {Se șterge fișierul pentru {label}...} other {Se șterg fișierele pentru {label}...}}",
+  "filesUploaded": "{count, plural, one {Fișierul pentru {label} a fost încărcat!} other {Fișierele pentru {label} au fost încărcate!}}",
+  "filesDeleted": "{count, plural, one {Fișierul pentru {label} a fost șters!} other {Fișierele pentru {label} au fost șterse!}}",
   "failedToUpload": "Nu s-au putut încărca fișierele pentru {label}.",
   "created": "{gender, select, feminine {{label} creată!} other {{label} creat!}}",
   "updated": "{gender, select, feminine {{label} actualizată!} other {{label} actualizat!}}"

@@ -18,7 +18,7 @@ import type { ResourceId } from "../../types/resource-hook-types";
 import type { FieldTabConfig } from "../../types/tab-config-type";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
 import { resolvePermission } from "@/framework/lib/resolvePermissions";
-import { usePermissions } from "@/framework/authorization/usePermissions";
+import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 
 export function createAddDialog<
   TItem,

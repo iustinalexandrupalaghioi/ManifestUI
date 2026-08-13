@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { LogOutIcon } from "lucide-react";
 import { logout } from "../actions/logout";
 import { getQueryClient } from "@/framework/lib/queryClient";
-import { PERMISSIONS_QUERY_KEY } from "@/framework/authorization/usePermissions";
-import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/useCurrentUserId";
+import { PERMISSIONS_QUERY_KEY } from "@/framework/authorization/cache/permissions";
+import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/cache/currentUserId";
 
 export function LogoutButton() {
   const t = useTranslations("Auth");

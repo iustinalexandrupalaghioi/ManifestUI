@@ -1,5 +1,5 @@
 import { RelationOverview } from "@/components/features/main/relations/resource";
-import { ResourceGuard } from "@/framework/authorization/ResourceGuard";
+import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {
   return (

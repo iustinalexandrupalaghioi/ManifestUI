@@ -1,18 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { getQueryClient } from "@/framework/lib/queryClient";
-import { getMyPermissions } from "./getMyPermissions";
-import { ALL_PERMISSIONS } from "./constants";
+import { ALL_PERMISSIONS } from "../constants";
 
 export const PERMISSIONS_QUERY_KEY = ["auth", "permissions"] as const;
-
-export function usePermissions() {
-  return useQuery({
-    queryKey: PERMISSIONS_QUERY_KEY,
-    queryFn: async () => new Set(await getMyPermissions()),
-  });
-}
 
 // Plain, synchronous — safe to call from anywhere (including the
 // PermissionValue closures defineResourceComponents builds at module-eval

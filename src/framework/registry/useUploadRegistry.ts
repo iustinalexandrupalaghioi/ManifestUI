@@ -15,13 +15,12 @@ export function useUploadRegistry(): UploadRegistry {
   }
 
   const runAll = async (
-    id: number | string,
     data: Record<string, unknown>
   ): Promise<Record<string, string>> => {
     const patches: Record<string, string> = {}
     for (const [, entry] of entries.current) {
       const existingPath = data[entry.pathField] as string | undefined
-      const result = await entry.handleOperation(id, existingPath)
+      const result = await entry.handleOperation(existingPath)
       if (result.action === "uploaded" || result.action === "deleted") {
         patches[entry.pathField] = result.path ?? ""
       }

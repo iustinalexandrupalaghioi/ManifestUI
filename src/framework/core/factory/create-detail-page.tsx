@@ -29,10 +29,8 @@ import type { ResourceHooks } from "../hooks/create-resource-hooks";
 import { getItemId } from "../resource-id";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { resolvePermission } from "@/framework/lib/resolvePermissions";
-import {
-  hasPermission,
-  usePermissions,
-} from "@/framework/authorization/usePermissions";
+import { hasPermission } from "@/framework/authorization/cache/permissions";
+import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 import { BulkActionResult } from "@/framework/lib/actionResult";
 
 export function createDetailPage<

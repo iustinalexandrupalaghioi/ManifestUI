@@ -4,8 +4,10 @@
   "deleted": "Deleted {count} {label}!",
   "deletedOf": "Deleted {succeeded} of {total} {label}.",
   "failedToDelete": "{count, plural, one {Failed to delete this {label}.} other {Failed to delete {count} {label}.}}",
-  "uploadingFiles": "Uploading {label} files...",
-  "filesUploaded": "{label} files uploaded!",
+  "uploadingFiles": "{count, plural, one {Uploading {label} file...} other {Uploading {label} files...}}",
+  "deletingFiles": "{count, plural, one {Deleting {label} file...} other {Deleting {label} files...}}",
+  "filesUploaded": "{count, plural, one {{label} file uploaded!} other {{label} files uploaded!}}",
+  "filesDeleted": "{count, plural, one {{label} file deleted!} other {{label} files deleted!}}",
   "failedToUpload": "Failed to upload {label} files.",
   "created": "{label} created!",
   "updated": "{label} updated!"

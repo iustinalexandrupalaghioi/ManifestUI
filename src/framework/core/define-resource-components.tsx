@@ -10,7 +10,7 @@ import type { ResourceId } from "../types/resource-hook-types";
 import type { FormConfig, SectionConfig } from "../components/form/types/types";
 import type { ResourceHooks } from "./hooks/create-resource-hooks";
 import { createResourceComponents } from "./factory/create-resource-components";
-import { hasPermission } from "@/framework/authorization/usePermissions";
+import { hasPermission } from "@/framework/authorization/cache/permissions";
 import {
   createColumnsFromConfig,
   createVisibilityFromConfig,

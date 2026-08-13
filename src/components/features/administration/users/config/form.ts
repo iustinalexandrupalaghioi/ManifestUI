@@ -1,5 +1,5 @@
 import type { FormConfig } from "@/framework/components/form/types/types";
-import { currentUserId } from "@/framework/authorization/useCurrentUserId";
+import { currentUserId } from "@/framework/authorization/cache/currentUserId";
 import type { UserFormValues } from "./schema";
 
 export const usersForm: FormConfig<UserFormValues> = {

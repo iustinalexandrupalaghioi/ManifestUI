@@ -5,7 +5,6 @@ import { createContext } from "react"
 export interface UploadEntry {
   pathField: string
   handleOperation: (
-    id: number | string,
     existingPath?: string
   ) => Promise<{ action: "uploaded" | "deleted" | "none"; path?: string }>
   reset: () => void
@@ -14,10 +13,7 @@ export interface UploadEntry {
 export interface UploadRegistry {
   register: (name: string, entry: UploadEntry) => void
   unregister: (name: string) => void
-  runAll: (
-    id: number | string,
-    data: Record<string, unknown>
-  ) => Promise<Record<string, string>>
+  runAll: (data: Record<string, unknown>) => Promise<Record<string, string>>
   resetAll: () => void
   snapshot: () => UploadEntry[]
 }

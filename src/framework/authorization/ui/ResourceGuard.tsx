@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
-import { getCurrentUserId, hasServerPermission } from "./rbac";
+import { getCurrentUserId } from "../lib/getCurrentUserId";
+import { hasServerPermission } from "../lib/permissions";
 import { AccessDeniedDialog } from "./AccessDeniedDialog";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { resourceDescriptors } from "@/app/resourceDescriptors";

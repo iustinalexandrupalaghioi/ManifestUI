@@ -4,10 +4,10 @@ import { db } from "@/db";
 import { role_resource_permissions, roles } from "@/db/schema";
 import {
   assertHasAllPermissions,
-  defineResourceActions,
-  getCurrentUserId,
   permissionStringsForResourceGrant,
-} from "@/framework/authorization/rbac";
+} from "@/framework/authorization/lib/confusedDeputyGuard";
+import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
 import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";

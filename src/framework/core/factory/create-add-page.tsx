@@ -21,7 +21,7 @@ import {
 import { useAddSave } from "@/framework/components/screen/hooks/useAddSave";
 import { ErrorDialog } from "@/framework/components/dialog/ErrorDialog";
 import { resolvePermission } from "@/framework/lib/resolvePermissions";
-import { usePermissions } from "@/framework/authorization/usePermissions";
+import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 
 export function createAddPage<
   TItem,

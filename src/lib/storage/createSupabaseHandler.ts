@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client"
-import type { StorageHandler } from "./types"
+import type { StorageHandler } from "@/framework/components/files/storage/types"
 
 interface SupabaseHandlerOptions {
   supabaseUrl: string

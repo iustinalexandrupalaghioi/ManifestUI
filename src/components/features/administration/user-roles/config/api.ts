@@ -2,12 +2,10 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { user_roles, roles, users } from "@/db/schema";
-import {
-  assertHasAllPermissions,
-  defineResourceActions,
-  getCurrentUserId,
-  getPermissionsForRoleIds,
-} from "@/framework/authorization/rbac";
+import { assertHasAllPermissions } from "@/framework/authorization/lib/confusedDeputyGuard";
+import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
+import { getPermissionsForRoleIds } from "@/framework/authorization/lib/permissions";
 import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";

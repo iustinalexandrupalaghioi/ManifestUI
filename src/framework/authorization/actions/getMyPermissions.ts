@@ -1,6 +1,7 @@
 "use server";
 
-import { getCurrentUserId, getUserPermissions } from "./rbac";
+import { getCurrentUserId } from "../lib/getCurrentUserId";
+import { getUserPermissions } from "../lib/permissions";
 
 export async function getMyPermissions(): Promise<string[]> {
   const userId = await getCurrentUserId();

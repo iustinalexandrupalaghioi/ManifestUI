@@ -2,13 +2,11 @@
 
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import {
-  createSupabaseHandler,
-  setStorageHandler,
-} from "@/framework/components/files";
+import { setStorageHandler } from "@/framework/components/files";
+import { createSupabaseHandler } from "@/lib/storage/createSupabaseHandler";
 import { getQueryClient } from "@/framework/lib/queryClient";
-import { PERMISSIONS_QUERY_KEY } from "@/framework/authorization/usePermissions";
-import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/useCurrentUserId";
+import { PERMISSIONS_QUERY_KEY } from "@/framework/authorization/cache/permissions";
+import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/cache/currentUserId";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import "./register-resources";

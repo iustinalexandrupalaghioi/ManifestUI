@@ -2,18 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSafeRedirect } from "@/framework/authentication/lib/isSafeRedirect";
 
-// Keeps the Supabase session cookie fresh on every request. Per @supabase/ssr's
-// own docs this is mandatory for SSR: without it, a page rendered on the server
-// can read an expired access token (e.g. a tab reopened after being idle) since
-// only this proxy - not Server Components - is allowed to refresh and re-set it.
-//
-// The real, per-page authorization boundary is `ResourceGuard` and the
-// `withPermission` wrapper on each resource's server actions (see
-// src/framework/authorization/rbac.ts) — not this file. Per Next's own
-// guidance, `proxy`/middleware should only do *optimistic* checks (fast,
-// no DB round trip), so the redirect below is a defense-in-depth fallback
-// for the case where a page under an authenticated route forgets to add
-// `ResourceGuard` — it is not a substitute for that check.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -26,7 +14,9 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),

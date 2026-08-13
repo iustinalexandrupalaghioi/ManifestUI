@@ -77,10 +77,7 @@ export function useFileField(fieldName: string, bucket: string) {
     setValue(fieldName, "", { shouldDirty: true })
   }
 
-  const handleOperation = async (
-    id: number | string,
-    existingPath?: string
-  ) => {
+  const handleOperation = async (existingPath?: string) => {
     const storage = getStorageHandler()
     const currentFile = storedFileRef.current
     const isPendingDelete = pendingDeleteRef.current
@@ -106,7 +103,9 @@ export function useFileField(fieldName: string, bucket: string) {
       if (pathToRemove) await safeRemove(pathToRemove)
       const result = await storage.upload(currentFile, {
         bucket,
-        path: `${id}/${currentFile.name}`,
+        // A client-generated key, not the record id — keeps the upload
+        // decoupled from whatever id the record ends up with.
+        path: `${crypto.randomUUID()}/${currentFile.name}`,
       })
       return { action: "uploaded" as const, path: result.path }
     }

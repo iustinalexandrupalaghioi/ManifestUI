@@ -2,12 +2,10 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import {
-  ForbiddenError,
-  defineResourceActions,
-  getCurrentUserId,
-  isAdministrator,
-} from "@/framework/authorization/rbac";
+import { ForbiddenError } from "@/framework/authorization/lib/ForbiddenError";
+import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
+import { isAdministrator } from "@/framework/authorization/lib/isAdministrator";
 import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";

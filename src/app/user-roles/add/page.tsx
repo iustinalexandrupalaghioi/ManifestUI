@@ -1,5 +1,5 @@
 import { UserRoleAddPage } from "@/components/features/administration/user-roles/resource";
-import { ResourceGuard } from "@/framework/authorization/ResourceGuard";
+import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {
   return (

@@ -6,7 +6,7 @@ import type {
   ResourceId,
   BulkActionsHookResult,
 } from "../../types/resource-hook-types";
-import { hasPermission } from "@/framework/authorization/usePermissions";
+import { hasPermission } from "@/framework/authorization/cache/permissions";
 
 export function createActionsHook<
   TItem,

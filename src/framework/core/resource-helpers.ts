@@ -5,7 +5,7 @@ import { mapPgError } from "@/framework/lib/mapPgError";
 import { ActionResultError } from "@/framework/lib/actionResult";
 import type { AppError } from "@/framework/types/global/AppError";
 import { useState } from "react";
-import { toastLoading, toastUpdate } from "@/framework/lib/toast";
+import { dismissToast, toastLoading, toastUpdate } from "@/framework/lib/toast";
 import { useUploadStore } from "../components/form/hooks/useUploadStore";
 import type { UploadEntry } from "../registry/UploadRegistryContext";
 
@@ -67,24 +67,66 @@ export async function runUploadsInBackground<
     return;
   }
 
+  const lowerLabel = label.toLowerCase();
   useUploadStore.getState().setUploading(formId, true);
-  const toastId = toastLoading(t("uploadingFiles", { label }));
+
+  // Read what's actually queued before running any of it, so the loading
+  // toast says "uploading"/"deleting" correctly instead of always assuming
+  // an upload — `pending` is every registered file field, not just changed
+  // ones, so this can't be inferred from `pending.length` alone.
+  const store = useUploadStore.getState();
+  const prefix = `${formId}:`;
+  const pendingUploadCount = [...store.files.keys()].filter((k) =>
+    k.startsWith(prefix),
+  ).length;
+  const pendingDeleteCount = [...store.deletes].filter(
+    (k) => k.startsWith(prefix) && !store.files.has(k),
+  ).length;
+  const toastId =
+    pendingUploadCount > 0
+      ? toastLoading(
+          t("uploadingFiles", { label: lowerLabel, count: pendingUploadCount }),
+        )
+      : toastLoading(
+          t("deletingFiles", {
+            label: lowerLabel,
+            count: pendingDeleteCount || 1,
+          }),
+        );
   try {
     const patches: Record<string, string> = {};
+    let uploadedCount = 0;
+    let deletedCount = 0;
     for (const entry of pending) {
       const existingPath = data[entry.pathField] as string | undefined;
-      const result = await entry.handleOperation(id, existingPath);
+      const result = await entry.handleOperation(existingPath);
       if (result.action !== "none") {
         patches[entry.pathField] = result.path ?? "";
       }
+      if (result.action === "uploaded") uploadedCount++;
+      if (result.action === "deleted") deletedCount++;
     }
     if (Object.keys(patches).length) {
       await updateAsync({ id, data: { ...data, ...patches } as TFormValues });
     }
     useUploadStore.getState().clearAll(formId);
-    toastUpdate(toastId, "success", t("filesUploaded", { label }));
+    if (uploadedCount > 0) {
+      toastUpdate(
+        toastId,
+        "success",
+        t("filesUploaded", { label: lowerLabel, count: uploadedCount }),
+      );
+    } else if (deletedCount > 0) {
+      toastUpdate(
+        toastId,
+        "success",
+        t("filesDeleted", { label: lowerLabel, count: deletedCount }),
+      );
+    } else {
+      dismissToast(toastId);
+    }
   } catch {
     useUploadStore.getState().setUploading(formId, false);
-    toastUpdate(toastId, "error", t("failedToUpload", { label }));
+    toastUpdate(toastId, "error", t("failedToUpload", { label: lowerLabel }));
   }
 }

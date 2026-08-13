@@ -2,7 +2,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { todos, relations } from "@/db/schema";
-import { defineResourceActions } from "@/framework/authorization/rbac";
+import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
 import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";

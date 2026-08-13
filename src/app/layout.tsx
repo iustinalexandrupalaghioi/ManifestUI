@@ -4,8 +4,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Providers } from "./providers";
 import { AppNavBar } from "@/components/AppNavbar";
-import { getMyPermissions } from "@/framework/authorization/getMyPermissions";
-import { getCurrentUserId } from "@/framework/authorization/rbac";
+import { getMyPermissions } from "@/framework/authorization/actions/getMyPermissions";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
 import "./globals.css";
 
 export const metadata: Metadata = {

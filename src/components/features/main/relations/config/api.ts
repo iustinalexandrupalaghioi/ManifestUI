@@ -2,7 +2,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { relations } from "@/db/schema";
-import { defineResourceActions } from "@/framework/authorization/rbac";
+import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
 import { createResourceActions } from "@/app/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
@@ -134,6 +134,9 @@ export const {
     return result.id;
   }),
 
+  // `alsoAllow: ["add"]` — attaching an uploaded image's path runs through
+  // this same update after the add screen's background upload finishes, so
+  // a role with only "add" (no "update") still needs to complete it.
   updateRelation: resourceAction.update(
     async (tx, id: number, data: RelationFormValues) => {
       const parsed = relationSchema.parse(data);
@@ -142,6 +145,7 @@ export const {
         .set(toRelationRow(parsed))
         .where(eq(relations.id, id));
     },
+    { alsoAllow: ["add"] },
   ),
 
   deleteRelations: resourceAction.delete((tx, id: number) =>

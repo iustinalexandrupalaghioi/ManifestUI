@@ -6,7 +6,6 @@ export type {
   UploadProgressEvent,
 } from "./storage/types"
 export { setStorageHandler, getStorageHandler } from "./storage/handler"
-export { createSupabaseHandler } from "./storage/supabase-factory"
 
 // Hooks
 export { useFileUpload } from "./hooks/useFileUpload"

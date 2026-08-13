@@ -1,11 +1,11 @@
 import "server-only";
-import { db } from "@/db";
+import { getDbClient, type DbClient } from "./dbClient";
 import { describeActionFailure } from "./describeActionFailure";
 import { DescribedActionError, type ActionError } from "./actionResult";
-import { ForbiddenError } from "@/framework/authorization/rbac";
+import { ForbiddenError } from "@/framework/authorization/lib/ForbiddenError";
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 
-type Tx = Parameters<typeof db.transaction>[0] extends (tx: infer T) => any
+type Tx = Parameters<DbClient["transaction"]>[0] extends (tx: infer T) => any
   ? T
   : never;
 
@@ -26,7 +26,7 @@ async function runTransaction<T>(
   verb: string,
 ): Promise<T> {
   try {
-    return await db.transaction(fn);
+    return await getDbClient().transaction(fn);
   } catch (err) {
     // A permission guard thrown from inside `fn` (e.g. "can't strip your
     // own admin flag") is not a DB failure — let it reach withAdminAction
@@ -49,7 +49,7 @@ async function runPerIdImpl<TId extends string | number>(
 
   for (const id of ids) {
     try {
-      await db.transaction((tx) => fn(tx, id));
+      await getDbClient().transaction((tx) => fn(tx, id));
       succeededIds.push(String(id));
     } catch (err) {
       const described = await describeActionFailure(registry, err, resourceId, id, verb);
@@ -91,11 +91,17 @@ export function createResourceActions(
       ] as const;
     },
 
+    // `alsoAllow` widens who can call this beyond "update" — e.g. a file
+    // path patch that's really just finishing an "add" the caller already
+    // had rights to. Only use it when `fn` is scoped narrowly enough that
+    // granting it under another verb can't be used to edit fields that
+    // verb shouldn't reach.
     update<TId extends string | number, TArgs extends unknown[], R>(
       fn: (tx: Tx, id: TId, ...args: TArgs) => Promise<R>,
+      options?: { alsoAllow?: string[] },
     ) {
       return [
-        "update",
+        options?.alsoAllow ? ["update", ...options.alsoAllow] : "update",
         (id: TId, ...args: TArgs) =>
           runTransaction(
             (tx) => fn(tx, id, ...args),
