@@ -51,10 +51,10 @@ async function lookupFkColumn(
   return rows[0]?.column_name;
 }
 
-// Not every table has an "id" column — e.g. user_roles has a composite
-// primary key (user_id, role_id). Look up the real PK column(s) instead of
+// Not every table has an "id" column — e.g. user_group has a composite
+// primary key (user_id, group_id). Look up the real PK column(s) instead of
 // assuming "id", matching the "<col>_<col>" convention resource ids use for
-// composite keys elsewhere (see user-roles api.ts's parseId/selection.id).
+// composite keys elsewhere (see user-groups api.ts's parseId/selection.id).
 async function lookupPrimaryKeyColumns(tableName: string): Promise<string[]> {
   const rows = await getDbClient().execute<{ column_name: string }>(sql`
     SELECT kcu.column_name

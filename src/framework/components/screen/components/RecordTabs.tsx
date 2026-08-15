@@ -15,7 +15,7 @@ import type { TabConfig } from "@/framework/types/tab-config-type";
 import type { RelationConfig } from "@/framework/types/relation-config-type";
 import type { ComponentType } from "react";
 import type { FieldValues } from "react-hook-form";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 

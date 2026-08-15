@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/navigation";
 import { getLocale } from "next-intl/server";
 import { getCurrentUserId } from "../lib/getCurrentUserId";
 import { hasServerPermission } from "../lib/permissions";
 import { AccessDeniedDialog } from "./AccessDeniedDialog";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
-import { resourceDescriptors } from "@/app/resourceDescriptors";
+import { resourceDescriptors } from "@/app/[locale]/cms/resourceDescriptors";
 
 export async function ResourceGuard({
   resourceId,
@@ -17,19 +17,19 @@ export async function ResourceGuard({
   children: ReactNode;
 }) {
   const userId = await getCurrentUserId();
+  const locale = await getLocale();
 
   // Not signed in at all — send to login rather than showing "access
   // denied", which is reserved for a signed-in user missing the permission.
   if (!userId) {
-    redirect("/auth/login");
+    redirect({ href: "/auth/login", locale });
   }
 
   const allowed = await hasServerPermission(userId, `${resourceId}:${action}`);
 
   if (!allowed) {
-    const locale = await getLocale();
     // Resolve the descriptor's translated plural label, not the raw
-    // resourceId (e.g. "role-permissions") — the same "raw identifier leaks
+    // resourceId (e.g. "group-permissions") — the same "raw identifier leaks
     // into translated sentence" bug class as DeleteDialog's old `noun` prop.
     const descriptor = resourceDescriptors.find((d) => d.id === resourceId);
     const resourceLabel = descriptor

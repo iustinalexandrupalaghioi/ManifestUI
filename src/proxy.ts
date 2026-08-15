@@ -1,9 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import createMiddleware from "next-intl/middleware";
 import { isSafeRedirect } from "@/framework/authentication/lib/isSafeRedirect";
+import { routing } from "@/i18n/routing";
+
+const handleI18nRouting = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const response = handleI18nRouting(request);
+
+  if (response.headers.get("location")) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,13 +22,10 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+            response.cookies.set(name, value);
+          });
         },
       },
     },
@@ -33,12 +38,19 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname, search } = request.nextUrl;
-  const isPublicRoute =
-    pathname.startsWith("/auth/") || pathname.startsWith("/api/");
 
-  if (!user && !isPublicRoute) {
-    const next = `${pathname}${search}`;
-    const loginUrl = new URL("/auth/login", request.url);
+  const localeMatch = pathname.match(
+    new RegExp(`^/(${routing.locales.join("|")})(?=/|$)`),
+  );
+  const localePrefix = localeMatch ? localeMatch[0] : "";
+  const pathWithoutLocale = localeMatch
+    ? pathname.slice(localePrefix.length) || "/"
+    : pathname;
+  const requiresAuth = pathWithoutLocale.startsWith("/cms");
+
+  if (requiresAuth && !user) {
+    const next = `${pathWithoutLocale}${search}`;
+    const loginUrl = new URL(`${localePrefix}/auth/login`, request.url);
     if (isSafeRedirect(next)) loginUrl.searchParams.set("next", next);
     return NextResponse.redirect(loginUrl);
   }

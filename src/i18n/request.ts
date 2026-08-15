@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
+import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
-import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale } from "./locales";
+import { routing } from "./routing";
 
 const NAMESPACES = [
   { group: "framework", name: "Common" },
@@ -26,13 +26,15 @@ const NAMESPACES = [
   { group: "framework", name: "Calendar" },
   { group: "features", name: "Menu" },
   { group: "features", name: "Todos" },
-  { group: "features", name: "RolePermissions" },
+  { group: "features", name: "GroupPermissions" },
+  { group: "site", name: "Site" },
 ] as const;
 
-export default getRequestConfig(async () => {
-  const cookieStore = await cookies();
-  const requested = cookieStore.get(LOCALE_COOKIE)?.value;
-  const locale = isLocale(requested) ? requested : DEFAULT_LOCALE;
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requested = await requestLocale;
+  const locale = hasLocale(routing.locales, requested)
+    ? requested
+    : routing.defaultLocale;
 
   const modules = await Promise.all(
     NAMESPACES.map(

@@ -4,7 +4,7 @@ import type { FilterInput } from "../components/data-view/features/filtering/fil
 
 export interface ChildResource<TItem, TFormValues extends FieldValues> {
   // TId left as `any` — a relation's child can have any id shape (number,
-  // string, or a composite-string like role-permissions'/user-roles' own
+  // string, or a composite-string like group-permissions'/user-groups' own
   // synthetic ids); this config only ever renders the child's own
   // components/hooks, never constructs a child TId itself.
   hooks: ResourceHooks<TItem, TFormValues, any>;

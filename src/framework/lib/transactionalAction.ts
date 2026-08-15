@@ -72,7 +72,7 @@ export function createResourceActions(
 ) {
   return {
     // `getId` is only useful when the id is knowable before insert (e.g. a
-    // composite key built from the payload, as with user-roles) — omit it
+    // composite key built from the payload, as with user-groups) — omit it
     // and a DB-assigned id just won't be named in a failure message.
     add<TArgs extends unknown[], R>(
       fn: (tx: Tx, ...args: TArgs) => Promise<R>,

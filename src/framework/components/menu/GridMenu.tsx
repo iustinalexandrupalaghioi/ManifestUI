@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { MenuSection } from "./types";
 
 const GridMenu = ({ menuItems }: { menuItems: MenuSection[] }) => {

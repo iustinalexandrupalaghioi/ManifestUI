@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { user } from "@/db/schema";
 
 // Shape Supabase Database Webhooks send for INSERT/UPDATE/DELETE triggers.
 interface AuthUserRecord {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   if (payload.type === "DELETE") {
     const id = payload.old_record?.id;
     if (id) {
-      await db.delete(users).where(eq(users.id, id));
+      await db.delete(user).where(eq(user.id, id));
     }
     return NextResponse.json({ ok: true });
   }
@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
   // Upsert, not plain insert — webhook deliveries can retry or arrive
   // out of order (e.g. an UPDATE landing before its INSERT).
   await db
-    .insert(users)
+    .insert(user)
     .values(row)
-    .onConflictDoUpdate({ target: users.id, set: row });
+    .onConflictDoUpdate({ target: user.id, set: row });
 
   return NextResponse.json({ ok: true });
 }

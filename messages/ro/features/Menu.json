@@ -9,12 +9,12 @@
   "relationsDescription": "Vizualizează toate relațiile (date demonstrative)",
   "users": "Utilizatori",
   "usersDescription": "Vizualizează utilizatorii înregistrați",
-  "roles": "Roluri",
-  "rolesDescription": "Administrează rolurile",
+  "groups": "Grupuri",
+  "groupsDescription": "Administrează grupurile",
   "resources": "Resurse",
   "resourcesDescription": "Administrează resursele și acțiunile care pot fi acordate",
-  "rolePermissions": "Permisiuni rol",
-  "rolePermissionsDescription": "Administrează ce poate face fiecare rol",
-  "userRoles": "Roluri utilizator",
-  "userRolesDescription": "Atribuie roluri utilizatorilor"
+  "groupPermissions": "Permisiuni grup",
+  "groupPermissionsDescription": "Administrează ce poate face fiecare grup",
+  "userGroups": "Grupuri utilizator",
+  "userGroupsDescription": "Atribuie grupuri utilizatorilor"
 }

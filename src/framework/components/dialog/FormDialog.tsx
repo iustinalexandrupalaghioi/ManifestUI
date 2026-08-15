@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLinkIcon, Loader2Icon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { BaseDialog } from "./BaseDialog";
 import { usePendingChanges } from "@/framework/hooks/usePendingChanges";
 import { stashNavigationState } from "@/framework/lib/navigationHandoff";

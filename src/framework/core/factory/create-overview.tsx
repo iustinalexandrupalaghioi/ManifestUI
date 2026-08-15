@@ -32,7 +32,8 @@ import { toFilterRuleFallback } from "@/framework/components/data-view/features/
 import type { Row } from "@tanstack/react-table";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import type { FieldValues } from "react-hook-form";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";

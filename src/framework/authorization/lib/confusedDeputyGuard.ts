@@ -3,13 +3,13 @@ import { ForbiddenError } from "./ForbiddenError";
 import { ALL_PERMISSIONS } from "../constants";
 import { getUserPermissions, expandPermissionRows } from "./permissions";
 
-// Confused-deputy guard for permission-granting endpoints (assigning a role
-// to a user, adding/editing a role's resource permissions): a caller may
-// only hand out permissions they themselves hold. Without this, a role
-// scoped to "can manage user-role assignments" or "can manage role
+// Confused-deputy guard for permission-granting endpoints (assigning a group
+// to a user, adding/editing a group's resource permissions): a caller may
+// only hand out permissions they themselves hold. Without this, a group
+// scoped to "can manage user-group assignments" or "can manage group
 // permissions" would be root-equivalent, since it could otherwise assign
-// any role — including a more privileged one — to any user, or edit any
-// role's grants (including its own) without limit.
+// any group — including a more privileged one — to any user, or edit any
+// group's grants (including its own) without limit.
 export async function assertHasAllPermissions(
   userId: string,
   permissions: string[],
@@ -26,10 +26,10 @@ export async function assertHasAllPermissions(
   }
 }
 
-// Given a `role_resource_permissions` row's flags (as about to be
+// Given a `group_permission` row's flags (as about to be
 // inserted/updated), reconstructs the permission string(s) it would grant —
 // so a write to that table can be checked against `assertHasAllPermissions`
-// the same way a role assignment is. No DB lookup needed: `resourceId` is
+// the same way a group assignment is. No DB lookup needed: `resourceId` is
 // already the code-level id being granted against (see
 // src/app/grantablePermissions.ts), not a row to resolve.
 export function permissionStringsForResourceGrant(

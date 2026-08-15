@@ -10,7 +10,7 @@ import { DialogClose } from "@/components/ui/dialog";
 import type { AppError } from "@/framework/types/global/AppError";
 import { CheckIcon, ChevronDownIcon, CopyIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ReactNode, useState, type Dispatch, type SetStateAction } from "react";
 import { BaseDialog } from "./BaseDialog";
 

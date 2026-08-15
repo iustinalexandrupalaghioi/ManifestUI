@@ -26,7 +26,7 @@ import {
   Settings,
   Trash2,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import ToolbarActions from "./ToolbarActions";
 import { useState, useEffect } from "react";

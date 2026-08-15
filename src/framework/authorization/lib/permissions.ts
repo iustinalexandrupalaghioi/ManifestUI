@@ -1,12 +1,12 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { getDbClient } from "@/framework/lib/dbClient";
-import { role_resource_permissions, roles, user_roles } from "@/db/schema";
+import { group_permission, group, user_group } from "@/db/schema";
 import { ALL_PERMISSIONS } from "../constants";
 import { isAdministrator } from "./isAdministrator";
 
 // Global escape hatch — set ENABLE_RBAC=false to grant every permission to
-// every signed-in user, bypassing roles/permissions entirely.
+// every signed-in user, bypassing groups/permissions entirely.
 function isRbacEnabled(): boolean {
   return process.env.ENABLE_RBAC !== "false";
 }
@@ -46,46 +46,46 @@ export function expandPermissionRows(rows: PermissionRow[]): string[] {
   );
 }
 
-// Raw permission grants for a fixed set of roles, independent of which user
+// Raw permission grants for a fixed set of groups, independent of which user
 // (if any) actually holds them — used both by `getUserPermissions` (the
-// caller's own roles) and by `assertHasAllPermissions` (a role about to be
-// granted to someone, or a permission about to be added to a role), so a
+// caller's own groups) and by `assertHasAllPermissions` (a group about to be
+// granted to someone, or a permission about to be added to a group), so a
 // grant can be checked against what its *source* actually holds.
-export async function getPermissionsForRoleIds(
-  roleIds: number[],
+export async function getPermissionsForGroupIds(
+  groupIds: number[],
 ): Promise<string[]> {
-  if (roleIds.length === 0) return [];
+  if (groupIds.length === 0) return [];
 
   const rows = await getDbClient()
     .select({
-      resource_id: role_resource_permissions.resource_id,
-      can_read: role_resource_permissions.can_read,
-      can_add: role_resource_permissions.can_add,
-      can_update: role_resource_permissions.can_update,
-      can_delete: role_resource_permissions.can_delete,
-      allowed: role_resource_permissions.allowed,
+      resource_id: group_permission.resource_id,
+      can_read: group_permission.can_read,
+      can_add: group_permission.can_add,
+      can_update: group_permission.can_update,
+      can_delete: group_permission.can_delete,
+      allowed: group_permission.allowed,
     })
-    .from(role_resource_permissions)
-    .where(inArray(role_resource_permissions.role_id, roleIds));
+    .from(group_permission)
+    .where(inArray(group_permission.group_id, groupIds));
 
   return expandPermissionRows(rows);
 }
 
-// Administrators skip role/permission checks entirely — they get every
-// permission, including ones with no row in `role_resource_permissions` yet
+// Administrators skip group/permission checks entirely — they get every
+// permission, including ones with no row in `group_permission` yet
 // (e.g. a resource nobody has granted access to), not just what's assigned
-// via roles.
+// via groups.
 export async function getUserPermissions(userId: string): Promise<string[]> {
   if (!isRbacEnabled() || (await isAdministrator(userId))) {
     return [ALL_PERMISSIONS];
   }
 
-  const roleRows = await getDbClient()
-    .select({ roleId: user_roles.role_id })
-    .from(user_roles)
-    .where(eq(user_roles.user_id, userId));
+  const groupRows = await getDbClient()
+    .select({ groupId: user_group.group_id })
+    .from(user_group)
+    .where(eq(user_group.user_id, userId));
 
-  return getPermissionsForRoleIds(roleRows.map((row) => row.roleId));
+  return getPermissionsForGroupIds(groupRows.map((row) => row.groupId));
 }
 
 export async function hasServerPermission(
@@ -99,17 +99,34 @@ export async function hasServerPermission(
   return required.some((p) => perms.includes(p));
 }
 
-export async function hasRole(
+export async function hasGroup(
   userId: string,
-  roleName: string,
+  groupName: string,
 ): Promise<boolean> {
   if (!isRbacEnabled() || (await isAdministrator(userId))) return true;
 
   const rows = await getDbClient()
-    .select({ id: roles.id })
-    .from(user_roles)
-    .innerJoin(roles, eq(roles.id, user_roles.role_id))
-    .where(and(eq(user_roles.user_id, userId), eq(roles.name, roleName)))
+    .select({ id: group.id })
+    .from(user_group)
+    .innerJoin(group, eq(group.id, user_group.group_id))
+    .where(and(eq(user_group.user_id, userId), eq(group.name, groupName)))
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+// "Can this user open the CMS at all" — administrators always can, and
+// anyone with at least one group assigned can too, independent of whether
+// that group currently grants any actual permission (a group with zero
+// permissions still identifies someone as CMS staff, e.g. mid-onboarding
+// before their permissions are configured).
+export async function hasAnyGroup(userId: string): Promise<boolean> {
+  if (!isRbacEnabled() || (await isAdministrator(userId))) return true;
+
+  const rows = await getDbClient()
+    .select({ groupId: user_group.group_id })
+    .from(user_group)
+    .where(eq(user_group.user_id, userId))
     .limit(1);
 
   return rows.length > 0;

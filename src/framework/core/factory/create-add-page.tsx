@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { FieldValues } from "react-hook-form";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";

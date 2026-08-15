@@ -2,7 +2,8 @@
 
 import { useLocale } from "next-intl";
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,27 +13,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Languages } from "lucide-react";
-import { LOCALES, LOCALE_COOKIE, type Locale } from "@/i18n/locales";
 
 // Locale display names are hardcoded (not routed through the message
 // catalog) since each one is only ever shown in its own language — e.g.
 // "Română" doesn't need an English translation, it *is* the label.
-const LOCALE_NAMES: Record<Locale, string> = {
+const LOCALE_NAMES: Record<string, string> = {
   en: "English",
   ro: "Română",
 };
 
 export function LocaleSwitcher() {
   const locale = useLocale();
+  const pathname = usePathname();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  if (LOCALES.length <= 1) return null;
+  if (routing.locales.length <= 1) return null;
 
   const setLocale = (nextLocale: string) => {
-    document.cookie = `${LOCALE_COOKIE}=${nextLocale}; path=/; max-age=31536000; samesite=lax`;
     startTransition(() => {
-      router.refresh();
+      router.replace(pathname, { locale: nextLocale });
     });
   };
 
@@ -45,7 +45,7 @@ export function LocaleSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-content" align="start">
         <DropdownMenuRadioGroup value={locale} onValueChange={setLocale}>
-          {LOCALES.map((code) => (
+          {routing.locales.map((code) => (
             <DropdownMenuRadioItem key={code} value={code}>
               {LOCALE_NAMES[code] ?? code}
             </DropdownMenuRadioItem>

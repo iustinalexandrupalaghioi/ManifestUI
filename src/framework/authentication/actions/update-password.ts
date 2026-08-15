@@ -1,6 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { cookies } from "next/headers";
 import { getSupabase } from "@/lib/supabase/getSupabase";
 import type { ActionResult } from "@/framework/lib/actionResult";
@@ -33,5 +34,6 @@ export async function updatePassword(
   if (error) return { ok: false, error: { message: error.message } };
 
   cookieStore.delete(RECOVERY_COOKIE);
-  redirect("/");
+  const locale = await getLocale();
+  redirect({ href: "/", locale });
 }

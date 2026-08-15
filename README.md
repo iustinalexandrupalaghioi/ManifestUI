@@ -2,7 +2,7 @@
 
 A full-stack Next.js **admin app**: a resource-driven CRUD framework (`src/framework/`)
 built on React Query, React Hook Form, Zod, and Drizzle, with **role-based access control**
-(roles, per-resource/per-verb permissions) gating every route and every server action. Auth
+(groups, per-resource/per-verb permissions) gating every route and every server action. Auth
 and storage are Supabase; the framework itself is storage/DB-agnostic behind small
 interfaces.
 
@@ -68,7 +68,7 @@ works."
    | `DIRECT_DATABASE_URL`                                                                                                              | Same page, the **direct/session** connection (port 5432) — kept for reference but not currently read by any code                                                                     |
    | `AUTH_WEBHOOK_SECRET`                                                                                                              | Any string you choose — shared secret for the auth webhook, see step 4                                                                                                               |
    | `NEXT_PUBLIC_BASE_URL`                                                                                                             | e.g. `http://localhost:3000` in dev                                                                                                                                                  |
-   | `ENABLE_RBAC`                                                                                                                      | `true`/unset = roles & permissions enforced normally; `false` = every signed-in user gets every permission (dev/testing escape hatch — see [Authorization](#authorization-rbac))     |
+   | `ENABLE_RBAC`                                                                                                                      | `true`/unset = groups & permissions enforced normally; `false` = every signed-in user gets every permission (dev/testing escape hatch — see [Authorization](#authorization-rbac))     |
    | `NEXT_PUBLIC_APP_TIMEZONE`, `NEXT_PUBLIC_ENABLE_NUMBERED_TABS`, `NEXT_PUBLIC_NUMBER_LIST_COLUMNS`, `NEXT_PUBLIC_DEFAULT_VIEW_MODE` | App/display config                                                                                                                                                                    |
 
 3. **Create the schema in your Supabase Postgres**
@@ -81,26 +81,26 @@ works."
    fresh project. See [Database & migrations](#database--migrations) for the
    migration-file-based alternative.
 
-4. **Wire up the auth → users sync webhook.** This app's own `users` table (holding
+4. **Wire up the auth → users sync webhook.** This app's own `user` table (holding
    `administrator`, `full_name`, etc.) is _not_ Supabase's `auth.users` — it's kept in sync
    by a webhook. In the Supabase dashboard, add a **Database Webhook** on `auth.users` for
    `INSERT`/`UPDATE`/`DELETE`, pointed at `${NEXT_PUBLIC_BASE_URL}/api/webhooks/auth-users`,
    with a custom header `x-webhook-secret` set to the same value as `AUTH_WEBHOOK_SECRET`.
-   Without this, signing up won't create a row in `users`, and nothing in the app will know
+   Without this, signing up won't create a row in `user`, and nothing in the app will know
    who you are.
 
 5. **Sign up and grant yourself admin.** Run the app (next section), sign up through
    `/auth/signup`, then in your DB flip your row:
 
    ```sql
-   update users set administrator = true where email = 'you@example.com';
+   update "user" set administrator = true where email = 'you@example.com';
    ```
 
    There's no seed script or bootstrap admin today — this manual flip is the only way in.
-   `administrator = true` is a full bypass of the roles/permissions system (see
+   `administrator = true` is a full bypass of the groups/permissions system (see
    [Authorization](#authorization-rbac)): every route and every server action requires
    authentication plus the matching permission, and an administrator is granted all of them
-   automatically, with no role assignment needed.
+   automatically, with no group assignment needed.
 
 ## Running the app
 
@@ -117,8 +117,8 @@ pnpm typecheck     # tsc --noEmit
 src/
 ├── app/
 │   ├── <resource>/              one folder per resource route: todos/, relations/,
-│   │                             attachments/, users/, roles/, role-permissions/,
-│   │                             user-roles/ — each just page.tsx / add/page.tsx /
+│   │                             attachments/, users/, groups/, group-permissions/,
+│   │                             user-groups/ — each just page.tsx / add/page.tsx /
 │   │                             [id]/page.tsx wiring a ResourceGuard around the
 │   │                             resource's generated components
 │   ├── auth/                    login/signup/forgot-password/update-password pages
@@ -129,11 +129,11 @@ src/
 │   ├── createResourceActions.ts  project-level wrapper pre-binding the framework's
 │   │                             generic createResourceActions to resourceDescriptors
 │   └── grantablePermissions.ts   resources + custom actions offered by the
-│                                 role-permissions picker
+│                                 group-permissions picker
 ├── components/
 │   ├── features/
 │   │   ├── main/                 todos/, relations/, todo-attachments/
-│   │   └── administration/       users/, roles/, role-permissions/, user-roles/
+│   │   └── administration/       users/, group/, group-permissions/, user-groups/
 │   │                             (the RBAC resources themselves — see Authorization)
 │   └── ui/                       app-level UI, distinct from framework/components/ui
 ├── framework/                    the reusable CRUD framework (defineResource, forms,
@@ -208,7 +208,7 @@ Steps to add a new one, say `projects`:
    `db:push` (or `db:generate` + `db:migrate`).
 2. **Type** — add the row type under `src/app/types/main/` (mirrors the DB row shape; see
    `Todo.ts` for the pattern). Use `src/app/types/administration/` instead if the resource
-   is an RBAC-management resource like the existing `roles`/`role-permissions`/`user-roles`.
+   is an RBAC-management resource like the existing `groups`/`group-permissions`/`user-groups`.
 3. **`config/descriptor.ts`** — `id`, `table`, i18n `singular`/`plural`/`new` labels (plus
    `singularDefinite` and `gender` if you want grammatically correct Romanian error/toast
    messages — see the existing descriptors for the pattern), `routes` (list/add/detail),
@@ -248,8 +248,8 @@ Steps to add a new one, say `projects`:
 12. **i18n strings** — add whatever `t("...")` keys you introduced to `messages/en/*` and
     `messages/ro/*`.
 13. **Grant access** — a fresh resource is invisible to everyone but administrators until
-    some role is given permissions on it: sign in as an admin and add rows via the
-    `role-permissions` resource (or assign an existing role that already grants `"*"`-style
+    some group is given permissions on it: sign in as an admin and add rows via the
+    `group-permissions` resource (or assign an existing group that already grants `"*"`-style
     broad access, if you have one).
 
 ## Server actions & `ActionResult`
@@ -270,7 +270,7 @@ above), which:
 
 1. Calls `requirePermission(resourceId, action)` first — throws `ForbiddenError` unless the
    caller is signed in **and** holds the `"<resourceId>:<action>"` permission (directly via
-   a role, or implicitly because they're an administrator or `ENABLE_RBAC=false` — see
+   a group, or implicitly because they're an administrator or `ENABLE_RBAC=false` — see
    [Authorization](#authorization-rbac)).
 2. Runs your function, catching `ForbiddenError`, Zod errors, and anything else (Postgres
    constraint violations get mapped to a friendly, locale-aware message), and returns it as
@@ -305,7 +305,7 @@ half of the permission string it's gated on (`"todos:complete"`), same as `"read
 
 Because a custom verb isn't part of the automatic read/add/update/delete expansion, **you
 also have to add it to `grantableActions` in `src/app/grantablePermissions.ts`** so it shows
-up as something a role can be granted — see the `"todos:complete"` /
+up as something a group can be granted — see the `"todos:complete"` /
 `"todos:complete-with-note"` entries there for the pattern. The `id` you give it there must
 match the `verb` string exactly, since that's what `hasPermission(`${resourceId}:${verb}`)`
 checks against on the client and `requirePermission` checks server-side.
@@ -314,32 +314,32 @@ checks against on the client and `requirePermission` checks server-side.
 
 Access control is **role-based**: every route and every server action requires a signed-in
 user to hold a specific `"<resourceId>:<action>"` permission string (e.g. `"todos:read"`,
-`"role-permissions:update"`, or a custom verb like `"todos:complete-with-note"`). This all
-lives in `src/framework/authorization/` (framework-level) plus the project's own `roles`,
-`role-permissions`, and `user-roles` resources (`src/components/features/administration/`),
+`"group-permissions:update"`, or a custom verb like `"todos:complete-with-note"`). This all
+lives in `src/framework/authorization/` (framework-level) plus the project's own `groups`,
+`group-permissions`, and `user-groups` resources (`src/components/features/administration/`),
 which manage the data through the exact same generic CRUD framework as everything else —
 RBAC configuration is just another set of resources you edit in the app itself, once
 signed in as an administrator.
 
 **Data model** (`src/db/schema/`):
 
-- **`roles`** — a named role (e.g. "Editor").
-- **`role_resource_permissions`** — one row per (role, resource) grant. `resource_id` is a
+- **`group`** — a named group (e.g. "Editor").
+- **`group_permission`** — one row per (group, resource) grant. `resource_id` is a
   code-level id, not a DB foreign key: either a plain `resourceDescriptors` id ("todos"),
   expanded via four boolean flags (`can_read`/`can_add`/`can_update`/`can_delete`) into up to
   four permission strings, or an already-full custom-action permission string like
   `"todos:complete-with-note"` (recognizable by containing `":"`), gated by a single
   `allowed` flag instead.
-- **`user_roles`** — many-to-many between `users` and `roles`.
-- **`users.administrator`** — a full bypass, independent of roles: an administrator is
+- **`user_group`** — many-to-many between `user` and `group`.
+- **`user.administrator`** — a full bypass, independent of groups: an administrator is
   granted every permission (see `ALL_PERMISSIONS` below), including on resources nobody has
-  written a `role_resource_permissions` row for yet.
+  written a `group_permission` row for yet.
 
 **Server-side enforcement** (`src/framework/authorization/lib/`):
 
 - `getUserPermissions(userId)` — resolves a user's full permission-string list: `["*"]`
   (the `ALL_PERMISSIONS` sentinel) if they're an administrator or `ENABLE_RBAC=false`,
-  otherwise the union of every permission granted by their assigned roles.
+  otherwise the union of every permission granted by their assigned groups.
 - `requirePermission(resourceId, action)` — throws `ForbiddenError` unless the caller is
   signed in and `getUserPermissions` includes `"*"` or the exact `"<resourceId>:<action>"`
   string.
@@ -356,11 +356,11 @@ signed in as an administrator.
   `src/app/<resource>/` wraps its page in one, e.g.
   `<ResourceGuard resourceId="todos" action="read">`.
 - `assertHasAllPermissions(userId, permissions, context)` — a **confused-deputy guard** for
-  permission-granting endpoints (assigning a role to a user, editing a role's resource
-  grants): a caller may only hand out permissions they themselves hold. Without this, a role
-  scoped to "manage user-role assignments" or "manage role permissions" would be
-  root-equivalent, since it could otherwise assign a more privileged role to anyone, or grant
-  a role permissions its own creator doesn't have.
+  permission-granting endpoints (assigning a group to a user, editing a group's resource
+  grants): a caller may only hand out permissions they themselves hold. Without this, a group
+  scoped to "manage user-group assignments" or "manage group permissions" would be
+  root-equivalent, since it could otherwise assign a more privileged group to anyone, or grant
+  a group permissions its own creator doesn't have.
 
 **Client-side** (`src/framework/authorization/hooks/usePermissions.ts`,
 `src/framework/authorization/cache/permissions.ts`):
@@ -376,7 +376,7 @@ signed in as an administrator.
 
 **`ENABLE_RBAC=false`** is a global escape hatch (see `isRbacEnabled()` in `rbac.ts`) that
 makes every signed-in user behave as if they held every permission, without touching the
-`administrator` flag or any role data — useful for local development, not for anything
+`administrator` flag or any group data — useful for local development, not for anything
 resembling production.
 
 **The `pgPolicy(...)` RLS policies in `src/db/schema/*.ts` are not a real security
@@ -428,7 +428,7 @@ grammatically correct Romanian noun form and gender (see `ResourceDescriptor.gen
   of custom, non-CRUD permission strings — it is *not* derived from resources'
   `actionForms`/`bulkActions` automatically. Adding a new custom action and forgetting to add
   its entry there means it'll work for administrators but can never be granted to a
-  role-based user.
+  group-based user.
 - **No migration files exist yet** (`drizzle/` is empty/absent) — this project has only ever
   used `pnpm db:push`. The first time someone runs `db:generate` against a DB that's only
   seen pushes, review the generated SQL closely before migrating.

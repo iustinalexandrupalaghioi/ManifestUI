@@ -1,6 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { getSupabase } from "@/lib/supabase/getSupabase";
 import type { ActionResult } from "@/framework/lib/actionResult";
 import { isSafeRedirect } from "@/framework/authentication/lib/isSafeRedirect";
@@ -15,5 +16,6 @@ export async function login(
 
   if (error) return { ok: false, error: { message: error.message } };
 
-  redirect(isSafeRedirect(next) ? next : "/");
+  const locale = await getLocale();
+  redirect({ href: isSafeRedirect(next) ? next : "/", locale });
 }

@@ -1,53 +1,53 @@
 import { relations as defineRelations } from "drizzle-orm/relations";
-import { todos } from "./todos";
-import { relations } from "./relations-table";
-import { todo_attachments } from "./todo-attachments";
-import { roles } from "./roles";
-import { user_roles } from "./user-roles";
-import { role_resource_permissions } from "./role-resource-permissions";
+import { todo } from "./todo";
+import { relation } from "./relation-table";
+import { todo_attachment } from "./todo-attachment";
+import { group } from "./group";
+import { user_group } from "./user-group";
+import { group_permission } from "./group-permission";
 
-export const todosRelations = defineRelations(todos, ({ one, many }) => ({
-  relation: one(relations, {
-    fields: [todos.user_id],
-    references: [relations.id],
+export const todoRelations = defineRelations(todo, ({ one, many }) => ({
+  relation: one(relation, {
+    fields: [todo.user_id],
+    references: [relation.id],
   }),
-  todo_attachments: many(todo_attachments),
+  todo_attachment: many(todo_attachment),
 }));
 
-export const relationsTableRelations = defineRelations(relations, ({ many }) => ({
-  todos: many(todos),
+export const relationRelations = defineRelations(relation, ({ many }) => ({
+  todo: many(todo),
 }));
 
-export const todo_attachmentsRelations = defineRelations(
-  todo_attachments,
+export const todoAttachmentRelations = defineRelations(
+  todo_attachment,
   ({ one }) => ({
-    todo: one(todos, {
-      fields: [todo_attachments.todo_id],
-      references: [todos.id],
+    todo: one(todo, {
+      fields: [todo_attachment.todo_id],
+      references: [todo.id],
     }),
   }),
 );
 
-export const rolesRelations = defineRelations(roles, ({ many }) => ({
-  user_roles: many(user_roles),
-  role_resource_permissions: many(role_resource_permissions),
+export const groupRelations = defineRelations(group, ({ many }) => ({
+  user_group: many(user_group),
+  group_permission: many(group_permission),
 }));
 
-// No relation object for the auth.users side of user_roles — auth.users isn't
+// No relation object for the auth.users side of user_group — auth.users isn't
 // part of this Drizzle schema (owned by Supabase).
-export const userRolesRelations = defineRelations(user_roles, ({ one }) => ({
-  role: one(roles, {
-    fields: [user_roles.role_id],
-    references: [roles.id],
+export const userGroupRelations = defineRelations(user_group, ({ one }) => ({
+  group: one(group, {
+    fields: [user_group.group_id],
+    references: [group.id],
   }),
 }));
 
-export const roleResourcePermissionsRelations = defineRelations(
-  role_resource_permissions,
+export const groupPermissionRelations = defineRelations(
+  group_permission,
   ({ one }) => ({
-    role: one(roles, {
-      fields: [role_resource_permissions.role_id],
-      references: [roles.id],
+    group: one(group, {
+      fields: [group_permission.group_id],
+      references: [group.id],
     }),
   }),
 );

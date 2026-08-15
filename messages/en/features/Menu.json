@@ -9,12 +9,12 @@
   "relationsDescription": "View all relations (demo data)",
   "users": "Users",
   "usersDescription": "View signed-up users",
-  "roles": "Roles",
-  "rolesDescription": "Manage roles",
+  "groups": "Groups",
+  "groupsDescription": "Manage groups",
   "resources": "Resources",
   "resourcesDescription": "Manage grantable resources and actions",
-  "rolePermissions": "Role permissions",
-  "rolePermissionsDescription": "Manage what each role can do",
-  "userRoles": "User roles",
-  "userRolesDescription": "Assign roles to users"
+  "groupPermissions": "Group permissions",
+  "groupPermissionsDescription": "Manage what each group can do",
+  "userGroups": "User groups",
+  "userGroupsDescription": "Assign groups to users"
 }

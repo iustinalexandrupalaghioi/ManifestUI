@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/framework/lib/utils";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { LiveTileProps } from "./types";
 import { Badge } from "@/components/ui/badge";
 

@@ -1,6 +1,6 @@
 import { createTranslator } from "next-intl";
 import type { AppError } from "@/framework/types/global/AppError";
-import { DEFAULT_LOCALE, type Locale } from "@/i18n/locales";
+import { routing } from "@/i18n/routing";
 import enErrors from "../../../messages/en/framework/Errors.json";
 import roErrors from "../../../messages/ro/framework/Errors.json";
 
@@ -13,7 +13,7 @@ interface PgError {
   constraint_name?: string;
 }
 
-const ERRORS_MESSAGES: Record<Locale, Record<string, string>> = {
+const ERRORS_MESSAGES: Record<string, Record<string, string>> = {
   en: enErrors,
   ro: roErrors,
 };
@@ -23,7 +23,7 @@ const ERRORS_MESSAGES: Record<Locale, Record<string, string>> = {
 // sites (with `getLocale()`'s result) — see resolveLabel.ts for the same
 // pattern, and the comment there for why.
 function getErrorsTranslator(locale: string) {
-  const messages = ERRORS_MESSAGES[locale as Locale] ?? ERRORS_MESSAGES[DEFAULT_LOCALE];
+  const messages = ERRORS_MESSAGES[locale] ?? ERRORS_MESSAGES[routing.defaultLocale];
   return createTranslator({ locale, messages: { Errors: messages }, namespace: "Errors" });
 }
 
