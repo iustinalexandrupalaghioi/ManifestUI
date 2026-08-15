@@ -14,8 +14,6 @@ export interface ColumnConfig {
   size?: number;
   minSize?: number;
   hidden?: boolean;
-  cardHidden?: boolean;
-  cardNavigationHidden?: boolean;
   navigationHidden?: boolean;
   pickupHidden?: boolean;
   sortable?: boolean;
@@ -23,10 +21,12 @@ export interface ColumnConfig {
   selectOptions?: EnumOptions;
   bucket?: string;
   origin?: string;
-  cardGroup?: string;
-  cardGroupLabel?: TranslatableText;
-  cardLabel?: TranslatableText;
-  cardLabelPosition?: "before" | "after";
+  /** List-only: groups this field with others sharing the same key into one labeled block in the card. */
+  group?: string;
+  groupLabel?: TranslatableText;
+  /** List-only: inline unit suffix/prefix shown next to the value in a card, e.g. "42 years". */
+  inlineLabel?: TranslatableText;
+  labelPosition?: "before" | "after";
 }
 
 const DEFAULT_SIZE_BY_TYPE: Record<ColumnType, number> = {
@@ -65,14 +65,14 @@ export function createColumnsFromConfig<TItem>(
         columnType: col.type,
         origin: col.origin,
         selectOptions,
-        cardGroup: col.cardGroup,
-        cardGroupLabel: col.cardGroupLabel
-          ? resolveLabel(col.cardGroupLabel, locale)
+        group: col.group,
+        groupLabel: col.groupLabel
+          ? resolveLabel(col.groupLabel, locale)
           : undefined,
-        cardLabel: col.cardLabel
-          ? resolveLabel(col.cardLabel, locale)
+        inlineLabel: col.inlineLabel
+          ? resolveLabel(col.inlineLabel, locale)
           : undefined,
-        cardLabelPosition: col.cardLabelPosition,
+        labelPosition: col.labelPosition,
       },
     };
   });
@@ -80,30 +80,14 @@ export function createColumnsFromConfig<TItem>(
 
 export function createVisibilityFromConfig(
   columns: ColumnConfig[],
-  mode:
-    | "default"
-    | "card"
-    | "navigation"
-    | "card-navigation"
-    | "pickup" = "default",
+  mode: "default" | "navigation" | "pickup" = "default",
 ): VisibilityState {
   return Object.fromEntries(
     columns.map((col) => {
       let hidden: boolean;
       switch (mode) {
-        case "card":
-          hidden = col.cardHidden ?? col.hidden ?? false;
-          break;
         case "navigation":
           hidden = col.navigationHidden ?? col.hidden ?? false;
-          break;
-        case "card-navigation":
-          hidden =
-            col.cardNavigationHidden ??
-            col.navigationHidden ??
-            col.cardHidden ??
-            col.hidden ??
-            false;
           break;
         case "pickup":
           hidden = col.pickupHidden ?? col.hidden ?? false;

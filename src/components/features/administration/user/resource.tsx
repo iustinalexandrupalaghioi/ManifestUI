@@ -11,7 +11,7 @@ import {
 } from "./config/api";
 import { usersForm } from "./config/form";
 import { userSchema, type UserFormValues } from "./config/schema";
-import { userColumns } from "./config/columns";
+import { userColumns, userListColumns } from "./config/columns";
 import { userTabs } from "./config/tabs";
 import { usersRelations } from "./config/relations";
 import { usersDescriptor } from "./config/descriptor";
@@ -43,6 +43,7 @@ export const usersResource = defineResource<User, UserFormValues, string>({
   mutationFns: { add: addUser, update: updateUser, delete: deleteUsers },
 
   columns: userColumns,
+  listColumns: userListColumns,
   pickupColumns: userColumns,
 
   form: usersForm,

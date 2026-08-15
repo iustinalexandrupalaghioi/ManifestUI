@@ -45,6 +45,7 @@ function DataView<TData, TValue>({
         quickSearchEnabled={props.quickSearchEnabled ?? true}
         slotId={props.slotId}
         preFilters={props.preFilters ?? []}
+        hasTable={props.initialColumnVisibility !== undefined}
         hasList={props.initialListColumnVisibility !== undefined}
         loadMoreRef={loadMoreRef}
         isLookup={isLookup}

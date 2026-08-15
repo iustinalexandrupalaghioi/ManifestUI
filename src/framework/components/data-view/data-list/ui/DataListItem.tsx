@@ -31,16 +31,16 @@ function buildColumnGroups<TData>(
   const seen = new Set<string>();
 
   for (const col of visibleListColumns) {
-    const group = col.columnDef.meta?.cardGroup;
+    const group = col.columnDef.meta?.group;
     if (group) {
       if (!seen.has(group)) {
         seen.add(group);
         const groupCols = visibleListColumns.filter(
-          (c) => c.columnDef.meta?.cardGroup === group,
+          (c) => c.columnDef.meta?.group === group,
         );
         const groupLabel =
-          groupCols.find((c) => c.columnDef.meta?.cardGroupLabel)?.columnDef
-            .meta?.cardGroupLabel ??
+          groupCols.find((c) => c.columnDef.meta?.groupLabel)?.columnDef.meta
+            ?.groupLabel ??
           groupCols
             .map((c) => c.columnDef.meta?.columnLabel ?? c.id)
             .join(" + ");
@@ -242,8 +242,8 @@ export function DataListItem<TData>({
                   {cells.map((cell, i) => {
                     const meta = cell.column.columnDef.meta;
                     const isLast = i === cells.length - 1;
-                    const inlineLabel = meta?.cardLabel;
-                    const position = meta?.cardLabelPosition ?? "before";
+                    const inlineLabel = meta?.inlineLabel;
+                    const position = meta?.labelPosition ?? "before";
 
                     return (
                       <span

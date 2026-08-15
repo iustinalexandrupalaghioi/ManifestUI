@@ -473,7 +473,7 @@ export function FilterPanel({
             size="sm"
             className="w-full"
             onClick={handleApply}
-            disabled={drafts.length === 0 || !allValid}
+            disabled={!allValid}
           >
             {t("apply")}
           </Button>

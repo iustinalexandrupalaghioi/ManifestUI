@@ -46,9 +46,6 @@ export function ColumnManagerButton({ type }: { type: "list" | "table" }) {
   const listColumnOrder =
     listDraft?.listColumnOrder ?? activeListView?.listColumnOrder ?? [];
 
-  // Single batched update — order, pinning, and visibility land in one
-  // updateTableDraft call so subscribers (useColumnState → useReactTable)
-  // only re-derive and re-render once, not three times in sequence.
   const handleApplyTableColumns = (
     order: string[],
     pinning: { left: string[] },

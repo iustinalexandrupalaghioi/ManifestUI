@@ -7,13 +7,29 @@ import type {
   BulkActionsHookResult,
 } from "../../types/resource-hook-types";
 import { hasPermission } from "@/framework/authorization/cache/permissions";
+import { getItemId } from "../resource-id";
 
 export function createActionsHook<
   TItem,
   TFormValues extends FieldValues,
   TId extends ResourceId = number,
 >(config: ResourceConfig<TItem, TFormValues, TId>) {
-  const { id, isDeleteEligible = () => true, getRowUrl, bulkActions } = config;
+  const {
+    id,
+    idField = "id",
+    isDeleteEligible = () => true,
+    getRowUrl,
+    bulkActions,
+    routes,
+  } = config;
+
+  // Falls back to the resource's own detail route — only needed when a
+  // resource wants a copy-link that points somewhere other than its normal
+  // detail page (e.g. a custom public-facing URL).
+  const defaultGetRowUrl = (item: TItem) =>
+    `${process.env.NEXT_PUBLIC_BASE_URL}${routes.detail(
+      getItemId(item as Record<string, unknown>, idField).toString(),
+    )}`;
 
   return function useActions({
     setRowSelection,
@@ -41,7 +57,7 @@ export function createActionsHook<
           setRowSelection({});
         },
       })),
-      getRowUrl: getRowUrlOverride ?? getRowUrl,
+      getRowUrl: getRowUrlOverride ?? getRowUrl ?? defaultGetRowUrl,
       onOpen,
       isDeleteEligible,
       bulkResult: bulkActionsResult.bulkResult,

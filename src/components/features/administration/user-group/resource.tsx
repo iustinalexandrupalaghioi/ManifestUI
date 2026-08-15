@@ -11,7 +11,7 @@ import {
 } from "./config/api";
 import { userGroupsForm } from "./config/form";
 import { userGroupSchema, type UserGroupFormValues } from "./config/schema";
-import { userGroupColumns } from "./config/columns";
+import { userGroupColumns, userGroupListColumns } from "./config/columns";
 import { userGroupsDescriptor } from "./config/descriptor";
 
 export const userGroupsResource = defineResource<
@@ -45,6 +45,7 @@ export const userGroupsResource = defineResource<
   },
 
   columns: userGroupColumns,
+  listColumns: userGroupListColumns,
   pickupColumns: userGroupColumns,
 
   form: userGroupsForm,

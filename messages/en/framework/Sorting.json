@@ -1,0 +1,14 @@
+{
+  "sort": "Sort",
+  "addSortRules": "Add sort rules",
+  "noSortApplied": "No sorting applied",
+  "addSort": "Add sort",
+  "apply": "Apply",
+  "clearAll": "Clear all",
+  "removeRule": "Remove rule",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "columnPlaceholder": "Column...",
+  "ascending": "Ascending",
+  "descending": "Descending"
+}

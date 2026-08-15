@@ -11,7 +11,7 @@ import {
   deleteAttachments,
 } from "./config/api";
 import { attachmentsForm } from "./config/form";
-import { attachmentColumns } from "./config/columns";
+import { attachmentColumns, attachmentListColumns } from "./config/columns";
 import { attachmentsDescriptor } from "./config/descriptor";
 
 export const attachmentsResource = defineResource<
@@ -43,10 +43,8 @@ export const attachmentsResource = defineResource<
     update: updateAttachment,
     delete: deleteAttachments,
   },
-  getRowUrl: (attachment) =>
-    `${process.env.NEXT_PUBLIC_BASE_URL}/attachments/${attachment.id}`,
-
   columns: attachmentColumns,
+  listColumns: attachmentListColumns,
 
   form: attachmentsForm,
 

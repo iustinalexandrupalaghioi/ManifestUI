@@ -13,7 +13,7 @@ import { relationsAddTabs, relationsForm } from "./config/form";
 import { relationsTabs } from "./config/tabs";
 import { relationsRelations } from "./config/relations";
 import { relationSchema, type RelationFormValues } from "./config/schema";
-import { relationColumns } from "./config/columns";
+import { relationColumns, relationListColumns } from "./config/columns";
 import { relationsDetailSlots } from "./config/detailSlots";
 import { relationsDescriptor } from "./config/descriptor";
 
@@ -58,10 +58,8 @@ export const relationsResource = defineResource<Relation, RelationFormValues>({
     update: updateRelation,
     delete: deleteRelations,
   },
-  getRowUrl: (relation) =>
-    `${process.env.NEXT_PUBLIC_BASE_URL}/relations/${relation.id}`,
-
   columns: relationColumns,
+  listColumns: relationListColumns,
   pickupColumns: relationColumns,
 
   form: relationsForm,

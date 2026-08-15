@@ -55,5 +55,6 @@ export interface VirtualDataTableBodyProps<TData> {
   isLoading: boolean
   isCellSelected: (rowId: string, columnId: string) => boolean
   onCellClick: (e: React.MouseEvent, cell: Cell<TData, unknown>) => void
+  onCellContextClick: (cell: Cell<TData, unknown>) => void
   columnStateKey: string
 }

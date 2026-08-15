@@ -3,6 +3,7 @@
 import type { Table } from "@tanstack/react-table"
 import { useEffect, useRef } from "react"
 import { getFilteringStore } from "./filtering.store"
+import { getSelectionStore } from "../selection"
 import { getViewsStore } from "../views/views.store"
 import type { FilterRule, FilterableColumn } from "./filters"
 
@@ -33,6 +34,7 @@ export function useCellContextMenuFilter(
         ? current.map((f) => (f.columnId === rule.columnId ? rule : f))
         : [...current, rule]
       filterStore.getState().setRules(next)
+      getSelectionStore(tableId).getState().setRowSelection({})
 
       // Mark as draft
       const viewsStore = getViewsStore(tableId)

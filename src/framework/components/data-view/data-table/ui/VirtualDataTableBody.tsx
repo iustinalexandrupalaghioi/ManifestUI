@@ -75,6 +75,7 @@ function VirtualTableBodyInner<TData>({
   rowSelection,
   isCellSelected,
   onCellClick,
+  onCellContextClick,
   columnStateKey,
 }: VirtualDataTableBodyProps<TData>) {
   const t = useTranslations("DataView");
@@ -176,7 +177,7 @@ function VirtualTableBodyInner<TData>({
                     }
                   }}
                   onContextMenu={(e) => {
-                    onCellClick(e, cell);
+                    onCellContextClick(cell);
                     onRowContextClick(row);
 
                     const sel = rowSelection;

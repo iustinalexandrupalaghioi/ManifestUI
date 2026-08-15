@@ -48,8 +48,13 @@ export function DataTableBody({
   const { contextMenu, handleCellContextMenu, closeContextMenu } =
     useContextMenu(table)
 
-  const { isCellSelected, handleCellClick, clearSelection, getSelectionTsv } =
-    useCellSelection(table, rowSelection)
+  const {
+    isCellSelected,
+    handleCellClick,
+    handleCellContextClick,
+    clearSelection,
+    getSelectionTsv,
+  } = useCellSelection(table, rowSelection)
 
   const selectedCellValuesRef = useRef<() => string>(getSelectionTsv)
   useEffect(() => {
@@ -106,6 +111,7 @@ export function DataTableBody({
         onRowDoubleClick={handleRowDoubleClick}
         isCellSelected={isCellSelected}
         onCellClick={handleCellClick}
+        onCellContextClick={handleCellContextClick}
         columnStateKey={columnStateKey}
       />
       <CellContextMenu

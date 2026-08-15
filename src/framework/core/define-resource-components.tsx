@@ -1,3 +1,4 @@
+import type { ColumnDef } from "@tanstack/react-table";
 import type { FieldValues } from "react-hook-form";
 import { ResourceForm } from "../components/form/form-register/ResourceForm";
 import { registerResource } from "../registry/ResourceRegistry";
@@ -87,15 +88,45 @@ export function defineResourceComponents<
     Array.isArray(cols) && cols.length > 0 && "field" in cols[0];
 
   const rawColumns = config.list?.columns ?? config.columns;
+  const rawListColumns = config.listColumns;
 
-  const createColumns = rawColumns
-    ? typeof rawColumns === "function"
-      ? rawColumns
-      : isColumnConfig(rawColumns)
-        ? (locale: string) =>
-            createColumnsFromConfig<TItem>(rawColumns as ColumnConfig[], locale)
-        : () => rawColumns as any
-    : undefined;
+  const buildColumnsFn = (raw: typeof rawColumns) =>
+    raw
+      ? typeof raw === "function"
+        ? raw
+        : isColumnConfig(raw)
+          ? (locale: string) =>
+              createColumnsFromConfig<TItem>(raw as ColumnConfig[], locale)
+          : () => raw as any
+      : undefined;
+
+  const createTableColumnsFn = buildColumnsFn(rawColumns);
+  const createListColumnsFn = buildColumnsFn(rawListColumns);
+
+  // Table and list share one TanStack table instance (for row selection /
+  // actions), so both column sets must land in the single `columns` array
+  // DataView is built from. A field authored in both configs (the common
+  // case) keeps the table version's ColumnDef — accessor/cell/size stay
+  // table-driven — but list-only meta (group/groupLabel/inlineLabel/
+  // labelPosition) is merged in from the list config, since that's the
+  // only place it's authored. A field exclusive to `listColumns` is
+  // appended as its own column, hidden from table mode via the visibility
+  // maps below.
+  const createColumns =
+    createTableColumnsFn || createListColumnsFn
+      ? (locale: string) => {
+          const tableCols: ColumnDef<TItem>[] = createTableColumnsFn?.(locale) ?? [];
+          const listCols: ColumnDef<TItem>[] = createListColumnsFn?.(locale) ?? [];
+          const listById = new Map(listCols.map((c) => [c.id, c]));
+          const merged = tableCols.map((c) => {
+            const listCol = c.id ? listById.get(c.id) : undefined;
+            if (!listCol) return c;
+            listById.delete(c.id!);
+            return { ...c, meta: { ...c.meta, ...listCol.meta } };
+          });
+          return [...merged, ...listById.values()];
+        }
+      : undefined;
 
   // ── Pickup columns ────────────────────────────────────────────────────────
   const rawPickupColumns = config.list?.pickupColumns ?? config.pickupColumns;
@@ -114,36 +145,48 @@ export function defineResourceComponents<
     : undefined;
 
   // ── Visibility — auto-generate from ColumnConfig or use manual ───────────
-  const columnConfigs = isColumnConfig(rawColumns)
+  const tableColumnConfigs = isColumnConfig(rawColumns)
     ? (rawColumns as ColumnConfig[])
+    : null;
+  const listColumnConfigs = isColumnConfig(rawListColumns)
+    ? (rawListColumns as ColumnConfig[])
     : null;
   const pickupColumnConfigs = isColumnConfig(rawPickupColumns)
     ? (rawPickupColumns as ColumnConfig[])
     : null;
 
+  // Computes visibility for one view's own config, then explicitly hides
+  // any field that belongs exclusively to the other view — otherwise a
+  // field absent from a VisibilityState defaults to visible in TanStack,
+  // and it would leak across views.
+  const computeVisibility = (
+    own: ColumnConfig[] | null,
+    other: ColumnConfig[] | null,
+    mode: "default" | "navigation",
+  ) => {
+    if (!own) return undefined;
+    const visibility = createVisibilityFromConfig(own, mode);
+    for (const col of other ?? []) {
+      if (!(col.field in visibility)) visibility[col.field] = false;
+    }
+    return visibility;
+  };
+
   const columnVisibility =
     config.list?.defaultVisibility ??
-    (columnConfigs
-      ? createVisibilityFromConfig(columnConfigs, "default")
-      : undefined);
-
-  const listColumnVisibility =
-    config.list?.listColumnVisibility ??
-    (columnConfigs
-      ? createVisibilityFromConfig(columnConfigs, "card")
-      : undefined);
+    computeVisibility(tableColumnConfigs, listColumnConfigs, "default");
 
   const navigationColumnVisibility =
     config.list?.navigationColumnVisibility ??
-    (columnConfigs
-      ? createVisibilityFromConfig(columnConfigs, "navigation")
-      : undefined);
+    computeVisibility(tableColumnConfigs, listColumnConfigs, "navigation");
+
+  const listColumnVisibility =
+    config.list?.listColumnVisibility ??
+    computeVisibility(listColumnConfigs, tableColumnConfigs, "default");
 
   const cardNavigationColumnVisibility =
     config.list?.cardNavigationColumnVisibility ??
-    (columnConfigs
-      ? createVisibilityFromConfig(columnConfigs, "card-navigation")
-      : undefined);
+    computeVisibility(listColumnConfigs, tableColumnConfigs, "navigation");
 
   const pickupColumnVisibility =
     config.list?.pickupColumnVisibility ??

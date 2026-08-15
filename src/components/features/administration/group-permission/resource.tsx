@@ -14,7 +14,10 @@ import {
   groupPermissionSchema,
   type GroupPermissionFormValues,
 } from "./config/schema";
-import { groupPermissionColumns } from "./config/columns";
+import {
+  groupPermissionColumns,
+  groupPermissionListColumns,
+} from "./config/columns";
 import { groupPermissionsDescriptor } from "./config/descriptor";
 
 export const groupPermissionsResource = defineResource<
@@ -52,6 +55,7 @@ export const groupPermissionsResource = defineResource<
   },
 
   columns: groupPermissionColumns,
+  listColumns: groupPermissionListColumns,
   pickupColumns: groupPermissionColumns,
   form: groupPermissionsForm,
 

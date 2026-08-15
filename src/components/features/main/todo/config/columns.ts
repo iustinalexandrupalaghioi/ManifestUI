@@ -2,7 +2,7 @@ import type { ColumnConfig } from "@/framework/components/data-view/core/ui/crea
 import { Gender } from "@/app/types/main/Relation";
 
 export const todoColumns: ColumnConfig[] = [
-  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 55, cardHidden: true },
+  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 55 },
   { field: "title", label: { en: "Title", ro: "Titlu" }, type: "text", size: 300 },
   { field: "completed", label: { en: "Completed", ro: "Finalizat" }, type: "boolean", size: 90 },
   { field: "notes", label: { en: "Notes", ro: "Note" }, type: "text", size: 300 },
@@ -22,7 +22,6 @@ export const todoColumns: ColumnConfig[] = [
     origin: "relation",
     accessorFn: (row) => row.relation?.username,
     navigationHidden: true,
-    cardNavigationHidden: true,
   },
   {
     field: "relation_first_name",
@@ -70,6 +69,74 @@ export const todoColumns: ColumnConfig[] = [
     label: { en: "Add time", ro: "Data adăugării" },
     type: "datetime",
     size: 130,
+    hidden: true,
+  },
+];
+
+// List/card presentation — mirrors the table fields; navigationHidden
+// controls visibility when this resource is shown as a related-tab list
+// (e.g. under a relation's detail page).
+export const todoListColumns: ColumnConfig[] = [
+  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
+  { field: "title", label: { en: "Title", ro: "Titlu" }, type: "text" },
+  { field: "completed", label: { en: "Completed", ro: "Finalizat" }, type: "boolean" },
+  { field: "notes", label: { en: "Notes", ro: "Note" }, type: "text" },
+  {
+    field: "user_id",
+    label: { en: "User id", ro: "Id utilizator" },
+    type: "number",
+    hidden: true,
+  },
+  {
+    field: "relation_username",
+    label: { en: "Username", ro: "Nume utilizator" },
+    type: "text",
+    columnName: "username",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.username,
+    navigationHidden: true,
+  },
+  {
+    field: "relation_first_name",
+    label: { en: "First name", ro: "Prenume" },
+    type: "text",
+    columnName: "first_name",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.first_name,
+    hidden: true,
+  },
+  {
+    field: "relation_last_name",
+    label: { en: "Last name", ro: "Nume" },
+    type: "text",
+    columnName: "last_name",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.last_name,
+    hidden: true,
+  },
+  {
+    field: "relation_email",
+    label: { en: "Email", ro: "Email" },
+    type: "text",
+    columnName: "email",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.email,
+    hidden: true,
+  },
+  {
+    field: "relation_gender",
+    label: { en: "Gender", ro: "Gen" },
+    type: "select",
+    columnName: "gender",
+    origin: "relation",
+    accessorFn: (row) => row.relation?.gender,
+    hidden: true,
+    selectOptions: Gender.options,
+  },
+  {
+    field: "created_at",
+    label: { en: "Add time", ro: "Data adăugării" },
+    type: "datetime",
     hidden: true,
   },
 ];

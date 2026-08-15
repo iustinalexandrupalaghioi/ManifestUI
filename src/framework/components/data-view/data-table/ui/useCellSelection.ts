@@ -143,6 +143,25 @@ export function useCellSelection<TData>(
     [isActionColumn],
   );
 
+  // Right-click must never require a modifier key to preserve an existing
+  // range — Shift held into a right-click makes the browser ignore
+  // preventDefault() and show its native context menu regardless (a
+  // hardcoded browser behavior, not something JS can override), which is
+  // why range selection can't depend on shiftKey here. A cell already part
+  // of the selection keeps the whole range; anything else collapses to
+  // just that cell, mirroring how row context-click already behaves.
+  const handleCellContextClick = useCallback(
+    (cell: Cell<TData, unknown>) => {
+      if (isActionColumn(cell.column.id)) return;
+      const key = cellKey(cell.row.id, cell.column.id);
+      if (!selection.has(key)) {
+        anchorRef.current = { rowId: cell.row.id, columnId: cell.column.id };
+        setSelection(new Set([key]));
+      }
+    },
+    [isActionColumn, selection],
+  );
+
   const clearSelection = useCallback(() => {
     setSelection(new Set());
     anchorRef.current = null;
@@ -157,6 +176,7 @@ export function useCellSelection<TData>(
   return {
     isCellSelected,
     handleCellClick,
+    handleCellContextClick,
     clearSelection,
     selectionSize: selection.size,
     getSelectionTsv,

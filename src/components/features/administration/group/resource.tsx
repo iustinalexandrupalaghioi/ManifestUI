@@ -11,7 +11,7 @@ import {
 } from "./config/api";
 import { groupsForm } from "./config/form";
 import { groupSchema, type GroupFormValues } from "./config/schema";
-import { groupColumns } from "./config/columns";
+import { groupColumns, groupListColumns } from "./config/columns";
 import { groupsTabs } from "./config/tabs";
 import { groupsRelations } from "./config/relations";
 import { groupsDescriptor } from "./config/descriptor";
@@ -37,9 +37,9 @@ export const groupsResource = defineResource<Group, GroupFormValues>({
   fetchList: fetchGroupList,
   fetchDetail: fetchGroupDetail,
   mutationFns: { add: addGroup, update: updateGroup, delete: deleteGroups },
-  getRowUrl: (group) => `${process.env.NEXT_PUBLIC_BASE_URL}/cms/groups/${group.id}`,
 
   columns: groupColumns,
+  listColumns: groupListColumns,
   pickupColumns: groupColumns,
   form: groupsForm,
   tabs: groupsTabs,

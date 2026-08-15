@@ -1,8 +1,8 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Tabs as TabsPrimitive } from "radix-ui"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Tabs as TabsPrimitive } from "radix-ui";
 
-import { cn } from "@/framework/lib/utils"
+import { cn } from "@/framework/lib/utils";
 
 function CustomTabs({
   className,
@@ -16,11 +16,11 @@ function CustomTabs({
       orientation={orientation}
       className={cn(
         "group/tabs flex gap-2 data-[orientation=horizontal]:flex-col",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 const customTabsListVariants = cva(
@@ -35,8 +35,8 @@ const customTabsListVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
-)
+  },
+);
 
 function CustomTabsList({
   className,
@@ -51,11 +51,11 @@ function CustomTabsList({
       className={cn(
         customTabsListVariants({ variant }),
         "mb-1 h-auto w-max min-w-full justify-start gap-1 rounded-none border-b bg-transparent p-0",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CustomTabsTrigger({
@@ -72,11 +72,11 @@ function CustomTabsTrigger({
         "data-[state=active]:border-b-primary data-[state=active]:text-foreground",
         "disabled:pointer-events-none disabled:opacity-50",
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CustomTabsContent({
@@ -89,7 +89,13 @@ function CustomTabsContent({
       className={cn("flex-1 outline-none", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { CustomTabs, CustomTabsList, CustomTabsTrigger, CustomTabsContent, customTabsListVariants }
+export {
+  CustomTabs,
+  CustomTabsList,
+  CustomTabsTrigger,
+  CustomTabsContent,
+  customTabsListVariants,
+};

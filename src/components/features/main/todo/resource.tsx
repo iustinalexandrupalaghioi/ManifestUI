@@ -16,7 +16,7 @@ import { todosForm } from "./config/form";
 import { todoSchema, type TodoFormValues } from "./config/schema";
 import { todosTabs } from "./config/tabs";
 import { todosRelations } from "./config/relations";
-import { todoColumns, todoPickupColumns } from "./config/columns";
+import { todoColumns, todoListColumns, todoPickupColumns } from "./config/columns";
 import { todosDetailSlots } from "./config/detailSlots";
 import { todosDescriptor } from "./config/descriptor";
 
@@ -48,10 +48,10 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
   mutationFns: { add: addTodo, update: updateTodo, delete: deleteTodos },
 
   isDeleteEligible: (todo) => !!todo.completed,
-  getRowUrl: (todo) => `${process.env.NEXT_PUBLIC_BASE_URL}/todos/${todo.id}`,
   bulkActions: useTodoBulkActions,
 
   columns: todoColumns,
+  listColumns: todoListColumns,
   pickupColumns: todoPickupColumns,
 
   form: todosForm,

@@ -12,10 +12,10 @@ declare module "@tanstack/react-table" {
     columnType?: ColumnType | null
     selectOptions?: Enum[]
     onSelect?: (rows: Row<TData>[]) => void
-    cardGroup?: string
-    cardGroupLabel?: string
-    cardLabel?: string
-    cardLabelPosition?: "before" | "after"
+    group?: string
+    groupLabel?: string
+    inlineLabel?: string
+    labelPosition?: "before" | "after"
   }
 
   interface ColumnSort {

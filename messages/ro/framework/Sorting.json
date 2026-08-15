@@ -1,0 +1,14 @@
+{
+  "sort": "Sortare",
+  "addSortRules": "Adaugă reguli de sortare",
+  "noSortApplied": "Nicio sortare aplicată",
+  "addSort": "Adaugă sortare",
+  "apply": "Aplică",
+  "clearAll": "Șterge tot",
+  "removeRule": "Elimină regula",
+  "moveUp": "Mută în sus",
+  "moveDown": "Mută în jos",
+  "columnPlaceholder": "Coloană...",
+  "ascending": "Crescător",
+  "descending": "Descrescător"
+}

@@ -2,7 +2,7 @@ import type { ColumnConfig } from "@/framework/components/data-view/core/ui/crea
 import { BUCKET } from "./constants"
 
 export const attachmentColumns: ColumnConfig[] = [
-  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 70, cardHidden: true },
+  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 70 },
   { field: "filename", label: { en: "File name", ro: "Nume fișier" }, type: "text", size: 350 },
   {
     field: "path",
@@ -48,6 +48,49 @@ export const attachmentColumns: ColumnConfig[] = [
     label: { en: "Created at", ro: "Data creării" },
     type: "datetime",
     size: 140,
+    hidden: true,
+  },
+]
+
+// List/card presentation. `todo_id` (the raw related-todo id) is left out
+// here — `todo_title` already represents that relation and is what's worth
+// showing on a card.
+export const attachmentListColumns: ColumnConfig[] = [
+  { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
+  { field: "filename", label: { en: "File name", ro: "Nume fișier" }, type: "text" },
+  {
+    field: "path",
+    label: { en: "File", ro: "Fișier" },
+    type: "file",
+    bucket: BUCKET,
+    sortable: false,
+    filterable: false,
+  },
+  {
+    field: "todo_title",
+    label: { en: "Title", ro: "Titlu" },
+    type: "text",
+    columnName: "title",
+    origin: "todos",
+    accessorFn: (row) => row.todos?.title,
+    navigationHidden: true,
+    group: "todo",
+    groupLabel: { en: "Task", ro: "Sarcină" },
+  },
+  {
+    field: "todo_completed",
+    label: { en: "Completed", ro: "Finalizat" },
+    type: "boolean",
+    columnName: "completed",
+    origin: "todos",
+    accessorFn: (row) => row.todos?.completed,
+    navigationHidden: true,
+    group: "todo",
+  },
+  {
+    field: "created_at",
+    label: { en: "Created at", ro: "Data creării" },
+    type: "datetime",
     hidden: true,
   },
 ]

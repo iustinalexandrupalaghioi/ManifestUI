@@ -82,5 +82,7 @@ export interface DefinedResourceConfig<
 
   columns?: ColumnConfig[];
 
+  listColumns?: ColumnConfig[];
+
   pickupColumns?: ColumnConfig[];
 }

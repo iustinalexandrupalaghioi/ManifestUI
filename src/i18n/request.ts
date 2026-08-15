@@ -11,6 +11,7 @@ const NAMESPACES = [
   { group: "framework", name: "Dialog" },
   { group: "framework", name: "DataView" },
   { group: "framework", name: "Filtering" },
+  { group: "framework", name: "Sorting" },
   { group: "framework", name: "Views" },
   { group: "framework", name: "Pagination" },
   { group: "framework", name: "Toast" },
