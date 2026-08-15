@@ -20,6 +20,7 @@ works."
 
 - [Stack](#stack)
 - [Prerequisites](#prerequisites)
+- [Starting a new project from this template](#starting-a-new-project-from-this-template)
 - [First-time setup](#first-time-setup)
 - [Running the app](#running-the-app)
 - [Project structure](#project-structure)
@@ -37,8 +38,8 @@ works."
 - **Next.js 16** (App Router, `src/app/`) + **React 19**
 - **Supabase** — auth (email/password + Google OAuth) and file storage
 - **Drizzle ORM** over Postgres (Supabase's Postgres)
-- **next-intl** — `en`/`ro` locales, picked from a cookie (no locale-prefixed routes — see
-  [i18n](#i18n))
+- **next-intl** — `en`/`ro` locales, prefixed in the URL (`/ro/...`, `/en/...`, including
+  the default locale — see [i18n](#i18n))
 - **TanStack Query + Table**, **React Hook Form + Zod**, **shadcn/ui** primitives
 - Package manager: **pnpm**
 
@@ -47,6 +48,34 @@ works."
 - Node.js + pnpm
 - A Supabase project (free tier is fine for local dev) — you need its project URL, anon
   key, service role key, and Postgres connection strings
+
+## Starting a new project from this template
+
+1. **Create your repo** — use GitHub's "Use this template" button, or clone this repo and
+   start a clean history (`rm -rf .git && git init`).
+2. **Rename the project** — update `package.json`'s `name` field, the `title`/`description`
+   in `src/app/[locale]/layout.tsx`, `src/app/[locale]/(site)/layout.tsx`, and
+   `src/app/[locale]/cms/layout.tsx` (currently "ManifestUI" / "ManifestUI Admin"), and the
+   hardcoded "ManifestUI" text in `src/components/site/Navbar.tsx`.
+3. **Decide what to do with the demo resources.** `todos`, `relations`, and `attachments`
+   (`src/components/features/main/`) are a worked example of the resource pattern, not
+   meant to ship as-is. Keep them around while you learn the framework (see
+   [Adding a new resource](#adding-a-new-resource) — they're the reference every step there
+   points at), then delete them once you're comfortable: remove the three folders, drop
+   their entries from `resourceDescriptors.ts`/`registerResourceComponents.ts`, remove their tables
+   from `src/db/schema/` (`todo`, `todo_attachment`, `relation`), and delete their menu/i18n
+   entries. Leave `groups`/`group-permissions`/`user-groups`/`users`
+   (`src/components/features/administration/`) alone — that's the RBAC system itself, not
+   demo data.
+4. **Point it at your own Supabase project and apply the schema** — follow
+   [First-time setup](#first-time-setup) below (env vars, `db:push`, the auth webhook, and
+   bootstrapping your own first administrator).
+5. **Configure locales**, if you don't need `en`/`ro` — edit `src/i18n/routing.ts` and add
+   or remove the matching `messages/<locale>/` folders (see [i18n](#i18n)).
+6. **Start building** — once you're signed in as an administrator, follow
+   [Adding a new resource](#adding-a-new-resource) for your first real resource, and grant
+   yourself/your team access via the `groups`/`group-permissions` screens (see
+   [Authorization](#authorization-rbac)).
 
 ## First-time setup
 
@@ -68,7 +97,6 @@ works."
    | `DIRECT_DATABASE_URL`                                                                                                              | Same page, the **direct/session** connection (port 5432) — kept for reference but not currently read by any code                                                                     |
    | `AUTH_WEBHOOK_SECRET`                                                                                                              | Any string you choose — shared secret for the auth webhook, see step 4                                                                                                               |
    | `NEXT_PUBLIC_BASE_URL`                                                                                                             | e.g. `http://localhost:3000` in dev                                                                                                                                                  |
-   | `ENABLE_RBAC`                                                                                                                      | `true`/unset = groups & permissions enforced normally; `false` = every signed-in user gets every permission (dev/testing escape hatch — see [Authorization](#authorization-rbac))     |
    | `NEXT_PUBLIC_APP_TIMEZONE`, `NEXT_PUBLIC_ENABLE_NUMBERED_TABS`, `NEXT_PUBLIC_NUMBER_LIST_COLUMNS`, `NEXT_PUBLIC_DEFAULT_VIEW_MODE` | App/display config                                                                                                                                                                    |
 
 3. **Create the schema in your Supabase Postgres**
@@ -116,41 +144,48 @@ pnpm typecheck     # tsc --noEmit
 ```
 src/
 ├── app/
-│   ├── <resource>/              one folder per resource route: todos/, relations/,
-│   │                             attachments/, users/, groups/, group-permissions/,
-│   │                             user-groups/ — each just page.tsx / add/page.tsx /
-│   │                             [id]/page.tsx wiring a ResourceGuard around the
-│   │                             resource's generated components
-│   ├── auth/                    login/signup/forgot-password/update-password pages
-│   ├── api/webhooks/            route handlers, e.g. the auth-users sync webhook
-│   ├── resourceDescriptors.ts    whole-app resource registry (id/table/labels/routes)
-│   ├── register-resources.ts     side-effect imports that run defineResource() for
-│   │                             every feature, populating the resource registry
-│   ├── createResourceActions.ts  project-level wrapper pre-binding the framework's
-│   │                             generic createResourceActions to resourceDescriptors
-│   └── grantablePermissions.ts   resources + custom actions offered by the
-│                                 group-permissions picker
+│   ├── [locale]/
+│   │   ├── layout.tsx            outer shell (html/body, generateStaticParams) — no CSS
+│   │   │                         import, so (site) and cms below can each ship their own
+│   │   ├── (site)/               public site route group (no URL segment) — home page,
+│   │   │                         its own layout/Navbar, and auth/ (login/signup/
+│   │   │                         forgot-password/update-password/signup-success pages)
+│   │   └── cms/                  the admin app, gated by ResourceGuard on every route
+│   │       ├── <resource>/       one folder per resource route: todos/, relations/,
+│   │       │                     attachments/, users/, groups/, group-permissions/,
+│   │       │                     user-groups/ — each just page.tsx / add/page.tsx /
+│   │       │                     [id]/page.tsx wiring a ResourceGuard around the
+│   │       │                     resource's generated components
+│   │       ├── resourceDescriptors.ts   whole-app resource registry (id/table/labels/routes)
+│   │       ├── registerResourceComponents.ts   side-effect imports that run defineResource()
+│   │       │                     for every feature, populating the resource registry
+│   │       ├── createResourceActions.ts   project-level wrapper pre-binding the framework's
+│   │       │                     generic createResourceActions to resourceDescriptors
+│   │       └── grantablePermissions.ts   resources + custom actions offered by the
+│   │                             group-permissions picker
+│   └── api/webhooks/             route handlers, e.g. the auth-users sync webhook — outside
+│                                 [locale] since API routes aren't locale-scoped
 ├── components/
+│   ├── site/                     (site)-only UI: Navbar, UserMenu
+│   ├── cms/                      cms-only UI: AppNavbar, MenuItems, BASE_ROUTE ("/cms")
 │   ├── features/
-│   │   ├── main/                 todos/, relations/, todo-attachments/
-│   │   └── administration/       users/, group/, group-permissions/, user-groups/
+│   │   ├── main/                 todo/, relation/, todo-attachment/
+│   │   └── administration/       user/, group/, group-permission/, user-group/
 │   │                             (the RBAC resources themselves — see Authorization)
 │   └── ui/                       app-level UI, distinct from framework/components/ui
 ├── framework/                    the reusable CRUD framework (defineResource, forms,
 │   │                             data-view, dialogs, files) — not covered in depth by
 │   │                             this doc
-│   └── authorization/            RBAC: rbac.ts, ResourceGuard, usePermissions,
+│   └── authorization/            RBAC: permissions.ts, ResourceGuard, usePermissions,
 │                                 AccessDeniedDialog — see Authorization
 ├── db/
 │   ├── index.ts                  Drizzle client (see the RLS caveat in Authorization)
 │   └── schema/                   Drizzle table definitions — the source of truth for
 │                                 the DB shape
-└── i18n/                        next-intl config; locale is read from a cookie, not
-                                  the URL — strings live in messages/en, messages/ro
+└── i18n/                        next-intl config; locale lives in the URL
+                                  (localePrefix: "always") — strings live in messages/en,
+                                  messages/ro
 ```
-
-There's no `[locale]` route segment and no separate public-site/admin split — this app is
-a single admin surface, gated by sign-in + permissions on every route.
 
 ## Database & migrations
 
@@ -159,21 +194,23 @@ Schema source of truth is `src/db/schema/*.ts` (Drizzle, `casing: "snake_case"` 
 
 - **`pnpm db:push`** — pushes the current schema files straight to the DB, no migration
   file generated. Fast for local iteration; don't use it against a shared/prod DB since
-  there's no history to review or roll back. This project has so far only ever used
-  `db:push` — there's no `drizzle/` migrations folder yet.
+  there's no history to review or roll back. This project used `db:push` exclusively until
+  its first hand-written migration (`drizzle/0000_sparkling_living_tribunal.sql`, the
+  role→group rename + table singularization) — prefer `db:generate` + `db:migrate` from
+  here on so schema history stays reviewable.
 - **`pnpm db:generate`** then **`pnpm db:migrate`** — `generate` diffs your schema files
-  against the last-known DB state and writes a new SQL file under `drizzle/`; `migrate`
-  applies pending migration files. This is the reviewable, shared-DB-safe path. Since no
-  migration has ever been generated for this DB, review the very first generated SQL
-  carefully before running it — drizzle-kit's diff is only as accurate as the DB state it's
-  comparing against, and a DB that's only ever seen `db:push` has no recorded history to
-  diff from.
+  against the last-known DB state (recorded in `drizzle/meta/`) and writes a new SQL file
+  under `drizzle/`; `migrate` applies pending migration files. This is the reviewable,
+  shared-DB-safe path. **Always review the generated SQL before running `db:migrate`** —
+  drizzle-kit's diff heuristics can mistake a rename for a drop+create, which silently loses
+  data; the existing `0000_sparkling_living_tribunal.sql` had to be hand-edited for exactly
+  this reason (see the comment at the top of that file).
 - **`pnpm db:studio`** — opens Drizzle Studio against your DB.
 
 To change the schema:
 
-1. Edit/add a file in `src/db/schema/` (a `pgTable(...)` definition; see `todos.ts` for a
-   simple example, `relations-table.ts` for one with `pgPolicy`/`check` constraints — note
+1. Edit/add a file in `src/db/schema/` (a `pgTable(...)` definition; see `todo.ts` for a
+   simple example, `relation-table.ts` for one with `pgPolicy`/`check` constraints — note
    the RLS caveat in [Authorization](#authorization-rbac) before relying on `pgPolicy`).
 2. Add cross-table relations in `src/db/schema/relations.ts` if needed (Drizzle's
    `relations()` helper — used for typed joins, not enforced at the DB level).
@@ -184,10 +221,10 @@ To change the schema:
 ## Adding a new resource
 
 Every resource under `src/components/features/**` follows the same shape. Walking through
-`todos` (`src/components/features/main/todos/`) as the template:
+`todos` (`src/components/features/main/todo/`) as the template:
 
 ```
-todos/
+todo/
 ├── resource.tsx              defineResource(...) call — the entry point
 ├── index.ts                   re-exports resource.tsx's public surface
 ├── config/
@@ -216,7 +253,7 @@ Steps to add a new one, say `projects`:
 4. **`config/schema.ts`** — a Zod object for the editable fields; export the inferred
    `ProjectFormValues` type.
 5. **`config/api.ts`** — `"use server"`; build server actions via
-   `createResourceActions(descriptor.id)` (from `@/app/createResourceActions`, a
+   `createResourceActions(descriptor.id)` (from `@/app/[locale]/cms/createResourceActions`, a
    project-level wrapper — don't import `defineResourceActions`/the base
    `createResourceActions` from `@/framework/...` directly, that wrapper is what threads
    this app's whole `resourceDescriptors` list through so failure messages can resolve any
@@ -227,24 +264,24 @@ Steps to add a new one, say `projects`:
 7. **`config/form.ts`** — a `FormConfig` (stack or grid layout) for add/edit.
 8. **`resource.tsx`** — call `defineResource({...})` wiring all of the above together, then
    re-export the generated `hooks`/`components` you need (`Overview`, `AddPage`,
-   `DetailPage`, `LookupDialog`, the query hooks). Copy `todos/resource.tsx` as a template.
+   `DetailPage`, `LookupDialog`, the query hooks). Copy `todo/resource.tsx` as a template.
 9. **`index.ts`** — re-export resource.tsx's public names.
-10. **Register it in three places** (all under `src/app/`):
+10. **Register it in three places** (all under `src/app/[locale]/cms/`):
     - `resourceDescriptors.ts` — add `projectsDescriptor` to the array (this is what backs
       `createResourceActions`, `grantablePermissions.ts`'s resource picker, and any central
       resource listing).
-    - `register-resources.ts` — add `import "@/components/features/main/projects";`
+    - `registerResourceComponents.ts` — add `import "@/components/features/main/projects";`
       (side-effect import; this is what actually runs `defineResource()` and populates the
       `ResourceRegistry` that lookup/relation fields resolve other resources through).
     - `grantablePermissions.ts` needs no edit for plain CRUD — it derives the resource's
       read/add/update/delete permission strings automatically from `resourceDescriptors`.
       Only add an entry to its `grantableActions` array if the resource exposes a **custom**
       action (see [Custom actions](#custom-actions-actionforms-vs-bulkactions)).
-11. **Routes** — add `src/app/projects/page.tsx` (renders `ProjectOverview` wrapped in
-    `<ResourceGuard resourceId="projects" action="read">`), `projects/add/page.tsx`
+11. **Routes** — add `src/app/[locale]/cms/projects/page.tsx` (renders `ProjectOverview`
+    wrapped in `<ResourceGuard resourceId="projects" action="read">`), `projects/add/page.tsx`
     (`ProjectAddPage`, `action="add"`), `projects/[id]/page.tsx` (`ProjectDetailPage`,
     `action="read"`, since the update permission is checked per-field/per-save inside the
-    detail page itself) — three small files, same pattern as `src/app/todos/*`.
+    detail page itself) — three small files, same pattern as `src/app/[locale]/cms/todos/*`.
 12. **i18n strings** — add whatever `t("...")` keys you introduced to `messages/en/*` and
     `messages/ro/*`.
 13. **Grant access** — a fresh resource is invisible to everyone but administrators until
@@ -270,7 +307,7 @@ above), which:
 
 1. Calls `requirePermission(resourceId, action)` first — throws `ForbiddenError` unless the
    caller is signed in **and** holds the `"<resourceId>:<action>"` permission (directly via
-   a group, or implicitly because they're an administrator or `ENABLE_RBAC=false` — see
+   a group, or implicitly because they're an administrator — see
    [Authorization](#authorization-rbac)).
 2. Runs your function, catching `ForbiddenError`, Zod errors, and anything else (Postgres
    constraint violations get mapped to a friendly, locale-aware message), and returns it as
@@ -287,7 +324,7 @@ succeed (`{ succeededIds, failures }`, surfaced in the UI as a `BulkResultDialog
 ## Custom actions: `actionForms` vs `bulkActions`
 
 Beyond plain add/edit/delete, a resource can expose custom actions. `todos` has one
-example of each (`src/components/features/main/todos/config/actions/`):
+example of each (`src/components/features/main/todo/config/actions/`):
 
 - **`actionForms`** (`complete-with-notes.tsx`) — an `ActionFormConfig`: a labeled action
   that opens a small dialog with its own form (its own Zod schema, its own submit), usable
@@ -304,7 +341,7 @@ half of the permission string it's gated on (`"todos:complete"`), same as `"read
 `"update"`/`"delete"` for the built-ins.
 
 Because a custom verb isn't part of the automatic read/add/update/delete expansion, **you
-also have to add it to `grantableActions` in `src/app/grantablePermissions.ts`** so it shows
+also have to add it to `grantableActions` in `src/app/[locale]/cms/grantablePermissions.ts`** so it shows
 up as something a group can be granted — see the `"todos:complete"` /
 `"todos:complete-with-note"` entries there for the pattern. The `id` you give it there must
 match the `verb` string exactly, since that's what `hasPermission(`${resourceId}:${verb}`)`
@@ -338,8 +375,8 @@ signed in as an administrator.
 **Server-side enforcement** (`src/framework/authorization/lib/`):
 
 - `getUserPermissions(userId)` — resolves a user's full permission-string list: `["*"]`
-  (the `ALL_PERMISSIONS` sentinel) if they're an administrator or `ENABLE_RBAC=false`,
-  otherwise the union of every permission granted by their assigned groups.
+  (the `ALL_PERMISSIONS` sentinel) if they're an administrator, otherwise the union of
+  every permission granted by their assigned groups.
 - `requirePermission(resourceId, action)` — throws `ForbiddenError` unless the caller is
   signed in and `getUserPermissions` includes `"*"` or the exact `"<resourceId>:<action>"`
   string.
@@ -374,10 +411,9 @@ signed in as an administrator.
   `requirePermission` check on every action and `ResourceGuard` on every route; the client
   check just avoids showing controls that would fail anyway.
 
-**`ENABLE_RBAC=false`** is a global escape hatch (see `isRbacEnabled()` in `rbac.ts`) that
-makes every signed-in user behave as if they held every permission, without touching the
-`administrator` flag or any group data — useful for local development, not for anything
-resembling production.
+There is deliberately no global "bypass RBAC" escape hatch — the only way to get every
+permission is the `administrator` flag on a specific user, which is auditable per-row and
+never toggled by an env var.
 
 **The `pgPolicy(...)` RLS policies in `src/db/schema/*.ts` are not a real security
 boundary.** `src/db/index.ts` connects as the Postgres role behind Supabase's pooler, which
@@ -402,12 +438,17 @@ described above on top.
 
 ## i18n
 
-There's no locale-prefixed routing or middleware — `en`/`ro` is picked from a `NEXT_LOCALE`
-cookie (`src/i18n/locales.ts`/`request.ts`), defaulting to `ro` when unset. `LocaleSwitcher`
-(`src/framework/components/partials/LocaleSwitcher.tsx`) just writes that cookie and calls
-`router.refresh()`. Translation strings live under `messages/en/` and `messages/ro/`, split
-into per-namespace JSON files (`framework/Common.json`, `features/Todos.json`, etc.) that
-`src/i18n/request.ts` loads by name — add a new namespace there if you introduce one.
+Locale lives in the URL, not a cookie: `src/i18n/routing.ts` declares the supported
+locales (`en`/`ro`, default `ro`) via next-intl's `defineRouting`, with
+`localePrefix: "always"` so every locale gets an explicit prefix (`/ro/...`, `/en/...`) —
+including the default, for a single unambiguous canonical URL per locale. `src/proxy.ts`
+runs next-intl's locale-detection middleware first, then its own Supabase auth-refresh and
+`/cms` auth gate. `LocaleSwitcher` (`src/framework/components/partials/LocaleSwitcher.tsx`)
+switches locale via `router.replace(pathname, { locale: nextLocale })` from
+`@/i18n/navigation`, staying on the same page. Translation strings live under `messages/en/`
+and `messages/ro/`, split into per-namespace JSON files (`framework/Common.json`,
+`features/Todos.json`, etc.) that `src/i18n/request.ts` loads by name — add a new namespace
+there if you introduce one.
 
 `config/descriptor.ts`/`columns.ts`/`form.ts` labels use `{ en, ro }` objects
 (`TranslatableText`, resolved via `resolveLabel()`) directly rather than `t()` keys (see the
@@ -422,16 +463,18 @@ grammatically correct Romanian noun form and gender (see `ResourceDescriptor.gen
   currently reads it — `DATABASE_URL` (the pooled connection) is used everywhere, including
   by `drizzle-kit`.
 - **No bootstrap/seed script** for the first administrator — the only way in is the manual
-  `update users set administrator = true` flip described in setup step 5. There's also no
+  `update "user" set administrator = true` flip described in setup step 5. There's also no
   UI for un-setting `administrator` on yourself, so be careful who you grant it to.
-- **`grantableActions` is a small, hand-maintained list** (`src/app/grantablePermissions.ts`)
+- **`grantableActions` is a small, hand-maintained list** (`src/app/[locale]/cms/grantablePermissions.ts`)
   of custom, non-CRUD permission strings — it is *not* derived from resources'
   `actionForms`/`bulkActions` automatically. Adding a new custom action and forgetting to add
   its entry there means it'll work for administrators but can never be granted to a
   group-based user.
-- **No migration files exist yet** (`drizzle/` is empty/absent) — this project has only ever
-  used `pnpm db:push`. The first time someone runs `db:generate` against a DB that's only
-  seen pushes, review the generated SQL closely before migrating.
+- **Only one migration exists so far** (`drizzle/0000_sparkling_living_tribunal.sql`) —
+  everything before it was applied via `pnpm db:push`, with no recorded history. Always
+  review generated SQL closely before running `db:migrate`; drizzle-kit's diff can turn a
+  rename into a destructive drop+create if it misreads the change (see the comment at the
+  top of that migration for a concrete example).
 - **RLS policies in `src/db/schema/*.ts` don't do anything** through the app's own DB
   client — see the callout in [Authorization](#authorization-rbac). Don't add a new
   `pgPolicy` expecting it to enforce anything by itself.

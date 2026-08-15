@@ -1,5 +1,5 @@
-import { userGroupsResource } from "@/components/features/administration/user-groups/resource";
-import { groupPermissionsResource } from "@/components/features/administration/group-permissions/resource";
+import { userGroupsResource } from "@/components/features/administration/user-group/resource";
+import { groupPermissionsResource } from "@/components/features/administration/group-permission/resource";
 import type { RelationConfig } from "@/framework/types/relation-config-type";
 import type { Group } from "@/app/types/administration/Group";
 

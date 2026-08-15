@@ -5,12 +5,6 @@ import { group_permission, group, user_group } from "@/db/schema";
 import { ALL_PERMISSIONS } from "../constants";
 import { isAdministrator } from "./isAdministrator";
 
-// Global escape hatch — set ENABLE_RBAC=false to grant every permission to
-// every signed-in user, bypassing groups/permissions entirely.
-function isRbacEnabled(): boolean {
-  return process.env.ENABLE_RBAC !== "false";
-}
-
 type PermissionRow = {
   resource_id: string;
   can_read: boolean | null;
@@ -76,7 +70,7 @@ export async function getPermissionsForGroupIds(
 // (e.g. a resource nobody has granted access to), not just what's assigned
 // via groups.
 export async function getUserPermissions(userId: string): Promise<string[]> {
-  if (!isRbacEnabled() || (await isAdministrator(userId))) {
+  if (await isAdministrator(userId)) {
     return [ALL_PERMISSIONS];
   }
 
@@ -103,7 +97,7 @@ export async function hasGroup(
   userId: string,
   groupName: string,
 ): Promise<boolean> {
-  if (!isRbacEnabled() || (await isAdministrator(userId))) return true;
+  if (await isAdministrator(userId)) return true;
 
   const rows = await getDbClient()
     .select({ id: group.id })
@@ -121,7 +115,7 @@ export async function hasGroup(
 // permissions still identifies someone as CMS staff, e.g. mid-onboarding
 // before their permissions are configured).
 export async function hasAnyGroup(userId: string): Promise<boolean> {
-  if (!isRbacEnabled() || (await isAdministrator(userId))) return true;
+  if (await isAdministrator(userId)) return true;
 
   const rows = await getDbClient()
     .select({ groupId: user_group.group_id })

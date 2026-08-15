@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { completeTodos } from "@/components/features/main/todos/config/api";
+import { completeTodos } from "@/components/features/main/todo/config/api";
 import {
   BulkActionError,
   toBulkActionResult,

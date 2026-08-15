@@ -1,4 +1,4 @@
-import { UserOverview } from "@/components/features/administration/users/resource";
+import { UserOverview } from "@/components/features/administration/user/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

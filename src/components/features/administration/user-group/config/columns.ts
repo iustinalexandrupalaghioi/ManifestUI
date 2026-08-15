@@ -4,7 +4,7 @@ export const userGroupColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "text", size: 160, cardHidden: true },
   // Not shown — exists only so the groups→users and users→groups relation
   // tabs can pre-filter by them (see src/components/features/administration/group/config/
-  // relations.ts and src/components/features/administration/users/config/relations.ts).
+  // relations.ts and src/components/features/administration/user/config/relations.ts).
   { field: "group_id", label: { en: "Group Id", ro: "Id grup" }, type: "number", hidden: true },
   { field: "user_id", label: { en: "User Id", ro: "Id utilizator" }, type: "text", hidden: true },
   {

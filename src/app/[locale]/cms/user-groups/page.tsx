@@ -1,4 +1,4 @@
-import { UserGroupOverview } from "@/components/features/administration/user-groups/resource";
+import { UserGroupOverview } from "@/components/features/administration/user-group/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

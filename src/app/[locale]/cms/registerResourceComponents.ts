@@ -1,7 +1,7 @@
-import "@/components/features/main/todo-attachments";
-import "@/components/features/main/relations";
-import "@/components/features/administration/users";
-import "@/components/features/main/todos";
+import "@/components/features/main/todo-attachment";
+import "@/components/features/main/relation";
+import "@/components/features/administration/user";
+import "@/components/features/main/todo";
 import "@/components/features/administration/group";
-import "@/components/features/administration/group-permissions";
-import "@/components/features/administration/user-groups";
+import "@/components/features/administration/group-permission";
+import "@/components/features/administration/user-group";

@@ -1,4 +1,4 @@
-import { AttachmentOverview } from "@/components/features/main/todo-attachments/resource";
+import { AttachmentOverview } from "@/components/features/main/todo-attachment/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

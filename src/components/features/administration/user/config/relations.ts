@@ -1,5 +1,5 @@
 import type { User } from "@/app/types/administration/User";
-import { userGroupsResource } from "@/components/features/administration/user-groups/resource";
+import { userGroupsResource } from "@/components/features/administration/user-group/resource";
 import type { RelationConfig } from "@/framework/types/relation-config-type";
 
 export const usersRelations: RelationConfig<User>[] = [

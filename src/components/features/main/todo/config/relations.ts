@@ -1,4 +1,4 @@
-import { attachmentsResource } from "@/components/features/main/todo-attachments/resource";
+import { attachmentsResource } from "@/components/features/main/todo-attachment/resource";
 import type { RelationConfig } from "@/framework/types/relation-config-type";
 import type { Todo } from "@/app/types/main/Todo";
 
