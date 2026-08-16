@@ -10,5 +10,10 @@
   "filesDeleted": "{count, plural, one {Fișierul pentru {label} a fost șters!} other {Fișierele pentru {label} au fost șterse!}}",
   "failedToUpload": "Nu s-au putut încărca fișierele pentru {label}.",
   "created": "{gender, select, feminine {{label} creată!} other {{label} creat!}}",
-  "updated": "{gender, select, feminine {{label} actualizată!} other {{label} actualizat!}}"
+  "updated": "{gender, select, feminine {{label} actualizată!} other {{label} actualizat!}}",
+  "updatingSingle": "Se actualizează {label}...",
+  "updatingMulti": "Se actualizează {completed} din {total} {label}...",
+  "updatedCount": "{gender, select, feminine {{count, plural, one {# {label} actualizată!} few {# {label} actualizate!} other {# de {label} actualizate!}}} neuter {{count, plural, one {# {label} actualizat!} few {# {label} actualizate!} other {# de {label} actualizate!}}} other {{count, plural, one {# {label} actualizat!} few {# {label} actualizați!} other {# de {label} actualizați!}}}}",
+  "updatedOf": "{gender, select, feminine {{succeeded} din {total} {label} actualizate.} neuter {{succeeded} din {total} {label} actualizate.} other {{succeeded} din {total} {label} actualizați.}}",
+  "failedToUpdate": "{count, plural, one {{gender, select, feminine {Nu s-a putut actualiza o {label}.} other {Nu s-a putut actualiza un {label}.}}} few {Nu s-au putut actualiza # {label}.} other {Nu s-au putut actualiza # de {label}.}}"
 }

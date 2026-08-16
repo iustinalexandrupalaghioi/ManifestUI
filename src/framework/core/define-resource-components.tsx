@@ -256,6 +256,7 @@ export function defineResourceComponents<
     renderOverview: config.renderOverview,
     detailSlots: config.detailSlots,
     permissions,
+    editable: config.editable,
   };
 
   const components = createResourceComponents(hooks, componentsConfig, addTabs);

@@ -25,6 +25,7 @@ const NAMESPACES = [
   { group: "framework", name: "DataTable" },
   { group: "framework", name: "Toolbar" },
   { group: "framework", name: "Calendar" },
+  { group: "framework", name: "Editing" },
   { group: "features", name: "Menu" },
   { group: "features", name: "Todos" },
   { group: "features", name: "GroupPermissions" },

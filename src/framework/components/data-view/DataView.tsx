@@ -9,6 +9,7 @@ import { viewsFeature } from "./features/views/views.feature";
 import { sortingFeature } from "./features/sorting/sorting.feature";
 import { selectionFeature } from "./features/selection/selection.feature";
 import { filteringFeature } from "./features/filtering/filtering.feature";
+import { editingFeature } from "./features/editing/editing.feature";
 import { listFeature } from "./data-list/DataList.feature";
 
 // Module-level constant — never inline. The registry loop calls hooks;
@@ -17,6 +18,7 @@ const DEFAULT_FEATURES: DataViewFeature[] = [
   sortingFeature,
   selectionFeature,
   filteringFeature,
+  editingFeature,
   listFeature,
 ];
 

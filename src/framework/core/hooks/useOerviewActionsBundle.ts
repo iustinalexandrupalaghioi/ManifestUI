@@ -18,7 +18,8 @@ export function useOverviewActionsBundle<
   const [activeActionKey, setActiveActionKey] = useState<string | null>(null);
   const [activeActionItems, setActiveActionItems] = useState<TItem[]>([]);
 
-  const { removeAsync, error, clearError } = hooks.useMutations();
+  const { removeAsync, updateManyAsync, error, clearError } =
+    hooks.useMutations();
 
   const actionFormActions = hooks.actionForms.map((a) => ({
     key: a.key,
@@ -67,6 +68,7 @@ export function useOverviewActionsBundle<
     getRowUrl,
     isDeleteEligible,
     removeAsync,
+    updateManyAsync,
     error,
     clearError,
     deleteOpen,

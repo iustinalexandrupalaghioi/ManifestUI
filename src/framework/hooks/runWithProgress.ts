@@ -31,9 +31,24 @@ export async function runWithProgress<TId extends string | number>(
     }
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, ids.length) }, worker),
-  );
+  // Warn on refresh/close while requests are in flight — closing the tab
+  // aborts unsent requests and orphans the client from any already-sent
+  // ones, silently stranding a partially-applied batch.
+  const hasWindow = typeof window !== "undefined";
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
+  if (hasWindow) window.addEventListener("beforeunload", handleBeforeUnload);
+
+  try {
+    await Promise.all(
+      Array.from({ length: Math.min(concurrency, ids.length) }, worker),
+    );
+  } finally {
+    if (hasWindow)
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+  }
 
   return { succeededIds, failures };
 }

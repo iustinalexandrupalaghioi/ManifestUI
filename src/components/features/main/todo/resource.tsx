@@ -16,7 +16,11 @@ import { todosForm } from "./config/form";
 import { todoSchema, type TodoFormValues } from "./config/schema";
 import { todosTabs } from "./config/tabs";
 import { todosRelations } from "./config/relations";
-import { todoColumns, todoListColumns, todoPickupColumns } from "./config/columns";
+import {
+  todoColumns,
+  todoListColumns,
+  todoPickupColumns,
+} from "./config/columns";
 import { todosDetailSlots } from "./config/detailSlots";
 import { todosDescriptor } from "./config/descriptor";
 
@@ -36,7 +40,7 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
 
   openMode: "page",
   addMode: "page",
-
+  editable: true,
   emptyValues: {
     title: "",
     completed: false,

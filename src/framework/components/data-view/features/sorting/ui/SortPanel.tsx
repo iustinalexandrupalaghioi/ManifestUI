@@ -84,77 +84,80 @@ function RuleRow({
   const t = useTranslations("Sorting")
 
   return (
-    <div className="flex items-center gap-2 rounded-md border p-3">
-      <div className="flex flex-col">
+    <div className="flex items-start gap-2 rounded-md border p-3">
+      <div className="flex flex-1 flex-col gap-2">
+        {/* Column picker */}
+        <Select
+          value={draft.columnId}
+          onValueChange={(columnId) => onChange({ ...draft, columnId })}
+        >
+          <SelectTrigger className="h-8 w-full text-xs">
+            <SelectValue placeholder={t("columnPlaceholder")} />
+          </SelectTrigger>
+          <SelectContent>
+            {sortableColumns
+              .filter(
+                (c) => c.id === draft.columnId || !usedColumnIds.has(c.id),
+              )
+              .map((c) => (
+                <SelectItem key={c.id} value={c.id} className="text-xs">
+                  {c.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+
+        {/* Direction */}
+        <Select
+          value={draft.desc ? "desc" : "asc"}
+          onValueChange={(v) => onChange({ ...draft, desc: v === "desc" })}
+        >
+          <SelectTrigger className="h-8 w-full text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asc" className="text-xs">
+              {t("ascending")}
+            </SelectItem>
+            <SelectItem value="desc" className="text-xs">
+              {t("descending")}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Reorder + remove */}
+      <div className="flex flex-col items-center gap-1">
         <Button
           variant="ghost"
           size="icon"
-          className="h-4 w-6 text-muted-foreground disabled:opacity-30"
+          className="h-6 w-8 text-muted-foreground disabled:opacity-30"
           onClick={onMoveUp}
           disabled={isFirst}
           aria-label={t("moveUp")}
         >
-          <ArrowUp className="h-3 w-3" />
+          <ArrowUp className="h-3.5 w-3.5" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-4 w-6 text-muted-foreground disabled:opacity-30"
+          className="h-6 w-8 text-muted-foreground disabled:opacity-30"
           onClick={onMoveDown}
           disabled={isLast}
           aria-label={t("moveDown")}
         >
-          <ArrowDown className="h-3 w-3" />
+          <ArrowDown className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-8 text-muted-foreground hover:text-destructive"
+          onClick={onRemove}
+          aria-label={t("removeRule")}
+        >
+          <XIcon className="h-3.5 w-3.5" />
         </Button>
       </div>
-
-      {/* Column picker */}
-      <Select
-        value={draft.columnId}
-        onValueChange={(columnId) => onChange({ ...draft, columnId })}
-      >
-        <SelectTrigger className="h-8 flex-1 text-xs">
-          <SelectValue placeholder={t("columnPlaceholder")} />
-        </SelectTrigger>
-        <SelectContent>
-          {sortableColumns
-            .filter((c) => c.id === draft.columnId || !usedColumnIds.has(c.id))
-            .map((c) => (
-              <SelectItem key={c.id} value={c.id} className="text-xs">
-                {c.name}
-              </SelectItem>
-            ))}
-        </SelectContent>
-      </Select>
-
-      {/* Direction */}
-      <Select
-        value={draft.desc ? "desc" : "asc"}
-        onValueChange={(v) => onChange({ ...draft, desc: v === "desc" })}
-      >
-        <SelectTrigger className="h-8 w-28 text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="asc" className="text-xs">
-            {t("ascending")}
-          </SelectItem>
-          <SelectItem value="desc" className="text-xs">
-            {t("descending")}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* Remove */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-        onClick={onRemove}
-        aria-label={t("removeRule")}
-      >
-        <XIcon className="h-3.5 w-3.5" />
-      </Button>
     </div>
   )
 }

@@ -10,5 +10,10 @@
   "filesDeleted": "{count, plural, one {The {label} file has been deleted!} other {The {label} files have been deleted!}}",
   "failedToUpload": "Failed to upload {label} files.",
   "created": "{label} created!",
-  "updated": "{label} updated!"
+  "updated": "{label} updated!",
+  "updatingSingle": "Updating {label}...",
+  "updatingMulti": "Updating {completed} of {total} {label}...",
+  "updatedCount": "Updated {count} {label}!",
+  "updatedOf": "Updated {succeeded} of {total} {label}.",
+  "failedToUpdate": "{count, plural, one {Failed to update this {label}.} other {Failed to update {count} {label}.}}"
 }

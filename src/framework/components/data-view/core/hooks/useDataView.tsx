@@ -9,6 +9,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { deleteEditingStore } from "../../features/editing/editing.store";
 import { deleteFilteringStores } from "../../features/filtering/filtering.store";
 import type { FilterInput } from "../../features/filtering/filters";
 import { useCellContextMenuFilter } from "../../features/filtering/useFiltering";
@@ -53,6 +54,8 @@ export interface DataViewProps<TData, TValue> {
   slotId?: string;
   preFilters?: FilterInput[];
   initialListColumnVisibility?: VisibilityState;
+  /** Inline-editing glue (updateAsync/getRecordId/useDetailForm) — omit to leave the grid read-only. */
+  tableMeta?: import("@tanstack/react-table").TableMeta<TData>;
 }
 
 export function useDataView<TData, TValue>(
@@ -73,6 +76,7 @@ export function useDataView<TData, TValue>(
     tableId,
     defaultViewName = "Default",
     initialListColumnVisibility,
+    tableMeta,
   } = props;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -176,6 +180,7 @@ export function useDataView<TData, TValue>(
         typeof updater === "function" ? updater(globalFilter) : updater;
       setGlobalFilter(next);
     },
+    meta: tableMeta,
     ...columnHandlers,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -263,6 +268,7 @@ export function useDataView<TData, TValue>(
       deleteSelectionStore(tableId);
       deleteFilteringStores(tableId);
       deleteSortingStores(tableId);
+      deleteEditingStore(tableId);
     };
   }, [tableId]);
 

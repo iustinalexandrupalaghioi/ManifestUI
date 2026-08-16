@@ -18,6 +18,7 @@ import {
   FilterX,
   Link,
   ListFilter,
+  Pencil,
   Settings,
   Trash2,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import { memo, useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { useDataViewCore } from "../stores/DataViewProvider";
+import { getEditingStore } from "../../features/editing/editing.store";
 import type { ContextMenuState, ResolvedAction } from "../types";
 import type { FilterRule } from "../../features/filtering/filters";
 import { formatTime } from "@/framework/lib/date-time-formatters";
@@ -143,7 +145,24 @@ function CellContextMenuInner<TData>({
     onOpen,
     deleteAction,
     actions,
+    rowId,
+    editableField,
   } = state;
+
+  // Edit is one command that branches: a genuinely editable single cell
+  // starts inline editing (arming the grid if it wasn't already); anything
+  // else — multi-selection, or a column with no matching field — falls
+  // back to the same behavior as "Open".
+  const canInlineEdit = !isMulti && !!editableField;
+  const handleEdit = () => {
+    if (canInlineEdit) {
+      const editingStore = getEditingStore(tableId);
+      editingStore.getState().setArmed(true);
+      editingStore.getState().startEditing({ rowId, columnId: state.columnId });
+      return;
+    }
+    onOpen?.(effectiveRows);
+  };
 
   const handleCopyValue = () => {
     const tsv = selectedCellValuesRef.current?.();
@@ -214,6 +233,13 @@ function CellContextMenuInner<TData>({
         alignOffset={-4}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
+        {/* ── Edit — inline if this cell is editable, else same as Open ── */}
+        {(canInlineEdit || onOpen) && (
+          <DropdownMenuItem onSelect={handleEdit}>
+            <Pencil className="h-4 w-4" />
+            {t("edit")}
+          </DropdownMenuItem>
+        )}
         {/* ── Open ── */}
         {onOpen && (
           <>

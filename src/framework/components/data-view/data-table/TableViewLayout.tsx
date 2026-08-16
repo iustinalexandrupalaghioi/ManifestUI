@@ -8,6 +8,7 @@ import { type RefObject, useMemo, useState } from "react";
 import type { SortingState, Table as TTable } from "@tanstack/react-table";
 import type { DataViewFeature } from "../core/contracts";
 import { useCoreStore } from "../core/stores/DataViewStore";
+import { DataListModeToggle } from "../data-list/ui/DataListModeToggle";
 import { getFilteringStore } from "../features/filtering/filtering.store";
 import type { FilterRule } from "../features/filtering/filters";
 import { FilterButton } from "../features/filtering/ui/FilterButton";
@@ -36,6 +37,7 @@ interface TableViewLayoutProps {
   scrollContainerRef: RefObject<HTMLDivElement | null>;
   handleScroll: () => void;
   height?: number;
+  hasListMode: boolean;
 }
 
 export function TableViewLayout({
@@ -52,6 +54,7 @@ export function TableViewLayout({
   scrollContainerRef,
   handleScroll,
   height,
+  hasListMode,
 }: TableViewLayoutProps) {
   const t = useTranslations("DataView");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -94,8 +97,8 @@ export function TableViewLayout({
   return (
     <>
       {/* ── filters + search ── */}
-      <div className="mb-2 flex justify-between">
-        <div className="flex items-center gap-1">
+      <div className="mb-2 flex items-start justify-between">
+        <div className="flex flex-wrap items-center gap-1">
           <FilterButton
             viewId={tableViewId}
             tableId={tableId}
@@ -116,6 +119,7 @@ export function TableViewLayout({
             </Button>
           )}
         </div>
+        <DataListModeToggle tableId={tableId} hasList={hasListMode} />
       </div>
 
       {/* ── filter chips ── */}

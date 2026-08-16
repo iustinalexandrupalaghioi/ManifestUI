@@ -61,6 +61,7 @@ export interface ResourceComponentsConfig<TItem, TFormValues> {
   renderOverview?: (props: OverviewRenderProps<TItem>) => ReactNode;
   detailSlots?: DetailSlots<TItem>;
   permissions?: ResourcePermissions;
+  editable?: boolean;
 }
 
 export interface OverviewSlots<TItem> {

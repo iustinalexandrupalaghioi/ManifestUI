@@ -1,6 +1,10 @@
 "use client";
 
-import { CustomTableBody, CustomTableCell, CustomTableRow } from "@/framework/components/ui/CustomTable";
+import {
+  CustomTableBody,
+  CustomTableCell,
+  CustomTableRow,
+} from "@/framework/components/ui/CustomTable";
 import { cn } from "@/framework/lib/utils";
 import { flexRender } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -70,10 +74,13 @@ function VirtualTableBodyInner<TData>({
   onCellContextMenu,
   onRowClick,
   onRowDoubleClick,
+  onCellDoubleClick,
   onRowContextClick,
   isLoading,
   rowSelection,
   isCellSelected,
+  isCellEditing,
+  editingKey,
   onCellClick,
   onCellContextClick,
   columnStateKey,
@@ -97,6 +104,10 @@ function VirtualTableBodyInner<TData>({
   useEffect(() => {
     virtualizer.measure();
   }, [columnStateKey]);
+
+  useEffect(() => {
+    virtualizer.measure();
+  }, [editingKey]);
 
   const lastClickRef = useRef<{ rowId: string; time: number } | null>(null);
 
@@ -157,10 +168,12 @@ function VirtualTableBodyInner<TData>({
             {row.getVisibleCells().map((cell) => {
               const isLast = cell.column.id === lastColumnId;
               const isPinned = cell.column.getIsPinned();
+              const editing = isCellEditing(row.id, cell.column.id);
 
               return (
                 <CustomTableCell
                   key={cell.id}
+                  data-editing={editing || undefined}
                   onClick={(e) => {
                     e.stopPropagation();
                     onCellClick(e, cell);
@@ -169,8 +182,9 @@ function VirtualTableBodyInner<TData>({
                     const last = lastClickRef.current;
 
                     if (last?.rowId === row.id && now - last.time < 300) {
-                      onRowDoubleClick?.(row);
                       lastClickRef.current = null;
+                      const handled = onCellDoubleClick?.(cell) ?? false;
+                      if (!handled) onRowDoubleClick?.(row);
                     } else {
                       lastClickRef.current = { rowId: row.id, time: now };
                       onRowClick?.(e, row);
@@ -198,8 +212,10 @@ function VirtualTableBodyInner<TData>({
                     zIndex: isPinned ? 20 : 0,
                   }}
                   className={cn(
-                    "relative h-0 px-3 text-xs",
-                    "truncate overflow-hidden border-b whitespace-nowrap",
+                    "relative border-b text-xs",
+                    editing
+                      ? "overflow-hidden bg-background outline -outline-offset-1 outline-primary"
+                      : "h-0 truncate overflow-hidden px-3 whitespace-nowrap",
                     !isLast && "border-r",
                     isPinned && "bg-background",
                     isCellSelected(row.id, cell.column.id) &&
@@ -207,7 +223,13 @@ function VirtualTableBodyInner<TData>({
                     cell.column.columnDef.meta?.className,
                   )}
                 >
-                  <div className="min-w-0 truncate">
+                  <div
+                    className={
+                      editing
+                        ? "flex h-full min-w-0 items-stretch"
+                        : "min-w-0 truncate"
+                    }
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>
                 </CustomTableCell>

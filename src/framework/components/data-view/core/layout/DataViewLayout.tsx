@@ -8,7 +8,6 @@ import {
   useDataViewLayout,
 } from "../../core/stores/DataViewProvider";
 import { useActiveMode } from "../../core/stores/ViewModeStore";
-import { DataListModeToggle } from "../../data-list/ui/DataListModeToggle";
 import { ListViewLayout } from "../../data-list/ListViewLayout";
 import { TableViewLayout } from "../../data-table/TableViewLayout";
 import type { FilterInput, FilterRule } from "../../features/filtering/filters";
@@ -116,7 +115,6 @@ export function DataViewLayout({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <DataListModeToggle tableId={tableId} hasList={hasTable && hasList} />
           <SelectionToolbar tableId={tableId} totalCount={totalCount} />
         </div>
       </div>
@@ -136,6 +134,7 @@ export function DataViewLayout({
           handleScroll={handleScroll}
           height={height}
           isLookup={isLookup}
+          hasListMode={hasTable && hasList}
         />
       ) : (
         <TableViewLayout
@@ -152,6 +151,7 @@ export function DataViewLayout({
           scrollContainerRef={scrollContainerRef}
           handleScroll={handleScroll}
           height={height}
+          hasListMode={hasTable && hasList}
         />
       )}
     </div>

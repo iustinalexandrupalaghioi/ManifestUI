@@ -173,12 +173,27 @@ export function useCellSelection<TData>(
     [selection, isActionColumn],
   );
 
+  // Only meaningful when exactly one cell is selected — the editing feature
+  // uses this to know which cell "select + type" should open. Derived from
+  // the selection set itself (not anchorRef, which can point at a cell just
+  // ctrl-toggled OFF rather than the one remaining cell).
+  const selectedCell = (() => {
+    if (selection.size !== 1) return null;
+    const [key] = selection;
+    const separatorIndex = key.indexOf("::");
+    return {
+      rowId: key.slice(0, separatorIndex),
+      columnId: key.slice(separatorIndex + 2),
+    };
+  })();
+
   return {
     isCellSelected,
     handleCellClick,
     handleCellContextClick,
     clearSelection,
     selectionSize: selection.size,
+    selectedCell,
     getSelectionTsv,
   };
 }

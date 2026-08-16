@@ -52,6 +52,7 @@ import { ActionResultError } from "@/framework/lib/actionResult";
 import { AccessDeniedDialog } from "@/framework/authorization/ui/AccessDeniedDialog";
 import { useOverviewActionsBundle } from "../hooks/useOerviewActionsBundle";
 import { OverviewActionChrome } from "./OverviewActionChrome";
+import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFields";
 
 type OverviewConfig<TItem, TFormValues> = ResourceComponentsConfig<
   TItem,
@@ -158,6 +159,13 @@ export function createOverview<
     const canRead = resolvePermission(config.permissions?.read);
     const canAdd = resolvePermission(config.permissions?.add);
     const canDelete = resolvePermission(config.permissions?.delete);
+    const canUpdate = resolvePermission(config.permissions?.update);
+    const gridEditable = canUpdate && config.editable === true;
+
+    const { directFields, pickupFillFields } = useMemo(
+      () => flattenFormFields(config.formConfig),
+      [],
+    );
 
     const currentPath = searchParams.toString()
       ? `${pathname}?${searchParams.toString()}`
@@ -397,6 +405,7 @@ export function createOverview<
       getRowUrl,
       isDeleteEligible,
       removeAsync,
+      updateManyAsync,
       error,
       clearError,
       deleteOpen,
@@ -418,33 +427,83 @@ export function createOverview<
     );
 
     const columns = useMemo(
-      () => [
-        createSelectionColumn<TItem>(),
-        createActionsColumn<TItem>({
-          onOpen: canRead
-            ? (rows) => handleOpen(rows.map((r) => r.original))
-            : undefined,
-          onDelete: canDelete
-            ? (rows) => openDeleteDialog(rows.map((r) => r.original))
-            : undefined,
-          getRowUrl: getRowUrl ? (row) => getRowUrl(row.original) : undefined,
-          isDeleteEligible: canDelete
-            ? (row) => isDeleteEligible(row.original)
-            : () => false,
-          actions: () =>
-            actions.map((action) => ({
-              label: action.label,
-              isEligible: action.isEligible
-                ? (row: Row<TItem>) => action.isEligible!(row.original)
-                : undefined,
-              onSelect: (rows: Row<TItem>[]) =>
-                action.onSelect(rows.map((r) => r.original)),
-            })),
-        }),
-        ...(createColumns?.(locale) ?? []),
-        createBufferColumn<TItem>(),
+      () => {
+        const cols = [
+          createSelectionColumn<TItem>(),
+          createActionsColumn<TItem>({
+            onOpen: canRead
+              ? (rows) => handleOpen(rows.map((r) => r.original))
+              : undefined,
+            onDelete: canDelete
+              ? (rows) => openDeleteDialog(rows.map((r) => r.original))
+              : undefined,
+            getRowUrl: getRowUrl ? (row) => getRowUrl(row.original) : undefined,
+            isDeleteEligible: canDelete
+              ? (row) => isDeleteEligible(row.original)
+              : () => false,
+            actions: () =>
+              actions.map((action) => ({
+                label: action.label,
+                isEligible: action.isEligible
+                  ? (row: Row<TItem>) => action.isEligible!(row.original)
+                  : undefined,
+                onSelect: (rows: Row<TItem>[]) =>
+                  action.onSelect(rows.map((r) => r.original)),
+              })),
+          }),
+          ...(createColumns?.(locale) ?? []),
+          createBufferColumn<TItem>(),
+        ];
+
+        if (!gridEditable) return cols;
+
+        // Resolve each column's matching form field (if any) so the grid
+        // can edit it through the exact same field the detail page uses —
+        // see flattenFormFields / EditableCell.
+        return cols.map((col) => {
+          const columnName = col.meta?.columnName ?? col.id;
+          if (!columnName) return col;
+
+          const direct = directFields.get(columnName);
+          if (direct) {
+            return {
+              ...col,
+              meta: { ...col.meta, editableField: { kind: "direct" as const, field: direct } },
+            };
+          }
+
+          if (col.meta?.origin === "relation") {
+            const match = pickupFillFields.get(columnName);
+            if (match) {
+              return {
+                ...col,
+                meta: {
+                  ...col.meta,
+                  editableField: {
+                    kind: "pickup" as const,
+                    owningField: match.owningField,
+                    fillField: match.fillField,
+                  },
+                },
+              };
+            }
+          }
+
+          return col;
+        });
+      },
+      [
+        getRowUrl,
+        handleOpen,
+        isDeleteEligible,
+        actions,
+        canRead,
+        canDelete,
+        gridEditable,
+        directFields,
+        pickupFillFields,
+        locale,
       ],
-      [getRowUrl, handleOpen, isDeleteEligible, actions, canRead, canDelete, locale],
     );
 
     if (isForbidden)
@@ -489,9 +548,24 @@ export function createOverview<
       />
     );
 
+    const tableMeta = gridEditable
+      ? {
+          updateManyAsync: (
+            items: { id: ResourceId; data: Record<string, unknown> }[],
+          ) =>
+            updateManyAsync(
+              items.map((item) => ({ id: item.id, data: item.data as TFormValues })),
+            ),
+          getRecordId: (original: TItem) =>
+            getItemId(original as Record<string, unknown>, idField),
+          useDetailForm: hooks.useDetailForm,
+        }
+      : undefined;
+
     const tableNode = (
       <DataView
         slotId={slotId}
+        tableMeta={tableMeta}
         isLoading={isLoading}
         defaultViewName={resolvedViewName}
         tableId={tableId}

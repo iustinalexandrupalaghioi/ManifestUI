@@ -7,6 +7,8 @@ import { useDataViewLayout } from "../../core/stores/DataViewProvider"
 import { useCellSelection } from "./useCellSelection"
 import { useContextMenu } from "./useContextMenu"
 import { useSelection } from "../../features/selection/useSelection"
+import { useEditing } from "../../features/editing/useEditing"
+import { getEditingStore } from "../../features/editing/editing.store"
 import { CellContextMenu } from "../../core/ui/CellContextMenu"
 import { VirtualDataTableBody } from "./VirtualDataTableBody"
 import type { RowAction } from "../../core/types"
@@ -54,7 +56,22 @@ export function DataTableBody({
     handleCellContextClick,
     clearSelection,
     getSelectionTsv,
+    selectedCell,
   } = useCellSelection(table, rowSelection)
+
+  const { handleCellDoubleClick } = useEditing(tableId, table, selectedCell)
+
+  const editingStore = getEditingStore(tableId)
+  const editingArmed = editingStore((s) => s.armed)
+  const editingCell = editingStore((s) => s.editingCell)
+  const isCellEditing = (rowId: string, columnId: string) =>
+    editingArmed &&
+    editingCell?.rowId === rowId &&
+    editingCell?.columnId === columnId
+  const editingKey =
+    editingArmed && editingCell
+      ? `${editingCell.rowId}:${editingCell.columnId}`
+      : null
 
   const selectedCellValuesRef = useRef<() => string>(getSelectionTsv)
   useEffect(() => {
@@ -109,7 +126,10 @@ export function DataTableBody({
         onRowContextClick={handleRowContextClick}
         onRowClick={handleRowClick}
         onRowDoubleClick={handleRowDoubleClick}
+        onCellDoubleClick={handleCellDoubleClick}
         isCellSelected={isCellSelected}
+        isCellEditing={isCellEditing}
+        editingKey={editingKey}
         onCellClick={handleCellClick}
         onCellContextClick={handleCellContextClick}
         columnStateKey={columnStateKey}

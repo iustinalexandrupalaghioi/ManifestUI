@@ -107,6 +107,9 @@ export function useContextMenu<TData>(table: Table<TData>) {
         selectOptions: cellMeta?.selectOptions,
         origin: cellMeta?.origin,
         canFilter: cell.column.getCanFilter(),
+        // ── For the Edit menu item — the clicked cell's own row/field ─────
+        rowId: clickedRow.id,
+        editableField: cellMeta?.editableField,
       })
     },
     [tc]

@@ -9,6 +9,7 @@ import type { SortingState, Table as TTable } from "@tanstack/react-table";
 import type { DataViewFeature } from "../core/contracts";
 import { useCoreStore } from "../core/stores/DataViewStore";
 import { ColumnManagerButton } from "../core/ui/ColumnManagerButton";
+import { DataListModeToggle } from "./ui/DataListModeToggle";
 import { getFilteringStore } from "../features/filtering/filtering.store";
 import type {
   FilterableColumn,
@@ -40,6 +41,7 @@ interface ListViewLayoutProps {
   handleScroll: () => void;
   height?: number;
   isLookup?: boolean;
+  hasListMode: boolean;
 }
 
 export function ListViewLayout({
@@ -56,6 +58,7 @@ export function ListViewLayout({
   handleScroll,
   height,
   isLookup,
+  hasListMode,
 }: ListViewLayoutProps) {
   const t = useTranslations("DataView");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -94,8 +97,8 @@ export function ListViewLayout({
   return (
     <>
       {/* ── filters + search + cols ── */}
-      <div className="mb-2 flex justify-between">
-        <div className="flex items-center gap-1">
+      <div className="mb-2 flex items-start justify-between">
+        <div className="flex flex-wrap items-center gap-1">
           <FilterButton
             viewId={listViewId}
             tableId={tableId}
@@ -118,6 +121,7 @@ export function ListViewLayout({
             </Button>
           )}
         </div>
+        <DataListModeToggle tableId={tableId} hasList={hasListMode} />
       </div>
 
       {/* ── filter chips ── */}
