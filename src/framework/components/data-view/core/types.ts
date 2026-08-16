@@ -52,6 +52,7 @@ export interface VirtualDataTableBodyProps<TData> {
     effectiveRows: Row<TData>[],
   ) => void;
   rowSelection: Record<string, boolean>;
+  activeRowId?: string;
   onRowClick?: (e: React.MouseEvent, row: Row<TData>) => void;
   onRowDoubleClick?: (row: Row<TData>) => void;
   onCellDoubleClick?: (cell: Cell<TData, unknown>) => boolean;

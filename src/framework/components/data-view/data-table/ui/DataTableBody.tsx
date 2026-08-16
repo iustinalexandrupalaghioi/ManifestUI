@@ -26,6 +26,7 @@ declare module "@tanstack/react-table" {
 
 interface DataViewBodyProps {
   rowSelection: Record<string, boolean>
+  activeRowId?: string
   isLoading: boolean
   columnOrder: string[]
   columnPinning: { left: string[] }
@@ -35,6 +36,7 @@ interface DataViewBodyProps {
 
 export function DataTableBody({
   rowSelection,
+  activeRowId,
   isLoading,
   columnOrder,
   columnPinning,
@@ -117,6 +119,7 @@ export function DataTableBody({
         isLoading={isLoading}
         selectedCellValuesRef={selectedCellValuesRef}
         rowSelection={rowSelection}
+        activeRowId={activeRowId}
         rows={table.getRowModel().rows}
         lastColumnId={table.getAllLeafColumns().at(-1)?.id}
         columnsLength={table.getVisibleLeafColumns().length}

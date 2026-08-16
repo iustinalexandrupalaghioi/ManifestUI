@@ -78,6 +78,7 @@ function VirtualTableBodyInner<TData>({
   onRowContextClick,
   isLoading,
   rowSelection,
+  activeRowId,
   isCellSelected,
   isCellEditing,
   editingKey,
@@ -161,6 +162,7 @@ function VirtualTableBodyInner<TData>({
             className={cn(
               "select-none",
               virtualRow.index % 2 === 0 && "bg-muted/60",
+              row.id === activeRowId && "bg-primary/5",
             )}
             data-state={row.getIsSelected() ? "selected" : undefined}
             onClick={(e) => onRowClick?.(e, row)}

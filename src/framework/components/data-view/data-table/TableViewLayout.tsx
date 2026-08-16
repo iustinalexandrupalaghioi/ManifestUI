@@ -29,6 +29,7 @@ interface TableViewLayoutProps {
   table: TTable<any>;
   isLoading: boolean;
   rowSelection: Record<string, boolean>;
+  activeRowId?: string;
   quickSearchEnabled: boolean;
   enrichedPreFilters: FilterRule[];
   filterableColumns: FilterableColumn[];
@@ -46,6 +47,7 @@ export function TableViewLayout({
   table,
   isLoading,
   rowSelection,
+  activeRowId,
   quickSearchEnabled,
   enrichedPreFilters,
   filterableColumns,
@@ -174,6 +176,7 @@ export function TableViewLayout({
           table={table}
           isLoading={isLoading}
           rowSelection={rowSelection}
+          activeRowId={activeRowId}
           columnVisibility={columnVisibility}
           columnSizing={columnSizing}
           columnOrder={columnOrder ?? []}

@@ -1,42 +1,45 @@
-"use client"
+"use client";
 
-import { createContext, useContext, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import {
   FormProvider,
   type FieldValues,
   type UseFormReturn,
-} from "react-hook-form"
-import { FormIdContext } from "@/framework/components/form/contexts/FormIdContext"
+} from "react-hook-form";
+import { FormIdContext } from "@/framework/components/form/contexts/FormIdContext";
 import {
   UploadRegistryContext,
   type UploadRegistry,
-} from "@/framework/registry/UploadRegistryContext"
-import { useUploadRegistry } from "@/framework/registry/useUploadRegistry"
-import { useUploadStore } from "@/framework/components/form/hooks/useUploadStore"
+} from "@/framework/registry/UploadRegistryContext";
+import { useUploadRegistry } from "@/framework/registry/useUploadRegistry";
+import { useUploadStore } from "@/framework/components/form/hooks/useUploadStore";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 interface RecordScreenContextValue {
-  registry: UploadRegistry
-  formId: string
+  registry: UploadRegistry;
+  formId: string;
 }
 
-const RecordScreenContext = createContext<RecordScreenContextValue | null>(null)
+const RecordScreenContext = createContext<RecordScreenContextValue | null>(
+  null,
+);
 
 export function useRecordScreen(): RecordScreenContextValue {
-  const ctx = useContext(RecordScreenContext)
+  const ctx = useContext(RecordScreenContext);
   if (!ctx)
-    throw new Error("useRecordScreen must be used inside <RecordScreen>")
-  return ctx
+    throw new Error("useRecordScreen must be used inside <RecordScreen>");
+  return ctx;
 }
 
 // ─── RecordScreen ─────────────────────────────────────────────────────────────
 
 interface RecordScreenProps<TFormValues extends FieldValues> {
-  form: UseFormReturn<TFormValues>
-  formId: string
-  children: ReactNode
-  onSubmit?: () => void
+  form: UseFormReturn<TFormValues>;
+  formId: string;
+  children: ReactNode;
+  onSubmit?: () => void;
+  className?: string;
 }
 
 export function RecordScreen<TFormValues extends FieldValues>({
@@ -44,15 +47,16 @@ export function RecordScreen<TFormValues extends FieldValues>({
   formId,
   children,
   onSubmit,
+  className,
 }: RecordScreenProps<TFormValues>) {
-  const registry = useUploadRegistry()
+  const registry = useUploadRegistry();
 
   useEffect(() => {
     return () => {
-      const state = useUploadStore.getState()
-      if (!state.uploadingForms.has(formId)) state.clearAll(formId)
-    }
-  }, [formId])
+      const state = useUploadStore.getState();
+      if (!state.uploadingForms.has(formId)) state.clearAll(formId);
+    };
+  }, [formId]);
 
   return (
     <RecordScreenContext value={{ registry, formId }}>
@@ -61,9 +65,10 @@ export function RecordScreen<TFormValues extends FieldValues>({
           <FormProvider {...form}>
             {onSubmit ? (
               <form
+                className={className}
                 onSubmit={(e) => {
-                  e.preventDefault()
-                  onSubmit()
+                  e.preventDefault();
+                  onSubmit();
                 }}
               >
                 {children}
@@ -76,7 +81,7 @@ export function RecordScreen<TFormValues extends FieldValues>({
         </UploadRegistryContext>
       </FormIdContext>
     </RecordScreenContext>
-  )
+  );
 }
 
 // ─── RegistryCapture ──────────────────────────────────────────────────────────
@@ -86,9 +91,9 @@ export function RecordScreen<TFormValues extends FieldValues>({
 export function RegistryCapture({
   registryRef,
 }: {
-  registryRef: React.RefObject<UploadRegistry | null>
+  registryRef: React.RefObject<UploadRegistry | null>;
 }) {
-  const { registry } = useRecordScreen()
-  registryRef.current = registry
-  return null
+  const { registry } = useRecordScreen();
+  registryRef.current = registry;
+  return null;
 }

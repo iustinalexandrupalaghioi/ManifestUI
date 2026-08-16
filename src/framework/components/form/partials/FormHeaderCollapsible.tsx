@@ -33,6 +33,11 @@ export interface FormHeaderCollapsibleProps {
   firstPath?: string;
   lastPath?: string;
   isAddScreen?: boolean;
+  /** Rendered as its own row inside this same sticky container, above the
+   *  title — e.g. an inline split-view FormPage.Toolbar. Kept inside the
+   *  *same* sticky element (rather than a separate sticky sibling) so the
+   *  two never need to coordinate offsets — they just move as one unit. */
+  toolbar?: ReactNode;
 }
 
 export function FormHeaderCollapsible({
@@ -49,6 +54,7 @@ export function FormHeaderCollapsible({
   firstPath,
   lastPath,
   isAddScreen,
+  toolbar,
 }: FormHeaderCollapsibleProps) {
   const hasNav = prevPath !== undefined || nextPath !== undefined;
   const router = useTransitionRouter();
@@ -77,12 +83,14 @@ export function FormHeaderCollapsible({
       onOpenChange={setOpen}
       className={cn("flex flex-col", className)}
     >
-      <div
-        className={cn(
-          "sticky top-0 z-10 mb-4 flex w-full items-center bg-background py-1",
-          triggerClassName,
-        )}
-      >
+      <div className="sticky top-0 z-20 mb-4 flex flex-col bg-background">
+        {toolbar && <div className="h-10 shrink-0">{toolbar}</div>}
+        <div
+          className={cn(
+            "flex w-full items-center bg-background py-1",
+            triggerClassName,
+          )}
+        >
         <CollapsibleTrigger className="flex cursor-pointer items-center gap-2">
           <span className="font-semibold text-primary">{title}</span>
           {isAddScreen && (
@@ -147,6 +155,7 @@ export function FormHeaderCollapsible({
             </Button>
           </div>
         )}
+        </div>
       </div>
 
       <CollapsibleContent>{children}</CollapsibleContent>

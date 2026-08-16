@@ -11,11 +11,18 @@ import { useTranslations } from "next-intl";
 interface DataListProps {
   table: TTable<any>;
   isLoading: boolean;
+  activeRowId?: string;
   list: DataListFeatureApi;
   isLookup?: boolean;
 }
 
-export function DataList({ table, isLoading, list, isLookup }: DataListProps) {
+export function DataList({
+  table,
+  isLoading,
+  activeRowId,
+  list,
+  isLookup,
+}: DataListProps) {
   const t = useTranslations("DataView");
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
   const rows = table.getRowModel().rows;
@@ -56,6 +63,7 @@ export function DataList({ table, isLoading, list, isLookup }: DataListProps) {
         rows={rows}
         visibleListColumns={list.visibleListColumns}
         isLoading={isLoading}
+        activeRowId={activeRowId}
       />
 
       {/* List column manager panel — overview only */}

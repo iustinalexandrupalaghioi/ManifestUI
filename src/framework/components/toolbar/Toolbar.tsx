@@ -34,8 +34,6 @@ import { FilterInput } from "../data-view/features/filtering";
 import { useBrowserNavigation } from "../screen/stores/useBrowserNavigationStore";
 
 export interface TableAction<TData> {
-  // Stable identifier, gated as `${resourceId}:${key}` alongside the
-  // built-in CRUD verbs — see create-actions-hooks.ts.
   key: string;
   label: React.ReactNode;
   isEligible?: (row: TData) => boolean;
@@ -47,7 +45,7 @@ export type ToolbarVariant = "overview" | "nav" | "detail";
 
 interface ToolbarProps<TData> {
   selectedRows: TData[];
-  slotId?: string;
+  slotId?: string | false;
   variant?: ToolbarVariant;
   selectedCount: number;
   actions?: TableAction<TData>[];
@@ -170,8 +168,6 @@ export function Toolbar<TData>({
 
   const showBack = onBack || !slotId;
 
-  // --- Dedicated render path for the "nav" variant: everything collapses ---
-  // --- into a single "Actions" menu, with custom actions as a submenu.   ---
   if (variant === "nav") {
     const hasPrimaryItems = !!(
       onOpen ||
@@ -183,192 +179,7 @@ export function Toolbar<TData>({
     const hasCustomActions = !!actions?.length;
     const menuHasContent = hasPrimaryItems || hasCustomActions;
 
-    return (
-      <ToolbarActions slotId={slotId}>
-        <div
-          className={cn(
-            "flex h-full w-full items-center",
-            styles.gap,
-            styles.padding,
-          )}
-        >
-          {children}
-
-          <div className="ml-auto flex items-center gap-1">
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  className={styles.button}
-                  disabled={!menuHasContent}
-                >
-                  <MoreHorizontal className={styles.icon} />
-                  {t("more")}
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                onCloseAutoFocus={(e) => e.preventDefault()}
-                className="w-fit"
-                align="start"
-                sideOffset={2}
-                alignOffset={-4}
-              >
-                {onOpen && (
-                  <DropdownMenuItem
-                    disabled={!canOpen}
-                    onSelect={() => onOpen(selectedRows)}
-                  >
-                    <FileSearch className="size-4" />
-                    {selectedCount > 1 ? t("openCount", { count: selectedCount }) : t("open")}
-                  </DropdownMenuItem>
-                )}
-
-                {popOutUrl && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      navigateTo(
-                        popOutUrl,
-                        preFilters && preFilters.length > 0
-                          ? preFilters
-                          : undefined,
-                      )
-                    }
-                  >
-                    <ExternalLinkIcon className="size-4" /> {t("popout")}
-                  </DropdownMenuItem>
-                )}
-
-                {(addPath || onAdd) && (
-                  <DropdownMenuItem
-                    disabled={router.isPending}
-                    onSelect={() => {
-                      if (onAdd) onAdd();
-                      else if (addPath) router.push(addPath);
-                    }}
-                  >
-                    {router.isPending ? (
-                      <Loader2Icon className="size-4 animate-spin" />
-                    ) : (
-                      <Plus className="size-4" />
-                    )}
-                    {t("add")}
-                  </DropdownMenuItem>
-                )}
-
-                {reloadEnabled && (
-                  <DropdownMenuItem onSelect={() => window.location.reload()}>
-                    <RotateCcwIcon className="size-4" />
-                    {t("refresh")}
-                  </DropdownMenuItem>
-                )}
-
-                {hasCustomActions && (
-                  <>
-                    {hasPrimaryItems && <DropdownMenuSeparator />}
-                    {isNarrow ? (
-                      <>
-                        <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-                        {actions!.map((action, i) => {
-                          const eligible = selectedRows.filter(
-                            (r) => action.isEligible?.(r) ?? true,
-                          );
-
-                          if (eligible.length === 0) return null;
-
-                          return (
-                            <DropdownMenuItem
-                              key={i}
-                              onSelect={() => action.onSelect(eligible)}
-                            >
-                              {action.label}
-
-                              {selectedCount > 1 && (
-                                <span className="ml-1 text-muted-foreground">
-                                  ({eligible.length}/{selectedCount})
-                                </span>
-                              )}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </>
-                    ) : (
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger
-                          disabled={selectedCount === 0 || eligibleCount === 0}
-                          className={cn(
-                            (selectedCount === 0 || eligibleCount === 0) &&
-                              "pointer-events-none opacity-50",
-                          )}
-                        >
-                          <Settings className="size-4" />
-                          {t("actions")}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                          <DropdownMenuSubContent
-                            className="w-fit"
-                            align="start"
-                            sideOffset={2}
-                            alignOffset={-4}
-                          >
-                            {actions!.map((action, i) => {
-                              const eligible = selectedRows.filter(
-                                (r) => action.isEligible?.(r) ?? true,
-                              );
-
-                              if (eligible.length === 0) return null;
-
-                              return (
-                                <DropdownMenuItem
-                                  key={i}
-                                  onSelect={() => action.onSelect(eligible)}
-                                >
-                                  {action.label}
-
-                                  {selectedCount > 1 && (
-                                    <span className="ml-1 text-muted-foreground">
-                                      ({eligible.length}/{selectedCount})
-                                    </span>
-                                  )}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                      </DropdownMenuSub>
-                    )}
-                  </>
-                )}
-
-                {onDelete && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      disabled={eligibleForDelete.length === 0}
-                      onSelect={() => onDelete(eligibleForDelete)}
-                    >
-                      <Trash2 className="size-4" />
-                      {tc("delete")}
-                      {selectedCount > 1 && (
-                        <span className="ml-1 text-xs text-muted-foreground tabular-nums">
-                          {eligibleForDelete.length}/{selectedCount}
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </ToolbarActions>
-    );
-  }
-
-  return (
-    <ToolbarActions slotId={slotId}>
+    const navContent = (
       <div
         className={cn(
           "flex h-full w-full items-center",
@@ -376,240 +187,439 @@ export function Toolbar<TData>({
           styles.padding,
         )}
       >
-        {/* Left group */}
-        <div className={cn("flex items-center", styles.gap)}>
-          {showBack &&
-            (onBack ? (
+        {children}
+
+        <div className="ml-auto flex items-center gap-1">
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className={styles.button}
+                disabled={!menuHasContent}
+              >
+                <MoreHorizontal className={styles.icon} />
+                {t("more")}
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              className="w-fit"
+              align="start"
+              sideOffset={2}
+              alignOffset={-4}
+            >
+              {onOpen && (
+                <DropdownMenuItem
+                  disabled={!canOpen}
+                  onSelect={() => onOpen(selectedRows)}
+                >
+                  <FileSearch className="size-4" />
+                  {selectedCount > 1
+                    ? t("openCount", { count: selectedCount })
+                    : t("open")}
+                </DropdownMenuItem>
+              )}
+
+              {popOutUrl && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigateTo(
+                      popOutUrl,
+                      preFilters && preFilters.length > 0
+                        ? preFilters
+                        : undefined,
+                    )
+                  }
+                >
+                  <ExternalLinkIcon className="size-4" /> {t("popout")}
+                </DropdownMenuItem>
+              )}
+
+              {(addPath || onAdd) && (
+                <DropdownMenuItem
+                  disabled={router.isPending}
+                  onSelect={() => {
+                    if (onAdd) onAdd();
+                    else if (addPath) router.push(addPath);
+                  }}
+                >
+                  {router.isPending ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <Plus className="size-4" />
+                  )}
+                  {t("add")}
+                </DropdownMenuItem>
+              )}
+
+              {reloadEnabled && (
+                <DropdownMenuItem onSelect={() => window.location.reload()}>
+                  <RotateCcwIcon className="size-4" />
+                  {t("refresh")}
+                </DropdownMenuItem>
+              )}
+
+              {hasCustomActions && (
+                <>
+                  {hasPrimaryItems && <DropdownMenuSeparator />}
+                  {isNarrow ? (
+                    <>
+                      <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
+                      {actions!.map((action, i) => {
+                        const eligible = selectedRows.filter(
+                          (r) => action.isEligible?.(r) ?? true,
+                        );
+
+                        if (eligible.length === 0) return null;
+
+                        return (
+                          <DropdownMenuItem
+                            key={i}
+                            onSelect={() => action.onSelect(eligible)}
+                          >
+                            {action.label}
+
+                            {selectedCount > 1 && (
+                              <span className="ml-1 text-muted-foreground">
+                                ({eligible.length}/{selectedCount})
+                              </span>
+                            )}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger
+                        disabled={selectedCount === 0 || eligibleCount === 0}
+                        className={cn(
+                          (selectedCount === 0 || eligibleCount === 0) &&
+                            "pointer-events-none opacity-50",
+                        )}
+                      >
+                        <Settings className="size-4" />
+                        {t("actions")}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent
+                          className="w-fit"
+                          align="start"
+                          sideOffset={2}
+                          alignOffset={-4}
+                        >
+                          {actions!.map((action, i) => {
+                            const eligible = selectedRows.filter(
+                              (r) => action.isEligible?.(r) ?? true,
+                            );
+
+                            if (eligible.length === 0) return null;
+
+                            return (
+                              <DropdownMenuItem
+                                key={i}
+                                onSelect={() => action.onSelect(eligible)}
+                              >
+                                {action.label}
+
+                                {selectedCount > 1 && (
+                                  <span className="ml-1 text-muted-foreground">
+                                    ({eligible.length}/{selectedCount})
+                                  </span>
+                                )}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                  )}
+                </>
+              )}
+
+              {onDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={eligibleForDelete.length === 0}
+                    onSelect={() => onDelete(eligibleForDelete)}
+                  >
+                    <Trash2 className="size-4" />
+                    {tc("delete")}
+                    {selectedCount > 1 && (
+                      <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                        {eligibleForDelete.length}/{selectedCount}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    );
+
+    return slotId === false ? (
+      navContent
+    ) : (
+      <ToolbarActions slotId={slotId}>{navContent}</ToolbarActions>
+    );
+  }
+
+  const content = (
+    <div
+      className={cn(
+        "flex h-full w-full items-center",
+        styles.gap,
+        slotId !== false && styles.padding,
+      )}
+    >
+      {/* Left group */}
+      <div className={cn("flex items-center", styles.gap)}>
+        {showBack &&
+          (onBack ? (
+            <Button
+              title={t("back")}
+              type="button"
+              variant="outline"
+              size="icon"
+              className={styles.button}
+              onClick={onBack}
+            >
+              <ChevronLeftIcon className={styles.icon} />
+            </Button>
+          ) : (
+            <Link href="/">
               <Button
                 title={t("back")}
                 type="button"
                 variant="outline"
                 size="icon"
-                className={styles.button}
-                onClick={onBack}
               >
                 <ChevronLeftIcon className={styles.icon} />
               </Button>
-            ) : (
-              <Link href="/">
-                <Button
-                  title={t("back")}
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                >
-                  <ChevronLeftIcon className={styles.icon} />
-                </Button>
-              </Link>
-            ))}
+            </Link>
+          ))}
 
-          {onOpen &&
-            (() => {
-              const isMulti = selectedCount > 1;
+        {onOpen &&
+          (() => {
+            const isMulti = selectedCount > 1;
 
-              const handleClick = (e: React.MouseEvent) => {
-                const isModified =
-                  e.metaKey ||
-                  e.ctrlKey ||
-                  e.shiftKey ||
-                  e.altKey ||
-                  e.button !== 0;
-                if (openUrl && isModified) return;
-                e.preventDefault();
-                onOpen(selectedRows);
-              };
+            const handleClick = (e: React.MouseEvent) => {
+              const isModified =
+                e.metaKey ||
+                e.ctrlKey ||
+                e.shiftKey ||
+                e.altKey ||
+                e.button !== 0;
+              if (openUrl && isModified) return;
+              e.preventDefault();
+              onOpen(selectedRows);
+            };
 
-              const button = (
-                <Button
-                  title={
-                    isMulti
-                      ? t("openSelectedCount", { count: selectedCount })
-                      : t("open")
-                  }
-                  variant="outline"
-                  type="button"
-                  size={isMulti || styles.labeled ? "sm" : "icon"}
-                  className={isMulti ? undefined : styles.button}
-                  disabled={!canOpen}
-                  onClick={handleClick}
-                >
-                  <FileSearch className={cn(styles.icon, "shrink-0")} />
-                  {styles.labeled && t("open")}
-                  {isMulti && (
-                    <span className="ml-1 text-xs text-muted-foreground tabular-nums">
-                      {selectedCount}
-                    </span>
-                  )}
-                </Button>
-              );
-
-              return openUrl ? <Link href={openUrl}>{button}</Link> : button;
-            })()}
-
-          {children}
-        </div>
-
-        {/* Right group — pushed to the end */}
-        <div className={cn("ml-auto flex items-center", styles.gap)}>
-          {(addPath ||
-            onAdd ||
-            reloadEnabled ||
-            onDelete ||
-            !!actions?.length ||
-            popOutUrl) && (
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size={styles.labeled ? "sm" : "icon"}
-                  type="button"
-                  className={styles.button}
-                >
-                  <MoreHorizontal className={styles.icon} />
-                  {styles.labeled && t("more")}
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent
-                onCloseAutoFocus={(e) => e.preventDefault()}
-                className="w-fit"
-                align="end"
+            const button = (
+              <Button
+                title={
+                  isMulti
+                    ? t("openSelectedCount", { count: selectedCount })
+                    : t("open")
+                }
+                variant="outline"
+                type="button"
+                size={isMulti || styles.labeled ? "sm" : "icon"}
+                className={isMulti ? undefined : styles.button}
+                disabled={!canOpen}
+                onClick={handleClick}
               >
-                {popOutUrl && (
-                  <DropdownMenuItem
-                    onClick={() =>
-                      navigateTo(
-                        popOutUrl,
-                        preFilters && preFilters.length > 0
-                          ? preFilters
-                          : undefined,
-                      )
-                    }
-                  >
-                    <ExternalLinkIcon className="size-4" />
-                    {t("popout")}
-                  </DropdownMenuItem>
+                <FileSearch className={cn(styles.icon, "shrink-0")} />
+                {styles.labeled && t("open")}
+                {isMulti && (
+                  <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                    {selectedCount}
+                  </span>
                 )}
+              </Button>
+            );
 
-                {(addPath || onAdd) && (
-                  <DropdownMenuItem
-                    disabled={router.isPending}
-                    onSelect={() => {
-                      if (onAdd) onAdd();
-                      else if (addPath) router.push(addPath);
-                    }}
-                  >
-                    {router.isPending ? (
-                      <Loader2Icon className="size-4 animate-spin" />
-                    ) : (
-                      <Plus className="size-4" />
-                    )}
-                    {t("add")}
-                  </DropdownMenuItem>
-                )}
+            return openUrl ? <Link href={openUrl}>{button}</Link> : button;
+          })()}
 
-                {reloadEnabled && (
-                  <DropdownMenuItem onSelect={() => window.location.reload()}>
-                    <RotateCcwIcon className="size-4" />
-                    {t("refresh")}
-                  </DropdownMenuItem>
-                )}
-
-                {!!actions?.length && (
-                  <>
-                    {(addPath || onAdd || reloadEnabled || popOutUrl) && (
-                      <DropdownMenuSeparator />
-                    )}
-                    {isNarrow ? (
-                      <>
-                        <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-                        {actions.map((action, i) => {
-                          const eligible = selectedRows.filter(
-                            (r) => action.isEligible?.(r) ?? true,
-                          );
-                          if (eligible.length === 0) return null;
-                          return (
-                            <DropdownMenuItem
-                              key={i}
-                              onSelect={() => action.onSelect(eligible)}
-                            >
-                              {action.label}
-                              {selectedCount > 1 && (
-                                <span className="ml-1 text-muted-foreground">
-                                  ({eligible.length}/{selectedCount})
-                                </span>
-                              )}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </>
-                    ) : (
-                      <DropdownMenuSub>
-                        <DropdownMenuSubTrigger
-                          disabled={selectedCount === 0 || eligibleCount === 0}
-                          className={cn(
-                            (selectedCount === 0 || eligibleCount === 0) &&
-                              "pointer-events-none opacity-50",
-                          )}
-                        >
-                          <Settings className="size-4" />
-                          {t("actions")}
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuPortal>
-                          <DropdownMenuSubContent
-                            className="w-fit"
-                            align="start"
-                            sideOffset={2}
-                            alignOffset={-4}
-                          >
-                            {actions.map((action, i) => {
-                              const eligible = selectedRows.filter(
-                                (r) => action.isEligible?.(r) ?? true,
-                              );
-                              if (eligible.length === 0) return null;
-                              return (
-                                <DropdownMenuItem
-                                  key={i}
-                                  onSelect={() => action.onSelect(eligible)}
-                                >
-                                  {action.label}
-                                  {selectedCount > 1 && (
-                                    <span className="ml-1 text-muted-foreground">
-                                      ({eligible.length}/{selectedCount})
-                                    </span>
-                                  )}
-                                </DropdownMenuItem>
-                              );
-                            })}
-                          </DropdownMenuSubContent>
-                        </DropdownMenuPortal>
-                      </DropdownMenuSub>
-                    )}
-                  </>
-                )}
-
-                {onDelete && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      disabled={eligibleForDelete.length === 0}
-                      onSelect={() => onDelete(eligibleForDelete)}
-                    >
-                      <Trash2 className="size-4" />
-                      {tc("delete")}
-                      {selectedCount > 1 && (
-                        <span className="ml-1 text-xs text-muted-foreground tabular-nums">
-                          {eligibleForDelete.length}/{selectedCount}
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+        {children}
       </div>
-    </ToolbarActions>
+
+      <div
+        className={cn(
+          slotId === false ? "flex items-center" : "ml-auto flex items-center",
+          styles.gap,
+        )}
+      >
+        {(addPath ||
+          onAdd ||
+          reloadEnabled ||
+          onDelete ||
+          !!actions?.length ||
+          popOutUrl) && (
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size={styles.labeled ? "sm" : "icon"}
+                type="button"
+                className={styles.button}
+              >
+                <MoreHorizontal className={styles.icon} />
+                {styles.labeled && t("more")}
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              onCloseAutoFocus={(e) => e.preventDefault()}
+              className="w-fit"
+              align="end"
+            >
+              {popOutUrl && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigateTo(
+                      popOutUrl,
+                      preFilters && preFilters.length > 0
+                        ? preFilters
+                        : undefined,
+                    )
+                  }
+                >
+                  <ExternalLinkIcon className="size-4" />
+                  {t("popout")}
+                </DropdownMenuItem>
+              )}
+
+              {(addPath || onAdd) && (
+                <DropdownMenuItem
+                  disabled={router.isPending}
+                  onSelect={() => {
+                    if (onAdd) onAdd();
+                    else if (addPath) router.push(addPath);
+                  }}
+                >
+                  {router.isPending ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <Plus className="size-4" />
+                  )}
+                  {t("add")}
+                </DropdownMenuItem>
+              )}
+
+              {reloadEnabled && (
+                <DropdownMenuItem onSelect={() => window.location.reload()}>
+                  <RotateCcwIcon className="size-4" />
+                  {t("refresh")}
+                </DropdownMenuItem>
+              )}
+
+              {!!actions?.length && (
+                <>
+                  {(addPath || onAdd || reloadEnabled || popOutUrl) && (
+                    <DropdownMenuSeparator />
+                  )}
+                  {isNarrow ? (
+                    <>
+                      <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
+                      {actions.map((action, i) => {
+                        const eligible = selectedRows.filter(
+                          (r) => action.isEligible?.(r) ?? true,
+                        );
+                        if (eligible.length === 0) return null;
+                        return (
+                          <DropdownMenuItem
+                            key={i}
+                            onSelect={() => action.onSelect(eligible)}
+                          >
+                            {action.label}
+                            {selectedCount > 1 && (
+                              <span className="ml-1 text-muted-foreground">
+                                ({eligible.length}/{selectedCount})
+                              </span>
+                            )}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger
+                        disabled={selectedCount === 0 || eligibleCount === 0}
+                        className={cn(
+                          (selectedCount === 0 || eligibleCount === 0) &&
+                            "pointer-events-none opacity-50",
+                        )}
+                      >
+                        <Settings className="size-4" />
+                        {t("actions")}
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent
+                          className="w-fit"
+                          align="start"
+                          sideOffset={2}
+                          alignOffset={-4}
+                        >
+                          {actions.map((action, i) => {
+                            const eligible = selectedRows.filter(
+                              (r) => action.isEligible?.(r) ?? true,
+                            );
+                            if (eligible.length === 0) return null;
+                            return (
+                              <DropdownMenuItem
+                                key={i}
+                                onSelect={() => action.onSelect(eligible)}
+                              >
+                                {action.label}
+                                {selectedCount > 1 && (
+                                  <span className="ml-1 text-muted-foreground">
+                                    ({eligible.length}/{selectedCount})
+                                  </span>
+                                )}
+                              </DropdownMenuItem>
+                            );
+                          })}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                  )}
+                </>
+              )}
+
+              {onDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={eligibleForDelete.length === 0}
+                    onSelect={() => onDelete(eligibleForDelete)}
+                  >
+                    <Trash2 className="size-4" />
+                    {tc("delete")}
+                    {selectedCount > 1 && (
+                      <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                        {eligibleForDelete.length}/{selectedCount}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+    </div>
+  );
+
+  return slotId === false ? (
+    content
+  ) : (
+    <ToolbarActions slotId={slotId}>{content}</ToolbarActions>
   );
 }

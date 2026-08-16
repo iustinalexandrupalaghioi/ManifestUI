@@ -19,6 +19,7 @@ export interface DataListGridProps<TData> {
   rows: Row<TData>[];
   visibleListColumns: Column<TData>[];
   isLoading: boolean;
+  activeRowId?: string;
 }
 
 // No scroll container — owned by DataViewLayout's shared scroll div
@@ -26,6 +27,7 @@ export function DataListGrid<TData>({
   rows,
   visibleListColumns,
   isLoading,
+  activeRowId,
 }: DataListGridProps<TData>) {
   const t = useTranslations("DataView");
   const { table, tableId } = useDataViewCore();
@@ -33,7 +35,7 @@ export function DataListGrid<TData>({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-3 p-1 sm:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 p-1 @2xl:grid-cols-2 @5xl:grid-cols-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <SkeletonItem key={i} />
         ))}
@@ -50,13 +52,14 @@ export function DataListGrid<TData>({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 p-1 sm:grid-cols-2 2xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 p-1 @2xl:grid-cols-2 @5xl:grid-cols-3">
       {rows.map((row) => (
         <DataListItem
           key={row.id}
           row={row}
           visibleListColumns={visibleListColumns}
           onRowClick={handleRowClick}
+          isActive={row.id === activeRowId}
         />
       ))}
     </div>

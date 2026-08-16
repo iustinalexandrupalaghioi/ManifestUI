@@ -1,5 +1,6 @@
 import type { FieldValues } from "react-hook-form"
 import type { ResourceConfig, ResourceId } from "../../types/resource-hook-types"
+import { DEFAULT_SPLIT_CONFIG } from "../../types/split-config-type"
 import { createActionsHook } from "./create-actions-hooks"
 import { createDetailHook } from "./create-detail-hook"
 import { createFormHooks } from "./create-form-hooks"
@@ -23,9 +24,12 @@ export function createResourceHooks<
     relations = [],
     openMode = "page",
     addMode = "page",
+    splitConfig,
     afterAdd,
     afterUpdate,
   } = config
+
+  const resolvedSplitConfig = { ...DEFAULT_SPLIT_CONFIG, ...splitConfig }
 
   const keys = createKeys(config)
   const { useAddForm, useDetailForm, useDetailPageForm } = createFormHooks(
@@ -45,6 +49,7 @@ export function createResourceHooks<
     relations,
     openMode,
     addMode,
+    splitConfig: resolvedSplitConfig,
     isDeleteEligible,
     afterAdd,
     afterUpdate,

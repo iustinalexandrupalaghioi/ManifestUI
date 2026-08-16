@@ -14,6 +14,7 @@ interface DataTableProps {
   table: TTable<any>
   isLoading: boolean
   rowSelection: Record<string, boolean>
+  activeRowId?: string
   columnVisibility: VisibilityState
   columnSizing: Record<string, number>
   columnOrder: string[]
@@ -31,6 +32,7 @@ export function DataTable({
   table,
   isLoading,
   rowSelection,
+  activeRowId,
   columnVisibility,
   columnSizing,
   columnOrder,
@@ -76,6 +78,7 @@ export function DataTable({
         <DataTableBody
           columnSizing={columnSizing}
           rowSelection={rowSelection}
+          activeRowId={activeRowId}
           isLoading={isLoading}
           columnOrder={columnOrder}
           columnPinning={columnPinning}

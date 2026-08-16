@@ -54,8 +54,8 @@ export interface DataViewProps<TData, TValue> {
   slotId?: string;
   preFilters?: FilterInput[];
   initialListColumnVisibility?: VisibilityState;
-  /** Inline-editing glue (updateAsync/getRecordId/useDetailForm) — omit to leave the grid read-only. */
   tableMeta?: import("@tanstack/react-table").TableMeta<TData>;
+  activeRowId?: string;
 }
 
 export function useDataView<TData, TValue>(

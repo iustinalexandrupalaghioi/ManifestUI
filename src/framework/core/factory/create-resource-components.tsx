@@ -24,7 +24,7 @@ export function createResourceComponents<
   const AddPage = createAddPage(hooks, config, addTabs)
   const DetailPage = createDetailPage(hooks, config)
   const LookupDialog = createLookupDialog(hooks, config)
-  const Overview = createOverview(hooks, config, AddDialog, DetailDialog)
+  const Overview = createOverview(hooks, config, AddDialog, DetailDialog, DetailPage)
 
   return {
     Overview,

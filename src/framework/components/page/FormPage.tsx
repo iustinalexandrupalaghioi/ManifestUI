@@ -82,6 +82,14 @@ interface FormPageToolbarProps<T> {
   isDeleteEligible?: (row: T) => boolean;
   onAdd?: () => void;
   onBack?: () => void;
+  popOutUrl?: string;
+  /** Render the toolbar inline (e.g. inside a split-view detail panel)
+   *  instead of portaling to the navbar's #toolbar-slot. When true, pass
+   *  the returned element as RecordFormShell's `toolbar` prop rather than
+   *  rendering it as a sibling — it needs to live inside the title bar's
+   *  own sticky container (see FormHeader/FormHeaderCollapsible) so the
+   *  two never need to coordinate sticky offsets. */
+  inline?: boolean;
 }
 
 FormPage.Toolbar = function FormPageToolbar<T>({
@@ -91,13 +99,15 @@ FormPage.Toolbar = function FormPageToolbar<T>({
   isDeleteEligible,
   onAdd,
   onBack,
+  popOutUrl,
+  inline,
 }: FormPageToolbarProps<T>) {
   const form = useFormPageContext();
   const router = useTransitionRouter();
   if (!form) return null;
-  return (
+  const toolbar = (
     <Toolbar
-      slotId="toolbar-slot"
+      slotId={inline ? false : "toolbar-slot"}
       variant="detail"
       onBack={() => form.guard(() => (onBack ? onBack() : router.back()))}
       selectedRows={selectedRows}
@@ -106,6 +116,7 @@ FormPage.Toolbar = function FormPageToolbar<T>({
       onDelete={onDelete}
       isDeleteEligible={isDeleteEligible}
       onAdd={onAdd}
+      popOutUrl={popOutUrl}
       setRowSelection={() => {}}
     >
       {!form.readOnly && (
@@ -137,6 +148,8 @@ FormPage.Toolbar = function FormPageToolbar<T>({
       )}
     </Toolbar>
   );
+
+  return inline ? <div className="h-10 shrink-0">{toolbar}</div> : toolbar;
 };
 
 FormPage.Collapsible = function FormPageCollapsible(

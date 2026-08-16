@@ -32,6 +32,7 @@ interface ListViewLayoutProps {
   listViewId: string;
   table: TTable<any>;
   isLoading: boolean;
+  activeRowId?: string;
   quickSearchEnabled: boolean;
   enrichedPreFilters: FilterRule[];
   filterableColumns: FilterableColumn[];
@@ -49,6 +50,7 @@ export function ListViewLayout({
   listViewId,
   table,
   isLoading,
+  activeRowId,
   quickSearchEnabled,
   enrichedPreFilters,
   filterableColumns,
@@ -169,12 +171,13 @@ export function ListViewLayout({
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="scrollbar-thumb-rounded scrollbar-thin overflow-x-auto overflow-y-auto scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80"
+        className="@container scrollbar-thumb-rounded scrollbar-thin overflow-x-auto overflow-y-auto scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80"
         style={{ height: height || undefined }}
       >
         <DataList
           table={table}
           isLoading={isLoading}
+          activeRowId={activeRowId}
           list={list}
           isLookup={isLookup}
         />

@@ -44,6 +44,7 @@ function DataView<TData, TValue>({
         totalCount={props.totalCount}
         isLoading={props.isLoading}
         rowSelection={props.rowSelection}
+        activeRowId={props.activeRowId}
         quickSearchEnabled={props.quickSearchEnabled ?? true}
         slotId={props.slotId}
         preFilters={props.preFilters ?? []}

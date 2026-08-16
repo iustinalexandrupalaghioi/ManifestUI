@@ -28,6 +28,7 @@ interface DataViewLayoutProps {
   totalCount: number;
   isLoading: boolean;
   rowSelection: Record<string, boolean>;
+  activeRowId?: string;
   quickSearchEnabled: boolean;
   slotId?: string;
   preFilters: FilterInput[];
@@ -41,6 +42,7 @@ export function DataViewLayout({
   totalCount,
   isLoading,
   rowSelection,
+  activeRowId,
   quickSearchEnabled,
   slotId,
   preFilters,
@@ -125,6 +127,7 @@ export function DataViewLayout({
           listViewId={listViewId}
           table={table}
           isLoading={isLoading}
+          activeRowId={activeRowId}
           quickSearchEnabled={quickSearchEnabled}
           enrichedPreFilters={enrichedPreFilters}
           filterableColumns={filterableColumns}
@@ -143,6 +146,7 @@ export function DataViewLayout({
           table={table}
           isLoading={isLoading}
           rowSelection={rowSelection}
+          activeRowId={activeRowId}
           quickSearchEnabled={quickSearchEnabled}
           enrichedPreFilters={enrichedPreFilters}
           filterableColumns={filterableColumns}

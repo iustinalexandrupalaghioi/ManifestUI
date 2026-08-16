@@ -30,7 +30,7 @@ import {
 } from "@/framework/components/data-view/features/filtering";
 import { toFilterRuleFallback } from "@/framework/components/data-view/features/filtering/filters";
 import type { Row } from "@tanstack/react-table";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { FieldValues } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
@@ -53,6 +53,8 @@ import { AccessDeniedDialog } from "@/framework/authorization/ui/AccessDeniedDia
 import { useOverviewActionsBundle } from "../hooks/useOerviewActionsBundle";
 import { OverviewActionChrome } from "./OverviewActionChrome";
 import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFields";
+import { SplitOverviewShell } from "./SplitOverviewShell";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type OverviewConfig<TItem, TFormValues> = ResourceComponentsConfig<
   TItem,
@@ -95,6 +97,10 @@ export function createOverview<
     open: boolean;
     setOpen: (o: boolean) => void;
   }>,
+  DetailPage: React.ComponentType<{
+    id?: string;
+    onClose?: () => void;
+  }>,
 ) {
   const {
     createColumns,
@@ -106,7 +112,8 @@ export function createOverview<
     listColumnVisibility,
   } = config;
 
-  const { idField, keys, routes, labels, openMode, addMode } = hooks;
+  const { idField, keys, routes, labels, openMode, addMode, splitConfig } =
+    hooks;
 
   return function Overview(
     props: {
@@ -140,6 +147,9 @@ export function createOverview<
     const setNavigator = useNavigatorStore((s) => s.set);
     const clearNavigator = useNavigatorStore((s) => s.clear);
 
+    const isMobile = useIsMobile();
+    const isSplitDesktop = openMode === "split" && !isMobile;
+
     const locale = useLocale();
     const resolvedLabels = {
       singular: resolveLabel(labels.singular, locale),
@@ -148,12 +158,6 @@ export function createOverview<
       gender: labels.gender,
     };
 
-    // Subscribes this component to the permissions query so it re-renders
-    // once Providers seeds the real data — resolvePermission below reads a
-    // plain synchronous cache snapshot and has no way to trigger a re-render
-    // on its own. `isSuccess` also lets the list query below skip straight to
-    // "access denied" once permissions are known, instead of firing (and
-    // waiting on) a fetch it already knows the server will reject.
     const { isSuccess: permissionsLoaded } = usePermissions();
 
     const canRead = resolvePermission(config.permissions?.read);
@@ -266,11 +270,6 @@ export function createOverview<
         : (listColumnVisibility ?? {}),
     );
 
-    // getViewsStore only names the default view on first creation — it won't
-    // pick up a later locale switch on its own (the store outlives the
-    // locale it was created under, and persists to localStorage). The
-    // default view is never user-renamable (see TableViewBar/ListViewBar),
-    // so it's always safe to keep it in sync with the current locale here.
     useEffect(() => {
       const store = getViewsStore(tableId);
       const { tableViews, listViews } = store.getState().persisted;
@@ -281,7 +280,9 @@ export function createOverview<
         (v) => v.id === DEFAULT_LIST_VIEW_ID,
       );
       if (tableDefault && tableDefault.name !== resolvedViewName) {
-        store.getState().renameTableView(DEFAULT_TABLE_VIEW_ID, resolvedViewName);
+        store
+          .getState()
+          .renameTableView(DEFAULT_TABLE_VIEW_ID, resolvedViewName);
       }
       if (listDefault && listDefault.name !== resolvedViewName) {
         store.getState().renameListView(DEFAULT_LIST_VIEW_ID, resolvedViewName);
@@ -344,17 +345,6 @@ export function createOverview<
       isLoading: listIsLoading,
     } = hooks.useList(sorting, activeFilters, canRead);
 
-    // The list query is deliberately `enabled: canRead`, and canRead fails
-    // closed (false) until permissions actually resolve — so a disabled
-    // query's own isLoading is false the whole time permissions are
-    // unknown, not just once denial is confirmed. Left as query.isLoading
-    // alone, that's false identically on the server's first render and the
-    // client's pre-hydration render (both start with unresolved
-    // permissions), so hydration matches — but it then flips to "no
-    // results" before permissions (and therefore canRead) are actually
-    // known, which is wrong, and the *subsequent* client render (once
-    // permissions resolve and the query enables) flips again to true,
-    // producing the hydration-mismatch flash this replaces.
     const isLoading = !permissionsLoaded || listIsLoading;
 
     const isForbidden =
@@ -368,6 +358,25 @@ export function createOverview<
       idField,
     );
 
+    const didAutoOpenRef = useRef(false);
+    useEffect(() => {
+      if (!isSplitDesktop || didAutoOpenRef.current) return;
+      if (isLoading || allItems.length === 0) return;
+      didAutoOpenRef.current = true;
+      if (splitConfig.onOpen === "selectFirst") {
+        setOpeningItem(allItems[0]);
+      } else if (splitConfig.onOpen === "selectAll") {
+        setRowSelection(
+          Object.fromEntries(
+            allItems.map((i) => [
+              getItemId(i as Record<string, unknown>, idField).toString(),
+              true,
+            ]),
+          ),
+        );
+      }
+    }, [isSplitDesktop, isLoading, allItems, idField]);
+
     const handleOpen = (items: TItem[]) => {
       const item = items[0];
       if (!item) return;
@@ -376,7 +385,7 @@ export function createOverview<
       );
 
       if (
-        openMode === "dialog" &&
+        (openMode === "dialog" || isSplitDesktop) &&
         items.length === 1 &&
         selectedRows.length <= 1
       ) {
@@ -426,91 +435,93 @@ export function createOverview<
       canRead ? (item: TItem) => handleOpen([item]) : () => {},
     );
 
-    const columns = useMemo(
-      () => {
-        const cols = [
-          createSelectionColumn<TItem>(),
-          createActionsColumn<TItem>({
-            onOpen: canRead
-              ? (rows) => handleOpen(rows.map((r) => r.original))
-              : undefined,
-            onDelete: canDelete
-              ? (rows) => openDeleteDialog(rows.map((r) => r.original))
-              : undefined,
-            getRowUrl: getRowUrl ? (row) => getRowUrl(row.original) : undefined,
-            isDeleteEligible: canDelete
-              ? (row) => isDeleteEligible(row.original)
-              : () => false,
-            actions: () =>
-              actions.map((action) => ({
-                label: action.label,
-                isEligible: action.isEligible
-                  ? (row: Row<TItem>) => action.isEligible!(row.original)
-                  : undefined,
-                onSelect: (rows: Row<TItem>[]) =>
-                  action.onSelect(rows.map((r) => r.original)),
-              })),
-          }),
-          ...(createColumns?.(locale) ?? []),
-          createBufferColumn<TItem>(),
-        ];
+    const columns = useMemo(() => {
+      const cols = [
+        createSelectionColumn<TItem>(),
+        createActionsColumn<TItem>({
+          onOpen: canRead
+            ? (rows) => handleOpen(rows.map((r) => r.original))
+            : undefined,
+          onDelete: canDelete
+            ? (rows) => openDeleteDialog(rows.map((r) => r.original))
+            : undefined,
+          getRowUrl: getRowUrl ? (row) => getRowUrl(row.original) : undefined,
+          isDeleteEligible: canDelete
+            ? (row) => isDeleteEligible(row.original)
+            : () => false,
+          actions: () =>
+            actions.map((action) => ({
+              label: action.label,
+              isEligible: action.isEligible
+                ? (row: Row<TItem>) => action.isEligible!(row.original)
+                : undefined,
+              onSelect: (rows: Row<TItem>[]) =>
+                action.onSelect(rows.map((r) => r.original)),
+            })),
+        }),
+        ...(createColumns?.(locale) ?? []),
+        createBufferColumn<TItem>(),
+      ];
 
-        if (!gridEditable) return cols;
+      if (!gridEditable) return cols;
 
-        // Resolve each column's matching form field (if any) so the grid
-        // can edit it through the exact same field the detail page uses —
-        // see flattenFormFields / EditableCell.
-        return cols.map((col) => {
-          const columnName = col.meta?.columnName ?? col.id;
-          if (!columnName) return col;
+      return cols.map((col) => {
+        const columnName = col.meta?.columnName ?? col.id;
+        if (!columnName) return col;
 
-          const direct = directFields.get(columnName);
-          if (direct) {
+        const direct = directFields.get(columnName);
+        if (direct) {
+          return {
+            ...col,
+            meta: {
+              ...col.meta,
+              editableField: { kind: "direct" as const, field: direct },
+            },
+          };
+        }
+
+        if (col.meta?.origin === "relation") {
+          const match = pickupFillFields.get(columnName);
+          if (match) {
             return {
               ...col,
-              meta: { ...col.meta, editableField: { kind: "direct" as const, field: direct } },
+              meta: {
+                ...col.meta,
+                editableField: {
+                  kind: "pickup" as const,
+                  owningField: match.owningField,
+                  fillField: match.fillField,
+                },
+              },
             };
           }
+        }
 
-          if (col.meta?.origin === "relation") {
-            const match = pickupFillFields.get(columnName);
-            if (match) {
-              return {
-                ...col,
-                meta: {
-                  ...col.meta,
-                  editableField: {
-                    kind: "pickup" as const,
-                    owningField: match.owningField,
-                    fillField: match.fillField,
-                  },
-                },
-              };
-            }
-          }
-
-          return col;
-        });
-      },
-      [
-        getRowUrl,
-        handleOpen,
-        isDeleteEligible,
-        actions,
-        canRead,
-        canDelete,
-        gridEditable,
-        directFields,
-        pickupFillFields,
-        locale,
-      ],
-    );
+        return col;
+      });
+    }, [
+      getRowUrl,
+      handleOpen,
+      isDeleteEligible,
+      actions,
+      canRead,
+      canDelete,
+      gridEditable,
+      directFields,
+      pickupFillFields,
+      locale,
+    ]);
 
     if (isForbidden)
       return <AccessDeniedDialog resource={resolvedLabels.plural} />;
 
     if (isError)
       return <div>Error loading {resolvedLabels.plural.toLowerCase()}</div>;
+
+    const activeRowId =
+      isSplitDesktop && openingItem
+        ? getItemId(openingItem as Record<string, unknown>, idField).toString()
+        : undefined;
 
     const chromeNode = (
       <OverviewActionChrome
@@ -554,7 +565,10 @@ export function createOverview<
             items: { id: ResourceId; data: Record<string, unknown> }[],
           ) =>
             updateManyAsync(
-              items.map((item) => ({ id: item.id, data: item.data as TFormValues })),
+              items.map((item) => ({
+                id: item.id,
+                data: item.data as TFormValues,
+              })),
             ),
           getRecordId: (original: TItem) =>
             getItemId(original as Record<string, unknown>, idField),
@@ -590,6 +604,7 @@ export function createOverview<
         }
         data={allItems}
         preFilters={preFilters}
+        activeRowId={activeRowId}
         {...dataTableProps}
       />
     );
@@ -632,13 +647,44 @@ export function createOverview<
       });
     }
 
-    return (
-      <div className="my-2 flex max-h-full w-full flex-col">
+    const mainContent = (
+      <>
         {config.overviewSlots?.beforeToolbar?.(allItems, total)}
         {chromeNode}
         {config.overviewSlots?.afterToolbar?.(allItems, total)}
         {tableNode}
         {config.overviewSlots?.afterTable?.(allItems)}
+        {addDialogNode}
+      </>
+    );
+
+    if (isSplitDesktop) {
+      return (
+        <SplitOverviewShell
+          open={!!openingItem}
+          onOpenChange={(o) => !o && setOpeningItem(null)}
+          splitConfig={splitConfig}
+          main={
+            <div className="my-2 flex max-h-full w-full flex-col">
+              {mainContent}
+            </div>
+          }
+          detail={
+            activeRowId ? (
+              <DetailPage
+                key={activeRowId}
+                id={activeRowId}
+                onClose={() => setOpeningItem(null)}
+              />
+            ) : null
+          }
+        />
+      );
+    }
+
+    return (
+      <div className="my-2 flex max-h-full w-full flex-col">
+        {mainContent}
         {openMode === "dialog" && openingItem && (
           <DetailDialog
             key={getItemId(openingItem as Record<string, unknown>, idField)}
@@ -647,7 +693,6 @@ export function createOverview<
             setOpen={(o) => !o && setOpeningItem(null)}
           />
         )}
-        {addDialogNode}
       </div>
     );
   }

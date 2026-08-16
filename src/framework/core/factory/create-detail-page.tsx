@@ -42,8 +42,7 @@ export function createDetailPage<
   config: ResourceComponentsConfig<TItem, TFormValues>,
 ) {
   const Form = config.Form;
-  if (!Form)
-    throw new Error(`No Form component provided for ${hooks.noun}`);
+  if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
 
   const {
     idField,
@@ -57,9 +56,14 @@ export function createDetailPage<
     actionForms,
   } = hooks;
 
-  return function DetailPage() {
+  return function DetailPage({
+    id: idProp,
+    onClose,
+  }: { id?: string; onClose?: () => void } = {}) {
     const params = useParams();
-    const id = params.id as string;
+    const id = idProp ?? (params.id as string);
+
+    const isEmbedded = !!onClose;
     const overviewKey = config.overviewKey;
 
     usePermissions();
@@ -188,8 +192,26 @@ export function createDetailPage<
       (a) => a.key === activeActionKey,
     );
 
+    const toolbarElement = (
+      <FormPage.Toolbar
+        inline={isEmbedded}
+        onBack={isEmbedded ? onClose : () => router.back()}
+        popOutUrl={isEmbedded ? routes.detail(id!) : undefined}
+        selectedRows={item ? [item] : []}
+        mutations={[...bulkActions, ...actionFormMutations]}
+        isDeleteEligible={canDelete ? isDeleteEligible : undefined}
+        onDelete={canDelete ? () => setDeleteOpen(true) : undefined}
+        onAdd={canAdd ? () => router.push(routes.add) : undefined}
+      />
+    );
+
     return (
-      <RecordScreen form={form} formId={formId} onSubmit={onSave}>
+      <RecordScreen
+        form={form}
+        formId={formId}
+        onSubmit={onSave}
+        className={isEmbedded ? "flex h-full min-h-0 flex-col" : undefined}
+      >
         <RegistryCapture registryRef={registryRef} />
         <FormPage
           isDirty={isDirty || hasFileChanges}
@@ -198,15 +220,9 @@ export function createDetailPage<
           readOnly={!canUpdate}
           onSave={onSave}
           onReset={() => onReset(reset)}
+          className={isEmbedded ? "h-full px-4" : undefined}
         >
-          <FormPage.Toolbar
-            onBack={() => router.back()}
-            selectedRows={item ? [item] : []}
-            mutations={[...bulkActions, ...actionFormMutations]}
-            isDeleteEligible={canDelete ? isDeleteEligible : undefined}
-            onDelete={canDelete ? () => setDeleteOpen(true) : undefined}
-            onAdd={canAdd ? () => router.push(routes.add) : undefined}
-          />
+          {!isEmbedded && toolbarElement}
 
           <RecordFormShell
             hasTabs={hasTabs}
@@ -214,6 +230,7 @@ export function createDetailPage<
             isOpen={formOpen}
             setOpen={setFormOpen}
             navProps={navProps}
+            toolbar={isEmbedded ? toolbarElement : undefined}
             formRowLeft={item ? config.detailSlots?.left?.(item) : undefined}
             formRowRight={item ? config.detailSlots?.right?.(item) : undefined}
             beforeForm={item && config.detailSlots?.beforeForm?.(item)}
@@ -250,7 +267,9 @@ export function createDetailPage<
 
           {isError && (
             <p className="text-sm text-destructive">
-              {tr("failedToLoad", { resource: resolvedLabels.singular.toLowerCase() })}
+              {tr("failedToLoad", {
+                resource: resolvedLabels.singular.toLowerCase(),
+              })}
             </p>
           )}
           {item && (
@@ -263,7 +282,7 @@ export function createDetailPage<
               id={[itemId!]}
               queryKeys={[keys.all]}
               deleteFn={() => removeAsync([itemId!])}
-              onSuccess={() => router.back()}
+              onSuccess={isEmbedded ? onClose! : () => router.back()}
               onBulkResult={setActionFormError}
             />
           )}

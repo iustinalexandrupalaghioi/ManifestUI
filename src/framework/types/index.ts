@@ -33,6 +33,7 @@ export type {
 } from "./resource-components-types";
 
 export type { RelationConfig, ChildResource } from "./relation-config-type";
+export type { SplitConfig } from "./split-config-type";
 export type {
   FormConfig,
   FormLayoutConfig,

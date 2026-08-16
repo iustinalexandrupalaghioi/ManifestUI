@@ -16,6 +16,7 @@ import {
 } from "../lib/actionResult";
 import type { Cursor } from "./pagination";
 import type { TranslatableText } from "./i18n-types";
+import type { SplitConfig } from "./split-config-type";
 import { ReactNode } from "react";
 
 export type ResourceId = number | string;
@@ -83,8 +84,9 @@ export interface ResourceConfig<
   noun: string;
   routes: ResourceRoutes;
   labels: ResourceLabels;
-  openMode?: "dialog" | "page";
+  openMode?: "dialog" | "page" | "split";
   addMode?: "dialog" | "page";
+  splitConfig?: SplitConfig;
   fetchList: (
     sorting: SortRule[],
     filters: FilterRule[],

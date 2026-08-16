@@ -38,8 +38,11 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
 
   labels: todosDescriptor,
 
-  openMode: "page",
+  openMode: "split",
   addMode: "page",
+  splitConfig: {
+    onOpen: "selectFirst",
+  },
   editable: true,
   emptyValues: {
     title: "",

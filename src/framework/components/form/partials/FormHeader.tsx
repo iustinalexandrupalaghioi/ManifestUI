@@ -22,6 +22,7 @@ export interface FormHeaderProps {
   lastPath?: string;
   positionLabel?: string;
   guard?: (fn: () => void) => void;
+  toolbar?: ReactNode;
 }
 
 export function FormHeader({
@@ -33,6 +34,7 @@ export function FormHeader({
   lastPath,
   positionLabel,
   guard,
+  toolbar,
 }: FormHeaderProps) {
   const hasNav = prevPath !== undefined || nextPath !== undefined;
   const router = useTransitionRouter();
@@ -47,71 +49,72 @@ export function FormHeader({
   })();
   const effectiveGuard = guard ?? formPage?.guard;
 
-  // Always replace — keeps the history stack at a single detail-page
-  // entry no matter how many times Prev/Next/First/Last are clicked.
   const go = (path: string) => {
     if (effectiveGuard) effectiveGuard(() => router.replace(path));
     else router.replace(path);
   };
 
   return (
-    <div
-      className={cn(
-        "sticky top-0 z-10 mb-2 flex items-center justify-between bg-background py-1",
-        className,
-      )}
-    >
-      <h1 className="font-semibold text-primary">{children}</h1>
+    <div className="sticky top-0 z-20 mb-2 flex flex-col bg-background">
+      {toolbar && <div className="h-10 shrink-0">{toolbar}</div>}
+      <div
+        className={cn(
+          "flex items-center justify-between bg-background py-1",
+          className,
+        )}
+      >
+        <h1 className="font-semibold text-primary">{children}</h1>
 
-      {hasNav && (
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={!firstPath || router.isPending}
-            title={t("first")}
-            type="button"
-            onClick={() => firstPath && go(firstPath)}
-          >
-            <ChevronsLeftIcon className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={!prevPath || router.isPending}
-            title={t("previous")}
-            type="button"
-            onClick={() => prevPath && go(prevPath)}
-          >
-            <ChevronLeftIcon className="size-4" />
-          </Button>
-          {positionLabel && (
-            <span className="flex min-w-12 items-center justify-center text-center text-xs text-muted-foreground tabular-nums">
-              {positionLabel}
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={!nextPath || router.isPending}
-            title={t("next")}
-            type="button"
-            onClick={() => nextPath && go(nextPath)}
-          >
-            <ChevronRightIcon className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            disabled={!lastPath || router.isPending}
-            title={t("last")}
-            type="button"
-            onClick={() => lastPath && go(lastPath)}
-          >
-            <ChevronsRightIcon className="size-4" />
-          </Button>
-        </div>
-      )}
+        {hasNav && (
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={!firstPath || router.isPending}
+              title={t("first")}
+              type="button"
+              onClick={() => firstPath && go(firstPath)}
+            >
+              <ChevronsLeftIcon className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={!prevPath || router.isPending}
+              title={t("previous")}
+              type="button"
+              onClick={() => prevPath && go(prevPath)}
+            >
+              <ChevronLeftIcon className="size-4" />
+            </Button>
+            {positionLabel && (
+              <span className="flex min-w-12 items-center justify-center text-center text-xs text-muted-foreground tabular-nums">
+                {positionLabel}
+              </span>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={!nextPath || router.isPending}
+              title={t("next")}
+              type="button"
+              onClick={() => nextPath && go(nextPath)}
+            >
+              <ChevronRightIcon className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={!lastPath || router.isPending}
+              title={t("last")}
+              type="button"
+              onClick={() => lastPath && go(lastPath)}
+            >
+              <ChevronsRightIcon className="size-4" />
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

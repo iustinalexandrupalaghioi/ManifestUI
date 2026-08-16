@@ -61,12 +61,14 @@ export interface DataListItemProps<TData> {
   row: Row<TData>;
   visibleListColumns: Column<TData>[];
   onRowClick?: (e: React.MouseEvent, row: Row<TData>) => void;
+  isActive?: boolean;
 }
 
 export function DataListItem<TData>({
   row,
   visibleListColumns,
   onRowClick,
+  isActive,
 }: DataListItemProps<TData>) {
   const t = useTranslations("DataView");
   const tc = useTranslations("Common");
@@ -172,6 +174,7 @@ export function DataListItem<TData>({
       className={cn(
         "flex flex-col overflow-hidden rounded-lg border bg-card text-sm transition-colors hover:bg-accent/50",
         !isLookup && row.getIsSelected() && "border-primary bg-primary/5",
+        !isLookup && isActive && "border-primary bg-primary/5",
       )}
       onDoubleClick={() => isLookup && onSelect?.([row])}
     >
