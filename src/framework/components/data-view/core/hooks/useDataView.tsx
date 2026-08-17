@@ -67,8 +67,6 @@ export interface DataViewProps<TData, TValue> {
   initialListColumnVisibility?: VisibilityState;
   tableMeta?: import("@tanstack/react-table").TableMeta<TData>;
   activeRowId?: string;
-  /** Split view: a plain click on a row/card opens its detail directly
-   *  instead of just selecting it. */
   openOnRowClick?: boolean;
 }
 
@@ -106,15 +104,6 @@ export function useDataView<TData, TValue>(
     initialListColumnVisibility ?? {},
   );
 
-  // ── Row selection sync — prop ↔ SelectionStore ──────────────────────────
-  // These two effects mirror each other's target, so a naive bidirectional
-  // sync would ping-pong forever: whichever commit finds `rowSelection` and
-  // `storedSelection` disagreeing runs BOTH effects in the same pass, each
-  // closing over the pre-update snapshot of the other, so each "corrects"
-  // the mismatch by overwriting the other's just-applied value — swapping
-  // the two back and forth every commit. `lastSyncRef` records which side
-  // initiated the most recent push so the effect on the *receiving* side
-  // can recognize an update it caused and skip reacting to it.
   const selectionStore = getSelectionStore(tableId);
   const storedSelection = selectionStore((s) => s.rowSelection);
   const lastSyncRef = useRef<"toStore" | "toLocal" | null>(null);
@@ -291,6 +280,7 @@ export function useDataView<TData, TValue>(
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    resetKey: activeMode,
   });
 
   // ── Cleanup ───────────────────────────────────────────────────────────────

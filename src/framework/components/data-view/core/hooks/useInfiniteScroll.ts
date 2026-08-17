@@ -1,11 +1,12 @@
-"use client"
+"use client";
 
-import { useEffect, type RefObject } from "react"
+import { useEffect, type RefObject } from "react";
 
 interface UseInfiniteScrollOptions {
-  hasNextPage: boolean
-  isFetchingNextPage: boolean
-  fetchNextPage: () => void
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+  resetKey?: unknown;
 }
 
 /**
@@ -18,22 +19,27 @@ interface UseInfiniteScrollOptions {
 export function useInfiniteScroll(
   sentinelRef: RefObject<HTMLDivElement | null>,
   rootRef: RefObject<HTMLDivElement | null>,
-  { hasNextPage, isFetchingNextPage, fetchNextPage }: UseInfiniteScrollOptions
+  {
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    resetKey,
+  }: UseInfiniteScrollOptions,
 ) {
   useEffect(() => {
-    const sentinel = sentinelRef.current
-    const root = rootRef.current
-    if (!sentinel || !root) return
+    const sentinel = sentinelRef.current;
+    const root = rootRef.current;
+    if (!sentinel || !root) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && hasNextPage && !isFetchingNextPage)
-          fetchNextPage()
+          fetchNextPage();
       },
-      { root, rootMargin: "200px" }
-    )
+      { root, rootMargin: "200px" },
+    );
 
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, resetKey]);
 }
