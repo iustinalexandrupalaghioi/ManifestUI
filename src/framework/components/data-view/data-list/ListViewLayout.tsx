@@ -33,6 +33,7 @@ interface ListViewLayoutProps {
   table: TTable<any>;
   isLoading: boolean;
   activeRowId?: string;
+  openOnRowClick?: boolean;
   quickSearchEnabled: boolean;
   enrichedPreFilters: FilterRule[];
   filterableColumns: FilterableColumn[];
@@ -51,6 +52,7 @@ export function ListViewLayout({
   table,
   isLoading,
   activeRowId,
+  openOnRowClick,
   quickSearchEnabled,
   enrichedPreFilters,
   filterableColumns,
@@ -178,6 +180,7 @@ export function ListViewLayout({
           table={table}
           isLoading={isLoading}
           activeRowId={activeRowId}
+          openOnRowClick={openOnRowClick}
           list={list}
           isLookup={isLookup}
         />

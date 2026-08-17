@@ -12,6 +12,7 @@ interface DataListProps {
   table: TTable<any>;
   isLoading: boolean;
   activeRowId?: string;
+  openOnRowClick?: boolean;
   list: DataListFeatureApi;
   isLookup?: boolean;
 }
@@ -20,6 +21,7 @@ export function DataList({
   table,
   isLoading,
   activeRowId,
+  openOnRowClick,
   list,
   isLookup,
 }: DataListProps) {
@@ -64,6 +66,7 @@ export function DataList({
         visibleListColumns={list.visibleListColumns}
         isLoading={isLoading}
         activeRowId={activeRowId}
+        openOnRowClick={openOnRowClick}
       />
 
       {/* List column manager panel — overview only */}

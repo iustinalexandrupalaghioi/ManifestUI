@@ -117,7 +117,7 @@ export function SplitOverviewShell({
         type="button"
         onClick={() => setMainCollapsed((c) => !c)}
         title={mainCollapsed ? "Show list" : "Hide list"}
-        className="absolute top-1/2 left-1/2 z-10 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-foreground group-hover:opacity-100"
+        className="absolute top-1/2 left-1/2 z-10 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-sm hover:text-foreground"
       >
         {mainCollapsed ? (
           <ExpandIcon className="size-4" />

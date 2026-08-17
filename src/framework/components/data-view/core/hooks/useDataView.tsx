@@ -33,6 +33,17 @@ import { useColumnState } from "./useColumnState";
 import { useInfiniteScroll } from "./useInfiniteScroll";
 import { useScrollFreeze } from "./useScrollFreeze";
 
+function sameSelection(a: Record<string, boolean>, b: Record<string, boolean>) {
+  const aKeys = Object.keys(a)
+    .filter((k) => a[k])
+    .sort();
+  const bKeys = Object.keys(b)
+    .filter((k) => b[k])
+    .sort();
+  if (aKeys.length !== bKeys.length) return false;
+  return aKeys.every((k, i) => k === bKeys[i]);
+}
+
 export interface DataViewProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -56,6 +67,9 @@ export interface DataViewProps<TData, TValue> {
   initialListColumnVisibility?: VisibilityState;
   tableMeta?: import("@tanstack/react-table").TableMeta<TData>;
   activeRowId?: string;
+  /** Split view: a plain click on a row/card opens its detail directly
+   *  instead of just selecting it. */
+  openOnRowClick?: boolean;
 }
 
 export function useDataView<TData, TValue>(
@@ -93,17 +107,36 @@ export function useDataView<TData, TValue>(
   );
 
   // ── Row selection sync — prop ↔ SelectionStore ──────────────────────────
+  // These two effects mirror each other's target, so a naive bidirectional
+  // sync would ping-pong forever: whichever commit finds `rowSelection` and
+  // `storedSelection` disagreeing runs BOTH effects in the same pass, each
+  // closing over the pre-update snapshot of the other, so each "corrects"
+  // the mismatch by overwriting the other's just-applied value — swapping
+  // the two back and forth every commit. `lastSyncRef` records which side
+  // initiated the most recent push so the effect on the *receiving* side
+  // can recognize an update it caused and skip reacting to it.
   const selectionStore = getSelectionStore(tableId);
   const storedSelection = selectionStore((s) => s.rowSelection);
+  const lastSyncRef = useRef<"toStore" | "toLocal" | null>(null);
 
   useEffect(() => {
-    if (JSON.stringify(rowSelection) !== JSON.stringify(storedSelection)) {
+    if (lastSyncRef.current === "toLocal") {
+      lastSyncRef.current = null;
+      return;
+    }
+    if (!sameSelection(rowSelection, storedSelection)) {
+      lastSyncRef.current = "toStore";
       selectionStore.getState().setRowSelection(rowSelection);
     }
   }, [rowSelection]);
 
   useEffect(() => {
-    if (JSON.stringify(storedSelection) !== JSON.stringify(rowSelection)) {
+    if (lastSyncRef.current === "toStore") {
+      lastSyncRef.current = null;
+      return;
+    }
+    if (!sameSelection(storedSelection, rowSelection)) {
+      lastSyncRef.current = "toLocal";
       setRowSelection(storedSelection);
     }
   }, [storedSelection]);

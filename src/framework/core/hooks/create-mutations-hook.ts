@@ -24,6 +24,19 @@ import type {
   ResourceId,
 } from "../../types/resource-hook-types";
 import type { createKeys } from "./create-list-hooks";
+import { getItemId } from "../resource-id";
+import type { Cursor } from "../../types/pagination";
+
+interface ListPage<TItem> {
+  items: TItem[];
+  total: number;
+  nextCursor: Cursor | null;
+}
+
+interface ListCacheData<TItem> {
+  pages: ListPage<TItem>[];
+  pageParams: unknown[];
+}
 
 export function createMutationsHook<
   TItem,
@@ -34,6 +47,8 @@ export function createMutationsHook<
   keys: ReturnType<typeof createKeys<TItem, TFormValues, TId>>,
 ) {
   const { mutationFns, relations = [] } = config;
+  const idField = (config.idField ?? "id") as string;
+  const listKeyPrefix = [...keys.all, "list"];
 
   return function useMutations() {
     const queryClient = useQueryClient();
@@ -49,10 +64,78 @@ export function createMutationsHook<
       setError(mapErr(err, locale));
     };
 
-    const invalidateSelfAndRelations = (
-      action: "add" | "update" | "delete",
+    // Only ever touches this resource's own cached infinite-list pages
+    // (matched by the shared ["list", ...] prefix, regardless of active
+    // sorting/filters) — never triggers a network request on its own.
+    const patchListCache = (
+      updater: (pages: ListPage<TItem>[]) => ListPage<TItem>[],
     ) => {
-      queryClient.invalidateQueries({ queryKey: keys.all });
+      queryClient.setQueriesData<ListCacheData<TItem>>(
+        { queryKey: listKeyPrefix, exact: false },
+        (old) => (old ? { ...old, pages: updater(old.pages) } : old),
+      );
+    };
+
+    const patchListItems = (byId: Map<string, TItem>) => {
+      if (byId.size === 0) return;
+      patchListCache((pages) =>
+        pages.map((page) => ({
+          ...page,
+          items: page.items.map((item) => {
+            const patch = byId.get(
+              String(getItemId(item as Record<string, unknown>, idField)),
+            );
+            return patch ?? item;
+          }),
+        })),
+      );
+    };
+
+    const removeListItems = (ids: Set<string>) => {
+      if (ids.size === 0) return;
+      patchListCache((pages) => {
+        let removed = 0;
+        const filtered = pages.map((page) => {
+          const items = page.items.filter((item) => {
+            const hit = ids.has(
+              String(getItemId(item as Record<string, unknown>, idField)),
+            );
+            if (hit) removed++;
+            return !hit;
+          });
+          return { ...page, items };
+        });
+        if (removed === 0) return pages;
+        return filtered.map((page) => ({
+          ...page,
+          total: Math.max(0, page.total - removed),
+        }));
+      });
+    };
+
+    const resetListPagination = () => {
+      patchListCache((pages) => (pages.length > 1 ? [pages[0]] : pages));
+    };
+
+    const invalidateDetailAndRelations = (
+      action: "add" | "update" | "delete",
+      ids: ResourceId[],
+    ) => {
+      ids.forEach((id) =>
+        queryClient.invalidateQueries({ queryKey: keys.detail(id as TId) }),
+      );
+      relations.forEach((relation) => {
+        if (!relation.invalidateOn?.includes(action)) return;
+        queryClient.invalidateQueries({
+          queryKey: relation.childResource.hooks.keys.all,
+          refetchType: "all",
+        });
+      });
+    };
+
+    const invalidateSelfAndRelations = (action: "add" | "delete") => {
+      resetListPagination();
+      queryClient.invalidateQueries({ queryKey: listKeyPrefix, exact: false });
       relations.forEach((relation) => {
         if (!relation.invalidateOn?.includes(action)) return;
         queryClient.invalidateQueries({
@@ -81,7 +164,15 @@ export function createMutationsHook<
     } = useMutation({
       mutationFn: ({ id, data }: { id: ResourceId; data: TFormValues }) =>
         mutationFns.update(id as TId, data).then(unwrapAction),
-      onSuccess: () => invalidateSelfAndRelations("update"),
+
+      onSuccess: (_data, { id }) => {
+        resetListPagination();
+        queryClient.invalidateQueries({
+          queryKey: listKeyPrefix,
+          exact: false,
+        });
+        invalidateDetailAndRelations("update", [id]);
+      },
       onError: handleError,
     });
 
@@ -135,7 +226,11 @@ export function createMutationsHook<
 
         return bulkResult;
       },
-      onSuccess: () => invalidateSelfAndRelations("delete"),
+
+      onSuccess: (data) => {
+        removeListItems(new Set(data.succeededIds));
+        invalidateDetailAndRelations("delete", data.succeededIds);
+      },
       onError: handleError,
     });
 
@@ -206,7 +301,17 @@ export function createMutationsHook<
 
         return bulkResult;
       },
-      onSuccess: () => invalidateSelfAndRelations("update"),
+
+      onSuccess: (bulkResult, items) => {
+        const succeeded = new Set(bulkResult.succeededIds);
+        const byId = new Map(
+          items
+            .filter((item) => succeeded.has(String(item.id)))
+            .map((item) => [String(item.id), item.data as unknown as TItem]),
+        );
+        patchListItems(byId);
+        invalidateDetailAndRelations("update", [...succeeded]);
+      },
       onError: handleError,
     });
 

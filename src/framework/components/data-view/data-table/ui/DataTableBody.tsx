@@ -27,6 +27,7 @@ declare module "@tanstack/react-table" {
 interface DataViewBodyProps {
   rowSelection: Record<string, boolean>
   activeRowId?: string
+  openOnRowClick?: boolean
   isLoading: boolean
   columnOrder: string[]
   columnPinning: { left: string[] }
@@ -37,6 +38,7 @@ interface DataViewBodyProps {
 export function DataTableBody({
   rowSelection,
   activeRowId,
+  openOnRowClick,
   isLoading,
   columnOrder,
   columnPinning,
@@ -47,7 +49,7 @@ export function DataTableBody({
   const { isResizing } = useDataViewLayout()
 
   const { handleRowClick, handleRowDoubleClick, handleRowContextClick } =
-    useSelection(tableId, table)
+    useSelection(tableId, table, { openOnClick: openOnRowClick })
 
   const { contextMenu, handleCellContextMenu, closeContextMenu } =
     useContextMenu(table)

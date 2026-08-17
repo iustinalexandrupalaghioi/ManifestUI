@@ -362,9 +362,26 @@ export function createOverview<
     useEffect(() => {
       if (!isSplitDesktop || didAutoOpenRef.current) return;
       if (isLoading || allItems.length === 0) return;
+      // Guards against clobbering a record the user already has open. This
+      // matters beyond the obvious case: if this effect's owning component
+      // ever re-runs its effects without a true fresh mount (e.g. a reused
+      // fiber whose state survived but whose passive effects re-fire), the
+      // ref guard above resets and this would otherwise silently overwrite
+      // whatever's open back to allItems[0] — which flips the detail panel's
+      // `key`, forcing a full delete+recreate of that subtree.
+      if (openingItem) {
+        didAutoOpenRef.current = true;
+        return;
+      }
       didAutoOpenRef.current = true;
       if (splitConfig.onOpen === "selectFirst") {
         setOpeningItem(allItems[0]);
+        setRowSelection({
+          [getItemId(
+            allItems[0] as Record<string, unknown>,
+            idField,
+          ).toString()]: true,
+        });
       } else if (splitConfig.onOpen === "selectAll") {
         setRowSelection(
           Object.fromEntries(
@@ -375,32 +392,44 @@ export function createOverview<
           ),
         );
       }
-    }, [isSplitDesktop, isLoading, allItems, idField]);
+    }, [isSplitDesktop, isLoading, allItems, idField, openingItem]);
 
     const handleOpen = (items: TItem[]) => {
       const item = items[0];
       if (!item) return;
-      const targetRoute = routes.detail(
-        getItemId(item as Record<string, unknown>, idField).toString(),
-      );
+      const itemId = getItemId(
+        item as Record<string, unknown>,
+        idField,
+      ).toString();
+      const targetRoute = routes.detail(itemId);
+
+      const isPartOfAmbientSelection =
+        !isSplitDesktop &&
+        selectedRows.length > 1 &&
+        items.length === 1 &&
+        selectedRows.some(
+          (r) =>
+            getItemId(r as Record<string, unknown>, idField).toString() ===
+            itemId,
+        );
 
       if (
         (openMode === "dialog" || isSplitDesktop) &&
         items.length === 1 &&
-        selectedRows.length <= 1
+        !isPartOfAmbientSelection
       ) {
+        if (isSplitDesktop) clearNavigator(overviewKey);
         setOpeningItem(item);
       } else {
-        const isMultiSelection = selectedRows.length > 1 || items.length > 1;
+        const isMultiSelection = items.length > 1 || isPartOfAmbientSelection;
         if (isMultiSelection) {
-          const navigatorIds =
-            selectedRows.length > 1
-              ? selectedRows.map((i) =>
-                  getItemId(i as Record<string, unknown>, idField).toString(),
-                )
-              : items.map((i) =>
-                  getItemId(i as Record<string, unknown>, idField).toString(),
-                );
+          const navigatorIds = isPartOfAmbientSelection
+            ? selectedRows.map((i) =>
+                getItemId(i as Record<string, unknown>, idField).toString(),
+              )
+            : items.map((i) =>
+                getItemId(i as Record<string, unknown>, idField).toString(),
+              );
           setNavigator(navigatorIds, overviewKey, currentPath);
         } else {
           clearNavigator(overviewKey);
@@ -605,6 +634,7 @@ export function createOverview<
         data={allItems}
         preFilters={preFilters}
         activeRowId={activeRowId}
+        openOnRowClick={isSplitDesktop}
         {...dataTableProps}
       />
     );

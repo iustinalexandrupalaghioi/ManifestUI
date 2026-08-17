@@ -15,7 +15,15 @@ export function useAvailableHeight(
     function measure() {
       if (!ref.current) return;
       const top = ref.current.getBoundingClientRect().top;
-      setHeight(window.innerHeight - top - 16);
+      const next = window.innerHeight - top - 16;
+      // Split view nests two of these hooks (this element's own container,
+      // plus an ancestor of it observed by another instance elsewhere) —
+      // each one's height-driven layout change can retrigger the other's
+      // ResizeObserver. Snapping sub-pixel differences to the previous
+      // value (instead of always taking the newly-computed one) means
+      // React's setState bails out on an unchanged primitive once things
+      // settle, damping what would otherwise be an unbounded back-and-forth.
+      setHeight((prev) => (Math.abs(prev - next) < 1 ? prev : next));
     }
 
     measure();

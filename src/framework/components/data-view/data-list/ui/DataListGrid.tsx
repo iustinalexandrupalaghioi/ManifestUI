@@ -20,6 +20,7 @@ export interface DataListGridProps<TData> {
   visibleListColumns: Column<TData>[];
   isLoading: boolean;
   activeRowId?: string;
+  openOnRowClick?: boolean;
 }
 
 // No scroll container — owned by DataViewLayout's shared scroll div
@@ -28,10 +29,13 @@ export function DataListGrid<TData>({
   visibleListColumns,
   isLoading,
   activeRowId,
+  openOnRowClick,
 }: DataListGridProps<TData>) {
   const t = useTranslations("DataView");
   const { table, tableId } = useDataViewCore();
-  const { handleRowClick } = useSelection(tableId, table);
+  const { handleRowClick } = useSelection(tableId, table, {
+    openOnClick: openOnRowClick,
+  });
 
   if (isLoading) {
     return (
