@@ -9,7 +9,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { DialogClose } from "@/components/ui/dialog";
-import type { BulkActionFailure, BulkActionResult } from "@/framework/lib/actionResult";
+import type {
+  BulkActionFailure,
+  BulkActionResult,
+} from "@/framework/lib/actionResult";
 import { renderErrorDetails } from "./ErrorDialog";
 import { AlertTriangleIcon, ChevronDownIcon } from "lucide-react";
 import { BaseDialog } from "./BaseDialog";
@@ -85,15 +88,6 @@ export function BulkResultDialog({
       <div className="scrollbar-thumb-rounded scrollbar-thin flex max-h-[60vh] flex-col gap-4 overflow-y-auto px-4 scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80">
         {result.failures.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              {t("failed", {
-                label: (result.failures.length === 1
-                  ? resolvedItemLabel
-                  : plural
-                ).toLowerCase(),
-              })}
-            </p>
-
             {result.failures.length === 1 ? (
               <div className="flex flex-col gap-2 rounded-md border p-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
@@ -123,7 +117,9 @@ export function BulkResultDialog({
                     </CollapsibleTrigger>
 
                     <CollapsibleContent className="flex flex-col gap-2 border-t px-3 py-3">
-                      <p className="text-sm text-foreground">{failure.message}</p>
+                      <p className="text-sm text-foreground">
+                        {failure.message}
+                      </p>
                       {failureExtra(failure)}
                     </CollapsibleContent>
                   </Collapsible>
