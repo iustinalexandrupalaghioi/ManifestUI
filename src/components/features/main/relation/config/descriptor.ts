@@ -4,7 +4,7 @@ const id = "relations";
 
 export const relationsDescriptor: ResourceDescriptor = {
   id,
-  table: "relations",
+  table: "relation",
   singular: { en: "Relation", ro: "Relație" },
   singularDefinite: { en: "relation", ro: "relația" },
   plural: { en: "Relations", ro: "Relații" },

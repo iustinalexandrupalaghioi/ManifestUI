@@ -4,7 +4,7 @@ const id = "users";
 
 export const usersDescriptor: ResourceDescriptor = {
   id,
-  table: "users",
+  table: "user",
   singular: { en: "User", ro: "Utilizator" },
   singularDefinite: { en: "user", ro: "utilizatorul" },
   plural: { en: "Users", ro: "Utilizatori" },

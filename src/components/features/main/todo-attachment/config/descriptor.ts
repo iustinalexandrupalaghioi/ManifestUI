@@ -4,7 +4,7 @@ const id = "attachments";
 
 export const attachmentsDescriptor: ResourceDescriptor = {
   id,
-  table: "todo_attachments",
+  table: "todo_attachment",
   singular: { en: "Attachment", ro: "Atașament" },
   singularDefinite: { en: "attachment", ro: "atașamentul" },
   plural: { en: "Attachments", ro: "Atașamente" },
