@@ -3,6 +3,8 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { todo_attachment, todo } from "@/db/schema";
 import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
+import { hasServerPermission } from "@/framework/authorization/lib/permissions";
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
@@ -109,10 +111,25 @@ export const {
 
   // `alsoAllow: ["add"]` — attaching an uploaded file's path runs through
   // this same update after the add screen's background upload finishes, so
-  // a group with only "add" (no "update") still needs to complete it.
+  // a group with only "add" (no "update") still needs to complete it. That
+  // caller doesn't hold "attachments:update" though, so their write is
+  // scoped to just `path`, and only while it's still unset — it can't touch
+  // `todo_id`/`filename` or repoint an already-attached file on another row.
   updateAttachment: resourceAction.update(
     async (tx, id: number, data: AttachmentFormValues) => {
       const parsed = attachmentSchema.parse(data);
+      const userId = await getCurrentUserId();
+      const canFullyUpdate =
+        !!userId && (await hasServerPermission(userId, "attachments:update"));
+
+      if (!canFullyUpdate) {
+        await tx
+          .update(todo_attachment)
+          .set({ path: parsed.path })
+          .where(and(eq(todo_attachment.id, id), eq(todo_attachment.path, "")));
+        return;
+      }
+
       await tx
         .update(todo_attachment)
         .set(parsed)

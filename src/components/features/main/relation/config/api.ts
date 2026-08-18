@@ -3,6 +3,8 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { relation } from "@/db/schema";
 import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
+import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
+import { hasServerPermission } from "@/framework/authorization/lib/permissions";
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
@@ -81,32 +83,36 @@ export const {
 } = defineResourceActions("relations", {
   fetchRelationList: [
     "read",
-    async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
-    const where = buildWhereConditions(filters, filterColumns);
-    const sortColumns = resolveSortColumns(sorting, filterColumns, {
-      key: "id",
-      column: relation.id,
-    });
-    const orderBy = buildOrderBy(sortColumns);
-    const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
+    async (
+      sorting: SortRule[],
+      filters: FilterRule[],
+      cursor: Cursor | null,
+    ) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const sortColumns = resolveSortColumns(sorting, filterColumns, {
+        key: "id",
+        column: relation.id,
+      });
+      const orderBy = buildOrderBy(sortColumns);
+      const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
-    const [items, [{ count }]] = await Promise.all([
-      db
-        .select(selection)
-        .from(relation)
-        .where(seekWhere)
-        .orderBy(...orderBy)
-        .limit(PAGE_SIZE),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(relation)
-        .where(where),
-    ]);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select(selection)
+          .from(relation)
+          .where(seekWhere)
+          .orderBy(...orderBy)
+          .limit(PAGE_SIZE),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(relation)
+          .where(where),
+      ]);
 
-    const nextCursor =
-      items.length === PAGE_SIZE
-        ? extractCursor(items[items.length - 1], sortColumns)
-        : null;
+      const nextCursor =
+        items.length === PAGE_SIZE
+          ? extractCursor(items[items.length - 1], sortColumns)
+          : null;
 
       return { items: items as Relation[], total: count ?? 0, nextCursor };
     },
@@ -136,10 +142,25 @@ export const {
 
   // `alsoAllow: ["add"]` — attaching an uploaded image's path runs through
   // this same update after the add screen's background upload finishes, so
-  // a group with only "add" (no "update") still needs to complete it.
+  // a group with only "add" (no "update") still needs to complete it. That
+  // caller doesn't hold "relations:update" though, so their write is scoped
+  // to just `image`, and only while it's still unset — it can't touch any
+  // other field or repoint an already-attached image on someone else's row.
   updateRelation: resourceAction.update(
     async (tx, id: number, data: RelationFormValues) => {
       const parsed = relationSchema.parse(data);
+      const userId = await getCurrentUserId();
+      const canFullyUpdate =
+        !!userId && (await hasServerPermission(userId, "relations:update"));
+
+      if (!canFullyUpdate) {
+        await tx
+          .update(relation)
+          .set({ image: parsed.image ?? "" })
+          .where(and(eq(relation.id, id), eq(relation.image, "")));
+        return;
+      }
+
       await tx
         .update(relation)
         .set(toRelationRow(parsed))
