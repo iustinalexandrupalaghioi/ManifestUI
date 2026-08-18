@@ -89,9 +89,9 @@ export function BulkResultDialog({
         {result.failures.length > 0 && (
           <div className="flex flex-col gap-2">
             {result.failures.length === 1 ? (
-              <div className="flex flex-col gap-2 rounded-md border p-3">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <AlertTriangleIcon className="h-3.5 w-3.5" />
+              <div className="flex flex-col gap-2 rounded-md border border-destructive/30 p-3">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <AlertTriangleIcon className="h-4 w-4 shrink-0 text-destructive" />
                   {itemLink(result.failures[0].id)}
                 </div>
                 <p className="text-sm text-foreground">
@@ -101,29 +101,50 @@ export function BulkResultDialog({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {result.failures.map((failure) => (
-                  <Collapsible key={failure.id} className="rounded-md border">
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="group w-full justify-between px-3 text-xs font-medium"
-                      >
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <AlertTriangleIcon className="h-3.5 w-3.5" />
-                          {itemLink(failure.id)}
-                        </span>
-                        <ChevronDownIcon className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                      </Button>
-                    </CollapsibleTrigger>
+                {result.failures.map((failure) => {
+                  const extra = failureExtra(failure);
+                  const header = (
+                    <span className="flex items-center gap-2 text-foreground">
+                      <AlertTriangleIcon className="h-4 w-4 shrink-0 text-destructive" />
+                      {itemLink(failure.id)}
+                    </span>
+                  );
 
-                    <CollapsibleContent className="flex flex-col gap-2 border-t px-3 py-3">
-                      <p className="text-sm text-foreground">
-                        {failure.message}
-                      </p>
-                      {failureExtra(failure)}
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
+                  if (!extra) {
+                    return (
+                      <div
+                        key={failure.id}
+                        className="flex items-center rounded-md border border-destructive/30 px-3 py-2.5 text-sm font-medium"
+                      >
+                        {header}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Collapsible
+                      key={failure.id}
+                      className="overflow-hidden rounded-md border border-destructive/30"
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="group w-full justify-between rounded-none px-3 text-sm font-medium hover:bg-transparent aria-expanded:bg-transparent aria-expanded:text-foreground"
+                        >
+                          {header}
+                          <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                        </Button>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent className="flex flex-col gap-2 border-t px-3 py-3">
+                        <p className="text-sm text-foreground">
+                          {failure.message}
+                        </p>
+                        {extra}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
               </div>
             )}
           </div>

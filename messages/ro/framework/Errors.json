@@ -2,6 +2,7 @@
   "unknownError": "Eroare necunoscută",
   "actionFailed": "Acțiunea a eșuat.",
   "notAbleTo": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {subject}.",
+  "notAbleToReferenced": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {subject}. Înregistrarea este referențiată de înregistrări existente:",
   "notAbleToWithReason": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {subject}: {reason}",
   "notAbleToGeneric": "Nu s-a putut {verb, select, add {adăuga} update {actualiza} delete {șterge} complete {finaliza} other {{verb}}} {gender, select, feminine {o} other {un}} {label}",
   "forbidden": "Nu aveți permisiunea de a efectua această acțiune.",

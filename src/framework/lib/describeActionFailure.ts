@@ -144,7 +144,7 @@ export async function describeActionFailure(
     );
     if (refs) {
       return {
-        message: t("notAbleTo", { verb, subject }),
+        message: t("notAbleToReferenced", { verb, subject }),
         title,
         code: pg.code,
         originalMessage: pg.message,

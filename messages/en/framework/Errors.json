@@ -2,6 +2,7 @@
   "unknownError": "Unknown error",
   "actionFailed": "Action failed.",
   "notAbleTo": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} {subject}.",
+  "notAbleToReferenced": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} {subject}. Record is referenced by existing records:",
   "notAbleToWithReason": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} {subject}: {reason}",
   "notAbleToGeneric": "Not able to {verb, select, add {add} update {update} delete {delete} complete {complete} other {{verb}}} this {label}",
   "forbidden": "You don't have permission to perform this action.",

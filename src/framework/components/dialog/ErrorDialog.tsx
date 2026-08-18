@@ -159,32 +159,25 @@ registerErrorDetails("fk-references", (meta, t) => {
   if (references.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-1.5 text-sm">
-      <p className="text-xs font-medium text-muted-foreground">
-        {t("referencedByExisting")}
-      </p>
-      <ul className="flex flex-col gap-1">
-        {references.map((ref) => (
-          <li key={ref.id}>
-            {ref.href ? (
-              <Link
-                target="_blank"
-                href={ref.href}
-                className="underline underline-offset-2"
-              >
-                {ref.label} #{ref.id}
-              </Link>
-            ) : (
-              <span>
-                {ref.label} #{ref.id}
-              </span>
-            )}
-          </li>
-        ))}
-        {moreCount > 0 && (
-          <li className="text-muted-foreground">{t("andMore", { count: moreCount })}</li>
-        )}
-      </ul>
-    </div>
+    <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
+      {references.map((ref) => (
+        <li key={ref.id}>
+          {ref.href ? (
+            <Link
+              target="_blank"
+              href={ref.href}
+              className="underline underline-offset-2"
+            >
+              {ref.label} #{ref.id}
+            </Link>
+          ) : (
+            <span>
+              {ref.label} #{ref.id}
+            </span>
+          )}
+        </li>
+      ))}
+      {moreCount > 0 && <li>{t("andMore", { count: moreCount })}</li>}
+    </ul>
   );
 });
