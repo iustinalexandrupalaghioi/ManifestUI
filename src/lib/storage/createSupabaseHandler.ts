@@ -62,7 +62,7 @@ export function createSupabaseHandler({
               const body = JSON.parse(xhr.responseText);
               reject(
                 new Error(
-                  `Upload failed: ${body?.error ?? body?.message ?? xhr.responseText}`,
+                  `Upload failed: ${body?.message ?? body?.error ?? xhr.responseText}`,
                 ),
               );
             } catch {

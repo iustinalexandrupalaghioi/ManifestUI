@@ -8,8 +8,13 @@ interface AuthUserRecord {
   id: string;
   email: string | null;
   phone: string | null;
-  raw_user_meta_data?: { full_name?: string } | null;
+  raw_user_meta_data?: {
+    full_name?: string;
+    avatar_url?: string;
+    picture?: string;
+  } | null;
   banned_until: string | null;
+  last_sign_in_at: string | null;
 }
 
 interface WebhookPayload {
@@ -20,10 +25,6 @@ interface WebhookPayload {
   old_record: AuthUserRecord | null;
 }
 
-// Configure this URL as a Database Webhook on auth.users (INSERT, UPDATE,
-// DELETE) in the Supabase dashboard, with a custom header carrying the same
-// secret as AUTH_WEBHOOK_SECRET below — this is a server-to-server call,
-// not tied to any browser session.
 export async function POST(request: NextRequest) {
   const secret = request.headers.get("x-webhook-secret");
   if (!secret || secret !== process.env.AUTH_WEBHOOK_SECRET) {
@@ -48,12 +49,15 @@ export async function POST(request: NextRequest) {
     email: record.email,
     phone: record.phone,
     full_name: record.raw_user_meta_data?.full_name ?? null,
+    avatar_url:
+      record.raw_user_meta_data?.avatar_url ??
+      record.raw_user_meta_data?.picture ??
+      null,
     banned_until: record.banned_until,
+    last_sign_in_at: record.last_sign_in_at,
     updated_at: new Date().toISOString(),
   };
 
-  // Upsert, not plain insert — webhook deliveries can retry or arrive
-  // out of order (e.g. an UPDATE landing before its INSERT).
   await db
     .insert(user)
     .values(row)

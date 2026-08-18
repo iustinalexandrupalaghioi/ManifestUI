@@ -145,7 +145,7 @@ export function SplitOverviewShell({
     <div
       ref={containerRef}
       style={{ height: availableHeight || undefined }}
-      className="flex w-full"
+      className="flex w-full overflow-hidden"
     >
       {splitConfig.side === "left" && paneVisible && (
         <>

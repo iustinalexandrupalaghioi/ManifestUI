@@ -25,7 +25,10 @@ import { FormInput } from "@/framework/components/form/form-fields/FormInput";
 
 function makeLoginSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
   return z.object({
-    email: z.email(t("validation.invalidEmail")),
+    email: z
+      .string()
+      .trim()
+      .pipe(z.email(t("validation.invalidEmail"))),
     password: z.string().min(8, t("validation.passwordMinLength")),
     legal: z.boolean().refine((val) => val === true, {
       message: t("validation.mustAcceptTerms"),

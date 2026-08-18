@@ -362,13 +362,6 @@ export function createOverview<
     useEffect(() => {
       if (!isSplitDesktop || didAutoOpenRef.current) return;
       if (isLoading || allItems.length === 0) return;
-      // Guards against clobbering a record the user already has open. This
-      // matters beyond the obvious case: if this effect's owning component
-      // ever re-runs its effects without a true fresh mount (e.g. a reused
-      // fiber whose state survived but whose passive effects re-fire), the
-      // ref guard above resets and this would otherwise silently overwrite
-      // whatever's open back to allItems[0] — which flips the detail panel's
-      // `key`, forcing a full delete+recreate of that subtree.
       if (openingItem) {
         didAutoOpenRef.current = true;
         return;

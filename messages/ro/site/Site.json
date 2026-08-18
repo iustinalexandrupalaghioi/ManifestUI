@@ -1,5 +1,10 @@
 {
   "title": "ManifestUI",
   "description": "Aplicație full-stack construită cu ManifestUI.",
-  "adminPanel": "Deschide CMS"
+  "adminPanel": "Administrare",
+  "backToSite": "Înapoi la site",
+  "profile": "Profil",
+  "preferences": "Preferințe",
+  "language": "Limbă",
+  "theme": "Temă"
 }

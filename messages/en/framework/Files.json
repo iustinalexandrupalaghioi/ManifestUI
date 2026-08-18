@@ -8,6 +8,7 @@
   "uploadArea": "File upload area",
   "dropFilesHere": "Drop files here",
   "dragDropOrClick": "Drag & drop or click to upload",
+  "clickToUpload": "Click to upload",
   "accepted": "Accepted: {accept}",
   "maxSize": "Max {size} MB",
   "upToFiles": "Up to {count} {count, plural, one {file} other {files}}",

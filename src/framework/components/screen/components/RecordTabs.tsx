@@ -53,7 +53,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
     <CustomTabs
       value={activeTab}
       onValueChange={setActiveTab}
-      className="mt-2 w-full gap-0"
+      className="w-full gap-0"
     >
       <div className="flex items-center gap-1 overflow-x-auto">
         <CustomTabsList>
@@ -124,9 +124,12 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
           );
         }
 
-        // type === "list" (default): fully custom tab content, owned by the caller.
         return (
-          <CustomTabsContent key={tab.value} value={tab.value} className="mt-0 py-0">
+          <CustomTabsContent
+            key={tab.value}
+            value={tab.value}
+            className="mt-0 py-0"
+          >
             {tab.render(item, {
               formOpen,
               basePath: pathname,

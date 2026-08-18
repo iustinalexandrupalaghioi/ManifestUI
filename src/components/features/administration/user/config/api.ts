@@ -24,6 +24,7 @@ const filterColumns: FilterColumnMap = {
   phone: user.phone,
   administrator: user.administrator,
   created_at: user.created_at,
+  last_sign_in_at: user.last_sign_in_at,
 };
 
 const selection = {
@@ -31,8 +32,11 @@ const selection = {
   full_name: user.full_name,
   email: user.email,
   phone: user.phone,
+  avatar_url: user.avatar_url,
+  avatar_path: user.avatar_path,
   administrator: user.administrator,
   banned_until: user.banned_until,
+  last_sign_in_at: user.last_sign_in_at,
   created_at: user.created_at,
   updated_at: user.updated_at,
 };

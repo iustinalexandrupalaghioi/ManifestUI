@@ -4,12 +4,14 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { DownloadIcon, Trash2Icon } from "lucide-react"
+import { cn } from "@/framework/lib/utils"
 
 interface FileActionsProps {
   url: string
   filename: string
   onDelete?: () => Promise<void>
   disabled?: boolean
+  size?: "default" | "lg"
 }
 
 export function FileActions({
@@ -17,9 +19,12 @@ export function FileActions({
   filename,
   onDelete,
   disabled,
+  size = "default",
 }: FileActionsProps) {
   const t = useTranslations("Files")
   const [deleting, setDeleting] = useState(false)
+  const buttonSize = size === "lg" ? "size-9" : "size-7"
+  const iconSize = size === "lg" ? "size-5" : "size-3.5"
 
   const handleDownload = async () => {
     const res = await fetch(url)
@@ -48,12 +53,12 @@ export function FileActions({
         type="button"
         variant="ghost"
         size="icon"
-        className="size-7"
+        className={buttonSize}
         title={t("download")}
         disabled={disabled}
         onClick={handleDownload}
       >
-        <DownloadIcon className="size-3.5" />
+        <DownloadIcon className={iconSize} />
       </Button>
 
       {onDelete && (
@@ -61,12 +66,12 @@ export function FileActions({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 text-destructive hover:text-destructive"
+          className={cn(buttonSize, "text-destructive hover:text-destructive")}
           title={t("delete")}
           disabled={deleting || disabled}
           onClick={handleDelete}
         >
-          <Trash2Icon className="size-3.5" />
+          <Trash2Icon className={iconSize} />
         </Button>
       )}
     </div>

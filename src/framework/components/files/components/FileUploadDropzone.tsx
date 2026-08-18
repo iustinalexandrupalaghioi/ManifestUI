@@ -74,7 +74,7 @@ export function FileUploadDropzone({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-4", className)}>
       <div
         role="button"
         tabIndex={disabled || !canAdd ? -1 : 0}
@@ -93,7 +93,7 @@ export function FileUploadDropzone({
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-7 text-center transition-colors",
+          "flex cursor-pointer flex-col h-fit items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-center transition-colors",
           isDragging
             ? "border-primary bg-primary/5"
             : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30",
@@ -111,7 +111,8 @@ export function FileUploadDropzone({
           <p className="mt-0.5 text-xs text-muted-foreground">
             {[
               accept && t("accepted", { accept }),
-              maxSize && t("maxSize", { size: (maxSize / 1024 / 1024).toFixed(0) }),
+              maxSize &&
+                t("maxSize", { size: (maxSize / 1024 / 1024).toFixed(0) }),
               maxFiles && t("upToFiles", { count: maxFiles }),
             ]
               .filter(Boolean)

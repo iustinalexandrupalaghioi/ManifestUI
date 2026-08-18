@@ -4,13 +4,19 @@ import { getTranslations } from "next-intl/server";
 import { LucideHome } from "lucide-react";
 import { ThemeSwitcher } from "@/framework/components/partials/ThemeSwitcher";
 import { LocaleSwitcher } from "@/framework/components/partials/LocaleSwitcher";
-import { LogoutButton } from "@/framework/authentication/ui/LogoutButton";
+import { UserMenu } from "@/components/site/UserMenu";
 import { Button } from "@/components/ui/button";
 
 export async function AppNavBar({
   isAuthenticated,
+  displayName,
+  avatarUrl,
+  canAccessCms,
 }: {
   isAuthenticated: boolean;
+  displayName: string;
+  avatarUrl?: string | null;
+  canAccessCms: boolean;
 }) {
   const t = await getTranslations("Auth");
 
@@ -25,14 +31,20 @@ export async function AppNavBar({
       </div>
 
       <div className="flex items-center gap-2">
-        <LocaleSwitcher />
-        <ThemeSwitcher />
         {isAuthenticated ? (
-          <LogoutButton />
+          <UserMenu
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            canAccessCms={canAccessCms}
+          />
         ) : (
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/auth/login">{t("login")}</Link>
-          </Button>
+          <>
+            <LocaleSwitcher />
+            <ThemeSwitcher />
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/auth/login">{t("login")}</Link>
+            </Button>
+          </>
         )}
       </div>
     </nav>

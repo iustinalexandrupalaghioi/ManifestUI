@@ -8,6 +8,7 @@
   "uploadArea": "Zonă de încărcare fișiere",
   "dropFilesHere": "Plasați fișierele aici",
   "dragDropOrClick": "Trageți și plasați sau faceți clic pentru a încărca",
+  "clickToUpload": "Faceți clic pentru a încărca",
   "accepted": "Accepta: {accept}",
   "maxSize": "Maxim {size} MB",
   "upToFiles": "Până la {count} {count, plural, one {fișier} other {fișiere}}",

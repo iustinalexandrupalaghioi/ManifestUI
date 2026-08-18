@@ -8,10 +8,12 @@ import { UserMenu } from "./UserMenu";
 export async function Navbar({
   isAuthenticated,
   displayName,
+  avatarUrl,
   canAccessCms,
 }: {
   isAuthenticated: boolean;
   displayName: string;
+  avatarUrl?: string | null;
   canAccessCms: boolean;
 }) {
   const t = await getTranslations("Auth");
@@ -25,14 +27,20 @@ export async function Navbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <LocaleSwitcher />
-        <ThemeSwitcher />
         {isAuthenticated ? (
-          <UserMenu displayName={displayName} canAccessCms={canAccessCms} />
+          <UserMenu
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            canAccessCms={canAccessCms}
+          />
         ) : (
-          <Button asChild variant="outline" size="sm">
-            <Link href="/auth/login">{t("login")}</Link>
-          </Button>
+          <>
+            <LocaleSwitcher />
+            <ThemeSwitcher />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/auth/login">{t("login")}</Link>
+            </Button>
+          </>
         )}
       </div>
     </nav>

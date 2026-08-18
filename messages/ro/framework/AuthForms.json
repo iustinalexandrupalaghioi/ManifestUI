@@ -69,5 +69,19 @@
     "description": "Confirmă-ți contul pentru a continua",
     "message": "Ți-am trimis un link de confirmare pe email. Accesează-l pentru a-ți activa contul, apoi revino și autentifică-te.",
     "backToLogin": "Înapoi la autentificare"
+  },
+  "profile": {
+    "fullNameLabel": "Nume",
+    "emailLabel": "Email",
+    "phoneLabel": "Telefon",
+    "settings": "Setări",
+    "editProfile": "Editează profilul",
+    "changePasswordLink": "Schimbă parola",
+    "cancel": "Anulează",
+    "submitting": "Se salvează...",
+    "submit": "Salvează modificările",
+    "saveSuccess": "Profil actualizat",
+    "emailChangePending": "Un link de confirmare a fost trimis la noua ta adresă de email. Emailul nu se va schimba până când nu îl confirmi.",
+    "notReady": "Profilul tău este încă în curs de configurare. Te rugăm să revii peste câteva momente."
   }
 }

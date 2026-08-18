@@ -7,9 +7,12 @@ import { routing } from "@/i18n/routing";
 const handleI18nRouting = createMiddleware(routing);
 
 export async function proxy(request: NextRequest) {
-  const response = handleI18nRouting(request);
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api");
+  const response = isApiRoute
+    ? NextResponse.next()
+    : handleI18nRouting(request);
 
-  if (response.headers.get("location")) {
+  if (!isApiRoute && response.headers.get("location")) {
     return response;
   }
 
@@ -46,7 +49,9 @@ export async function proxy(request: NextRequest) {
   const pathWithoutLocale = localeMatch
     ? pathname.slice(localePrefix.length) || "/"
     : pathname;
-  const requiresAuth = pathWithoutLocale.startsWith("/cms");
+  const requiresAuth =
+    pathWithoutLocale.startsWith("/cms") ||
+    pathWithoutLocale.startsWith("/profile");
 
   if (requiresAuth && !user) {
     const next = `${pathWithoutLocale}${search}`;

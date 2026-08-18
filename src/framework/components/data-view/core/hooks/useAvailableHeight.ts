@@ -14,13 +14,18 @@ export function useAvailableHeight(
   useEffect(() => {
     function measure() {
       if (!ref.current) return;
-      const top = ref.current.getBoundingClientRect().top;
-      const next = Math.min(window.innerHeight - top - 16, window.innerHeight);
+      const { top } = ref.current.getBoundingClientRect();
+      const viewportHeight = document.documentElement.clientHeight;
+      const next = Math.floor(
+        Math.min(viewportHeight - top - 16, viewportHeight),
+      );
       setHeight((prev) => (Math.abs(prev - next) < 1 ? prev : next));
     }
 
     measure();
     window.addEventListener("resize", measure);
+
+    window.visualViewport?.addEventListener("resize", measure);
 
     const ro = new ResizeObserver(measure);
     if (ref.current) {
@@ -37,6 +42,7 @@ export function useAvailableHeight(
 
     return () => {
       window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
       ro.disconnect();
     };
   }, [ref]);

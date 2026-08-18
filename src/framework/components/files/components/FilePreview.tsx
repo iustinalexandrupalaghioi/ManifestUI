@@ -1,29 +1,29 @@
-import { useTranslations } from "next-intl"
+import { useTranslations } from "next-intl";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { useCoarsePointer } from "../hooks/useCoarsePointer"
-import { FileActions } from "./FileActions"
-import { FileCategoryIcon, getFileCategory } from "./FileUtils"
+} from "@/components/ui/tooltip";
+import { useCoarsePointer } from "../hooks/useCoarsePointer";
+import { FileActions } from "./FileActions";
+import { FileCategoryIcon, getFileCategory } from "./FileUtils";
 
-interface PreviewBodyProps {
-  src: string
-  alt: string
-  filename: string
-  mimeType: string
-  onDelete?: () => Promise<void>
+export interface PreviewBodyProps {
+  src: string;
+  alt: string;
+  filename: string;
+  mimeType: string;
+  onDelete?: () => Promise<void>;
 }
 
-function PreviewBody({ src, alt, mimeType }: PreviewBodyProps) {
-  const category = getFileCategory(mimeType)
+export function PreviewBody({ src, alt, mimeType }: PreviewBodyProps) {
+  const category = getFileCategory(mimeType);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-md">
@@ -43,16 +43,16 @@ function PreviewBody({ src, alt, mimeType }: PreviewBodyProps) {
         />
       )}
     </div>
-  )
+  );
 }
 
 export interface FilePreviewProps {
-  src: string
-  mimeType: string
-  filename: string
-  alt?: string
-  onDelete?: () => Promise<void>
-  disabled: boolean
+  src: string;
+  mimeType: string;
+  filename: string;
+  alt?: string;
+  onDelete?: () => Promise<void>;
+  disabled: boolean;
 }
 
 export function FilePreview({
@@ -63,12 +63,16 @@ export function FilePreview({
   onDelete,
   disabled,
 }: FilePreviewProps) {
-  const t = useTranslations("Files")
-  const isCoarse = useCoarsePointer()
-  const category = getFileCategory(mimeType)
+  const t = useTranslations("Files");
+  const isCoarse = useCoarsePointer();
+  const category = getFileCategory(mimeType);
 
   const categoryLabel =
-    category === "image" ? t("image") : category === "pdf" ? t("pdf") : t("file")
+    category === "image"
+      ? t("image")
+      : category === "pdf"
+        ? t("pdf")
+        : t("file");
 
   const trigger = (
     <div className="flex cursor-pointer items-center gap-3 rounded-lg border bg-card p-2 text-sm">
@@ -86,10 +90,10 @@ export function FilePreview({
         disabled={disabled}
       />
     </div>
-  )
+  );
 
   if (category === "other") {
-    return trigger
+    return trigger;
   }
 
   const body = (
@@ -100,17 +104,21 @@ export function FilePreview({
       mimeType={mimeType}
       onDelete={onDelete}
     />
-  )
+  );
 
   if (isCoarse) {
     return (
       <Popover>
         <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-        <PopoverContent side="bottom" className="w-fit max-w-none p-0">
+        <PopoverContent
+          side="bottom"
+          className="w-fit max-w-none p-0"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           {body}
         </PopoverContent>
       </Popover>
-    )
+    );
   }
 
   return (
@@ -122,5 +130,5 @@ export function FilePreview({
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  );
 }

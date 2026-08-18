@@ -28,7 +28,7 @@ export function FileFieldRenderer({
     (typeof field.disabled === "function" ? field.disabled() : field.disabled)
 
   return (
-    <div className={cn(spanClass(field.span), field.className)}>
+    <div className={cn("min-w-0", spanClass(field.span), field.className)}>
       <div className="flex flex-col gap-4">
         {previewUrl && mimeType && filename && (
           <FilePreview

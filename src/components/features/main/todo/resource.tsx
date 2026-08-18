@@ -38,7 +38,7 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
 
   labels: todosDescriptor,
 
-  openMode: "split",
+  openMode: "page",
   addMode: "page",
   splitConfig: {
     onOpen: "selectFirst",

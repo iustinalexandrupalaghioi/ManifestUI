@@ -69,5 +69,19 @@
     "description": "Confirm your account to continue",
     "message": "We've sent a confirmation link to your email. Click it to activate your account, then come back and log in.",
     "backToLogin": "Back to login"
+  },
+  "profile": {
+    "fullNameLabel": "Name",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "settings": "Settings",
+    "editProfile": "Edit profile",
+    "changePasswordLink": "Change password",
+    "cancel": "Cancel",
+    "submitting": "Saving...",
+    "submit": "Save changes",
+    "saveSuccess": "Profile updated",
+    "emailChangePending": "A confirmation link was sent to your new email address. Your email won't change until you confirm it.",
+    "notReady": "Your profile is still being set up. Please check back in a moment."
   }
 }

@@ -70,7 +70,7 @@ export function SectionRenderer<TFormValues extends Record<string, any>>({
   const colsClass = GRID_COLS_CLASS[cols] ?? "grid-cols-1";
 
   const grid = (
-    <div ref={ref} className={cn("grid gap-4", colsClass)}>
+    <div ref={ref} className={cn("grid min-w-0 gap-4", colsClass)}>
       {section.fields.map((field, i) => (
         <FieldRenderer<TFormValues>
           key={field.name ?? i}

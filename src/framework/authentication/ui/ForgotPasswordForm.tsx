@@ -19,7 +19,12 @@ import { cn } from "@/lib/utils";
 import { forgotPassword } from "../actions/forgot-password";
 
 function makeFormSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
-  return z.object({ email: z.email(t("validation.invalidEmail")) });
+  return z.object({
+    email: z
+      .string()
+      .trim()
+      .pipe(z.email(t("validation.invalidEmail"))),
+  });
 }
 
 type FormSchema = z.infer<ReturnType<typeof makeFormSchema>>;

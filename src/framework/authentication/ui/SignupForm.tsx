@@ -24,8 +24,14 @@ import { FormPasswordInput } from "@/framework/components/form/form-fields/FormP
 function makeSignUpSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
   return z
     .object({
-      fullName: z.string().min(2, t("validation.fullNameRequired")),
-      email: z.email(t("validation.invalidEmail")),
+      fullName: z
+        .string()
+        .trim()
+        .min(2, t("validation.fullNameRequired")),
+      email: z
+        .string()
+        .trim()
+        .pipe(z.email(t("validation.invalidEmail"))),
       password: z
         .string()
         .min(8, t("validation.passwordMinLength"))
