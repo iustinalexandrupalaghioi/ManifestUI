@@ -36,6 +36,7 @@ function getResourceByTable(
     name: entry.id,
     label: resolveLabel(entry.plural, locale),
     singularLabel: resolveLabel(entry.singular, locale),
+    routes: entry.routes,
   };
 }
 
@@ -106,7 +107,7 @@ async function lookupReferencingRows(
     references: ids.slice(0, 5).map((id) => ({
       id,
       label,
-      href: `/${child.name}/${id}`,
+      href: child.routes.detail(id),
     })),
     moreCount: Math.max(0, ids.length - 5),
   };
