@@ -1,8 +1,5 @@
 "use client";
 
-import { createActionsColumn } from "@/framework/components/data-view/core/ui/createActionsColumn";
-import { createBufferColumn } from "@/framework/components/data-view/core/ui/createBufferColumn";
-import { createSelectionColumn } from "@/framework/components/data-view/core/ui/createSelectionColumn";
 import DataView from "@/framework/components/data-view/DataView";
 import {
   useOverviewSelection,
@@ -12,7 +9,6 @@ import { useActiveMode } from "@/framework/components/data-view/core/stores/View
 import { getFilteringStore } from "@/framework/components/data-view/features/filtering/filtering.store";
 import { getSortingStore } from "@/framework/components/data-view/features/sorting/sorting.store";
 import {
-  getViewsStore,
   useActiveListView,
   useActiveTableView,
 } from "@/framework/components/data-view/features/views/views.store";
@@ -25,19 +21,16 @@ import { useNavigatorStore } from "@/framework/components/screen/stores/useNavig
 import {
   preFilterToFormKey,
   type FilterInput,
-  type FilterOperator,
   type FilterRule,
 } from "@/framework/components/data-view/features/filtering";
 import { toFilterRuleFallback } from "@/framework/components/data-view/features/filtering/filters";
-import type { Row } from "@tanstack/react-table";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import type { FieldValues } from "react-hook-form";
 import { useSearchParams } from "next/navigation";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
-import { stashNavigationState } from "@/framework/lib/navigationHandoff";
 import type { OverviewSlots } from "../../types/define-resource-type";
 import type {
   OverviewRenderProps,
@@ -56,6 +49,12 @@ import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFi
 import { getEditingStore } from "@/framework/components/data-view/features/editing/editing.store";
 import { SplitOverviewShell } from "./SplitOverviewShell";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { OverviewSkeleton } from "./create-overview/OverviewSkeleton";
+import { parseUrlPreFilters } from "./create-overview/parseUrlPreFilters";
+import { useAutoOpenSplitSelection } from "./create-overview/useAutoOpenSplitSelection";
+import { useOverviewColumns } from "./create-overview/useOverviewColumns";
+import { useOverviewViewsSync } from "./create-overview/useOverviewViewsSync";
+import { useOverviewNavigation } from "./create-overview/useOverviewNavigation";
 
 type OverviewConfig<TItem, TFormValues> = ResourceComponentsConfig<
   TItem,
@@ -65,21 +64,6 @@ type OverviewConfig<TItem, TFormValues> = ResourceComponentsConfig<
   renderOverview?: (props: OverviewRenderProps<TItem>) => React.ReactNode;
   getOverviewTitle?: (preFilters: FilterInput[]) => string;
 };
-
-const NO_VALUE_OPERATORS = [
-  "is_true",
-  "is_false",
-  "is_empty",
-  "is_not_empty",
-] as const;
-
-function OverviewSkeleton() {
-  return (
-    <div className="flex h-40 w-full items-center justify-center text-sm text-muted-foreground">
-      Loading…
-    </div>
-  );
-}
 
 export function createOverview<
   TItem,
@@ -193,71 +177,10 @@ export function createOverview<
       ? `${pathname}?${searchParams.toString()}`
       : pathname;
 
-    const urlPreFilters = useMemo<FilterInput[]>(() => {
-      const entries = [...searchParams.entries()];
-      if (entries.length === 0) return [];
-
-      return entries.reduce<FilterInput[]>((acc, [key, raw]) => {
-        const dotIndex = key.indexOf(".");
-        const columnName = dotIndex > -1 ? key.slice(dotIndex + 1) : key;
-        const origin = dotIndex > -1 ? key.slice(0, dotIndex) : undefined;
-
-        if (NO_VALUE_OPERATORS.includes(raw as any)) {
-          acc.push({
-            columnName,
-            origin,
-            operator: raw as FilterOperator,
-            value: null,
-          });
-          return acc;
-        }
-
-        const pipeIndex = raw.indexOf("|");
-        if (pipeIndex === -1) {
-          acc.push({ columnName, origin, operator: "equals", value: raw });
-          return acc;
-        }
-
-        const operator = raw.slice(0, pipeIndex) as FilterOperator;
-        const rawValue = raw.slice(pipeIndex + 1);
-
-        const isKnownOperator = [
-          "contains",
-          "not_contains",
-          "equals",
-          "not_equals",
-          "gt",
-          "gte",
-          "lt",
-          "lte",
-          "is_any_of",
-        ].includes(operator);
-
-        if (!isKnownOperator) {
-          if (process.env.NODE_ENV !== "production") {
-            console.warn(
-              `[createOverview] urlPreFilters: unknown operator "${operator}" in param "${key}=${raw}" — dropping it.`,
-            );
-          }
-          return acc;
-        }
-
-        if (rawValue === "") {
-          if (process.env.NODE_ENV !== "production") {
-            console.warn(
-              `[createOverview] urlPreFilters: missing value in param "${key}=${raw}" — dropping it.`,
-            );
-          }
-          return acc;
-        }
-
-        const value: FilterInput["value"] =
-          operator === "is_any_of" ? rawValue.split(",") : rawValue;
-
-        acc.push({ columnName, origin, operator, value });
-        return acc;
-      }, []);
-    }, [searchParams]);
+    const urlPreFilters = useMemo<FilterInput[]>(
+      () => parseUrlPreFilters(searchParams),
+      [searchParams],
+    );
 
     const preFilters = preFiltersProp ?? urlPreFilters;
 
@@ -279,7 +202,7 @@ export function createOverview<
       config.getOverviewTitle?.(preFilters) ??
       resolveLabel(defaultViewName, locale);
 
-    getViewsStore(
+    useOverviewViewsSync(
       tableId,
       resolvedViewName,
       listFilter && navigationColumnVisibility
@@ -289,25 +212,6 @@ export function createOverview<
         ? cardNavigationColumnVisibility
         : (listColumnVisibility ?? {}),
     );
-
-    useEffect(() => {
-      const store = getViewsStore(tableId);
-      const { tableViews, listViews } = store.getState().persisted;
-      const tableDefault = tableViews.views.find(
-        (v) => v.id === DEFAULT_TABLE_VIEW_ID,
-      );
-      const listDefault = listViews.views.find(
-        (v) => v.id === DEFAULT_LIST_VIEW_ID,
-      );
-      if (tableDefault && tableDefault.name !== resolvedViewName) {
-        store
-          .getState()
-          .renameTableView(DEFAULT_TABLE_VIEW_ID, resolvedViewName);
-      }
-      if (listDefault && listDefault.name !== resolvedViewName) {
-        store.getState().renameListView(DEFAULT_LIST_VIEW_ID, resolvedViewName);
-      }
-    }, [tableId, resolvedViewName]);
 
     const activeMode = useActiveMode(tableId);
     const activeTableView = useActiveTableView(tableId);
@@ -330,26 +234,6 @@ export function createOverview<
 
     const [openingItem, setOpeningItem] = useState<TItem | null>(null);
     const [addOpen, setAddOpen] = useState(false);
-
-    const handleAdd = () => {
-      if (!canAdd) return;
-      if (addMode === "dialog") {
-        setAddOpen(true);
-      } else {
-        if (preFilters.length > 0) {
-          stashNavigationState(
-            routes.add,
-            Object.fromEntries(
-              preFilters.map((f) => [
-                preFilterToFormKey(f, config.formConfig),
-                f.value,
-              ]),
-            ),
-          );
-        }
-        router.push(routes.add);
-      }
-    };
 
     const { rowSelection, setRowSelection, dataTableProps } =
       useOverviewState();
@@ -378,78 +262,36 @@ export function createOverview<
       idField,
     );
 
-    const didAutoOpenRef = useRef(false);
-    useEffect(() => {
-      if (!isSplitDesktop || didAutoOpenRef.current) return;
-      if (isLoading || allItems.length === 0) return;
-      if (openingItem) {
-        didAutoOpenRef.current = true;
-        return;
-      }
-      didAutoOpenRef.current = true;
-      if (splitConfig.onOpen === "selectFirst") {
-        setOpeningItem(allItems[0]);
-        setRowSelection({
-          [getItemId(
-            allItems[0] as Record<string, unknown>,
-            idField,
-          ).toString()]: true,
-        });
-      } else if (splitConfig.onOpen === "selectAll") {
-        setRowSelection(
-          Object.fromEntries(
-            allItems.map((i) => [
-              getItemId(i as Record<string, unknown>, idField).toString(),
-              true,
-            ]),
-          ),
-        );
-      }
-    }, [isSplitDesktop, isLoading, allItems, idField, openingItem]);
+    useAutoOpenSplitSelection({
+      isSplitDesktop,
+      isLoading,
+      allItems,
+      openingItem,
+      idField,
+      splitOnOpen: splitConfig.onOpen,
+      setOpeningItem,
+      setRowSelection,
+    });
 
-    const handleOpen = (items: TItem[]) => {
-      const item = items[0];
-      if (!item) return;
-      const itemId = getItemId(
-        item as Record<string, unknown>,
-        idField,
-      ).toString();
-      const targetRoute = routes.detail(itemId);
-
-      const isPartOfAmbientSelection =
-        !isSplitDesktop &&
-        selectedRows.length > 1 &&
-        items.length === 1 &&
-        selectedRows.some(
-          (r) =>
-            getItemId(r as Record<string, unknown>, idField).toString() ===
-            itemId,
-        );
-
-      if (
-        (openMode === "dialog" || isSplitDesktop) &&
-        items.length === 1 &&
-        !isPartOfAmbientSelection
-      ) {
-        if (isSplitDesktop) clearNavigator(overviewKey);
-        setOpeningItem(item);
-      } else {
-        const isMultiSelection = items.length > 1 || isPartOfAmbientSelection;
-        if (isMultiSelection) {
-          const navigatorIds = isPartOfAmbientSelection
-            ? selectedRows.map((i) =>
-                getItemId(i as Record<string, unknown>, idField).toString(),
-              )
-            : items.map((i) =>
-                getItemId(i as Record<string, unknown>, idField).toString(),
-              );
-          setNavigator(navigatorIds, overviewKey, currentPath);
-        } else {
-          clearNavigator(overviewKey);
-        }
-        router.push(targetRoute);
-      }
-    };
+    const { handleAdd, handleOpen } = useOverviewNavigation<TItem>({
+      canAdd,
+      addMode,
+      preFilters,
+      formConfig: config.formConfig,
+      addRoute: routes.add,
+      detailRoute: routes.detail,
+      router,
+      setAddOpen,
+      isSplitDesktop,
+      selectedRows,
+      idField,
+      openMode,
+      overviewKey,
+      currentPath,
+      clearNavigator,
+      setNavigator,
+      setOpeningItem,
+    });
 
     const {
       actions,
@@ -477,82 +319,20 @@ export function createOverview<
       canRead ? (item: TItem) => handleOpen([item]) : () => {},
     );
 
-    const columns = useMemo(() => {
-      const cols = [
-        createSelectionColumn<TItem>(),
-        createActionsColumn<TItem>({
-          onOpen: canRead
-            ? (rows) => handleOpen(rows.map((r) => r.original))
-            : undefined,
-          onDelete: canDelete
-            ? (rows) => openDeleteDialog(rows.map((r) => r.original))
-            : undefined,
-          getRowUrl: getRowUrl ? (row) => getRowUrl(row.original) : undefined,
-          isDeleteEligible: canDelete
-            ? (row) => isDeleteEligible(row.original)
-            : () => false,
-          actions: () =>
-            actions.map((action) => ({
-              label: action.label,
-              isEligible: action.isEligible
-                ? (row: Row<TItem>) => action.isEligible!(row.original)
-                : undefined,
-              onSelect: (rows: Row<TItem>[]) =>
-                action.onSelect(rows.map((r) => r.original)),
-            })),
-        }),
-        ...(createColumns?.(locale) ?? []),
-        createBufferColumn<TItem>(),
-      ];
-
-      if (!gridEditable) return cols;
-
-      return cols.map((col) => {
-        const columnName = col.meta?.columnName ?? col.id;
-        if (!columnName) return col;
-
-        const direct = directFields.get(col.meta?.editingField ?? columnName);
-        if (direct) {
-          return {
-            ...col,
-            meta: {
-              ...col.meta,
-              editableField: { kind: "direct" as const, field: direct },
-            },
-          };
-        }
-
-        if (col.meta?.origin) {
-          const match = pickupFillFields.get(columnName);
-          if (match) {
-            return {
-              ...col,
-              meta: {
-                ...col.meta,
-                editableField: {
-                  kind: "pickup" as const,
-                  owningField: match.owningField,
-                  fillField: match.fillField,
-                },
-              },
-            };
-          }
-        }
-
-        return col;
-      });
-    }, [
-      getRowUrl,
-      handleOpen,
-      isDeleteEligible,
-      actions,
+    const columns = useOverviewColumns<TItem>({
+      createColumns,
+      locale,
       canRead,
       canDelete,
       gridEditable,
       directFields,
       pickupFillFields,
-      locale,
-    ]);
+      handleOpen,
+      openDeleteDialog,
+      getRowUrl,
+      isDeleteEligible,
+      actions,
+    });
 
     if (isForbidden)
       return <AccessDeniedDialog resource={resolvedLabels.plural} />;

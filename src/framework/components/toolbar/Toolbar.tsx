@@ -5,12 +5,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
@@ -23,7 +18,6 @@ import {
   MoreHorizontal,
   Plus,
   RotateCcwIcon,
-  Settings,
   Trash2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -32,6 +26,8 @@ import ToolbarActions from "./ToolbarActions";
 import { useState, useEffect } from "react";
 import { FilterInput } from "../data-view/features/filtering";
 import { useBrowserNavigation } from "../screen/stores/useBrowserNavigationStore";
+import { ToolbarActionsList } from "./parts/ToolbarActionsList";
+import { ToolbarOpenButton } from "./parts/ToolbarOpenButton";
 
 export interface TableAction<TData> {
   key: string;
@@ -265,77 +261,13 @@ export function Toolbar<TData>({
               {hasCustomActions && (
                 <>
                   {hasPrimaryItems && <DropdownMenuSeparator />}
-                  {isNarrow ? (
-                    <>
-                      <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-                      {actions!.map((action, i) => {
-                        const eligible = selectedRows.filter(
-                          (r) => action.isEligible?.(r) ?? true,
-                        );
-
-                        if (eligible.length === 0) return null;
-
-                        return (
-                          <DropdownMenuItem
-                            key={i}
-                            onSelect={() => action.onSelect(eligible)}
-                          >
-                            {action.label}
-
-                            {selectedCount > 1 && (
-                              <span className="ml-1 text-muted-foreground">
-                                ({eligible.length}/{selectedCount})
-                              </span>
-                            )}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger
-                        disabled={selectedCount === 0 || eligibleCount === 0}
-                        className={cn(
-                          (selectedCount === 0 || eligibleCount === 0) &&
-                            "pointer-events-none opacity-50",
-                        )}
-                      >
-                        <Settings className="size-4" />
-                        {t("actions")}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent
-                          className="w-fit"
-                          align="start"
-                          sideOffset={2}
-                          alignOffset={-4}
-                        >
-                          {actions!.map((action, i) => {
-                            const eligible = selectedRows.filter(
-                              (r) => action.isEligible?.(r) ?? true,
-                            );
-
-                            if (eligible.length === 0) return null;
-
-                            return (
-                              <DropdownMenuItem
-                                key={i}
-                                onSelect={() => action.onSelect(eligible)}
-                              >
-                                {action.label}
-
-                                {selectedCount > 1 && (
-                                  <span className="ml-1 text-muted-foreground">
-                                    ({eligible.length}/{selectedCount})
-                                  </span>
-                                )}
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                  )}
+                  <ToolbarActionsList
+                    actions={actions!}
+                    selectedRows={selectedRows}
+                    selectedCount={selectedCount}
+                    eligibleCount={eligibleCount}
+                    isNarrow={isNarrow}
+                  />
                 </>
               )}
 
@@ -404,48 +336,16 @@ export function Toolbar<TData>({
             </Link>
           ))}
 
-        {onOpen &&
-          (() => {
-            const isMulti = selectedCount > 1;
-
-            const handleClick = (e: React.MouseEvent) => {
-              const isModified =
-                e.metaKey ||
-                e.ctrlKey ||
-                e.shiftKey ||
-                e.altKey ||
-                e.button !== 0;
-              if (openUrl && isModified) return;
-              e.preventDefault();
-              onOpen(selectedRows);
-            };
-
-            const button = (
-              <Button
-                title={
-                  isMulti
-                    ? t("openSelectedCount", { count: selectedCount })
-                    : t("open")
-                }
-                variant="outline"
-                type="button"
-                size={isMulti || styles.labeled ? "sm" : "icon"}
-                className={isMulti ? undefined : styles.button}
-                disabled={!canOpen}
-                onClick={handleClick}
-              >
-                <FileSearch className={cn(styles.icon, "shrink-0")} />
-                {styles.labeled && t("open")}
-                {isMulti && (
-                  <span className="ml-1 text-xs text-muted-foreground tabular-nums">
-                    {selectedCount}
-                  </span>
-                )}
-              </Button>
-            );
-
-            return openUrl ? <Link href={openUrl}>{button}</Link> : button;
-          })()}
+        {onOpen && (
+          <ToolbarOpenButton
+            onOpen={onOpen}
+            selectedRows={selectedRows}
+            selectedCount={selectedCount}
+            canOpen={canOpen}
+            openUrl={openUrl}
+            styles={styles}
+          />
+        )}
 
         {children}
       </div>
@@ -525,71 +425,13 @@ export function Toolbar<TData>({
                   {(addPath || onAdd || reloadEnabled || popOutUrl) && (
                     <DropdownMenuSeparator />
                   )}
-                  {isNarrow ? (
-                    <>
-                      <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-                      {actions.map((action, i) => {
-                        const eligible = selectedRows.filter(
-                          (r) => action.isEligible?.(r) ?? true,
-                        );
-                        if (eligible.length === 0) return null;
-                        return (
-                          <DropdownMenuItem
-                            key={i}
-                            onSelect={() => action.onSelect(eligible)}
-                          >
-                            {action.label}
-                            {selectedCount > 1 && (
-                              <span className="ml-1 text-muted-foreground">
-                                ({eligible.length}/{selectedCount})
-                              </span>
-                            )}
-                          </DropdownMenuItem>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger
-                        disabled={selectedCount === 0 || eligibleCount === 0}
-                        className={cn(
-                          (selectedCount === 0 || eligibleCount === 0) &&
-                            "pointer-events-none opacity-50",
-                        )}
-                      >
-                        <Settings className="size-4" />
-                        {t("actions")}
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent
-                          className="w-fit"
-                          align="start"
-                          sideOffset={2}
-                          alignOffset={-4}
-                        >
-                          {actions.map((action, i) => {
-                            const eligible = selectedRows.filter(
-                              (r) => action.isEligible?.(r) ?? true,
-                            );
-                            if (eligible.length === 0) return null;
-                            return (
-                              <DropdownMenuItem
-                                key={i}
-                                onSelect={() => action.onSelect(eligible)}
-                              >
-                                {action.label}
-                                {selectedCount > 1 && (
-                                  <span className="ml-1 text-muted-foreground">
-                                    ({eligible.length}/{selectedCount})
-                                  </span>
-                                )}
-                              </DropdownMenuItem>
-                            );
-                          })}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-                  )}
+                  <ToolbarActionsList
+                    actions={actions}
+                    selectedRows={selectedRows}
+                    selectedCount={selectedCount}
+                    eligibleCount={eligibleCount}
+                    isNarrow={isNarrow}
+                  />
                 </>
               )}
 
