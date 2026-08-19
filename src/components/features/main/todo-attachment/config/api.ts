@@ -53,36 +53,44 @@ export const {
 } = defineResourceActions("attachments", {
   fetchAttachmentList: [
     "read",
-    async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
-    const where = buildWhereConditions(filters, filterColumns);
-    const sortColumns = resolveSortColumns(sorting, filterColumns, {
-      key: "id",
-      column: todo_attachment.id,
-    });
-    const orderBy = buildOrderBy(sortColumns);
-    const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
+    async (
+      sorting: SortRule[],
+      filters: FilterRule[],
+      cursor: Cursor | null,
+    ) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const sortColumns = resolveSortColumns(sorting, filterColumns, {
+        key: "id",
+        column: todo_attachment.id,
+      });
+      const orderBy = buildOrderBy(sortColumns);
+      const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
-    const [items, [{ count }]] = await Promise.all([
-      db
-        .select(selection)
-        .from(todo_attachment)
-        .innerJoin(todo, eq(todo.id, todo_attachment.todo_id))
-        .where(seekWhere)
-        .orderBy(...orderBy)
-        .limit(PAGE_SIZE),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(todo_attachment)
-        .innerJoin(todo, eq(todo.id, todo_attachment.todo_id))
-        .where(where),
-    ]);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select(selection)
+          .from(todo_attachment)
+          .innerJoin(todo, eq(todo.id, todo_attachment.todo_id))
+          .where(seekWhere)
+          .orderBy(...orderBy)
+          .limit(PAGE_SIZE),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(todo_attachment)
+          .innerJoin(todo, eq(todo.id, todo_attachment.todo_id))
+          .where(where),
+      ]);
 
-    const nextCursor =
-      items.length === PAGE_SIZE
-        ? extractCursor(items[items.length - 1], sortColumns)
-        : null;
+      const nextCursor =
+        items.length === PAGE_SIZE
+          ? extractCursor(items[items.length - 1], sortColumns)
+          : null;
 
-      return { items: items as TodoAttachment[], total: count ?? 0, nextCursor };
+      return {
+        items: items as TodoAttachment[],
+        total: count ?? 0,
+        nextCursor,
+      };
     },
   ],
 
@@ -96,7 +104,7 @@ export const {
         .where(eq(todo_attachment.id, id))
         .limit(1);
       if (!row) throw new Error(`Attachment ${id} not found`);
-      return row as unknown as TodoAttachment;
+      return row as TodoAttachment;
     },
   ],
 

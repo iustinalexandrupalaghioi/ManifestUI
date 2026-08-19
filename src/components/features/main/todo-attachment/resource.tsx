@@ -29,7 +29,7 @@ export const attachmentsResource = defineResource<
 
   openMode: "dialog",
   addMode: "dialog",
-
+  editable: true,
   emptyValues: {
     todo_id: 0,
     filename: "",

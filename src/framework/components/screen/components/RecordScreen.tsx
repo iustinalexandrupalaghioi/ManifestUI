@@ -19,6 +19,7 @@ import { useUploadStore } from "@/framework/components/form/hooks/useUploadStore
 interface RecordScreenContextValue {
   registry: UploadRegistry;
   formId: string;
+  insideForm: boolean;
 }
 
 const RecordScreenContext = createContext<RecordScreenContextValue | null>(
@@ -50,6 +51,8 @@ export function RecordScreen<TFormValues extends FieldValues>({
   className,
 }: RecordScreenProps<TFormValues>) {
   const registry = useUploadRegistry();
+  const parentCtx = useContext(RecordScreenContext);
+  const nestedInForm = !!parentCtx?.insideForm;
 
   useEffect(() => {
     return () => {
@@ -58,22 +61,28 @@ export function RecordScreen<TFormValues extends FieldValues>({
     };
   }, [formId]);
 
+  const renderForm = !!onSubmit && !nestedInForm;
+
   return (
-    <RecordScreenContext value={{ registry, formId }}>
+    <RecordScreenContext
+      value={{ registry, formId, insideForm: renderForm || nestedInForm }}
+    >
       <FormIdContext value={formId}>
         <UploadRegistryContext value={registry}>
           <FormProvider {...form}>
-            {onSubmit ? (
+            {renderForm ? (
               <form
                 className={className}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  onSubmit();
+                  onSubmit!();
                 }}
               >
                 {children}
                 <button type="submit" className="hidden" />
               </form>
+            ) : onSubmit ? (
+              <div className={className}>{children}</div>
             ) : (
               children
             )}

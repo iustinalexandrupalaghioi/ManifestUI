@@ -20,7 +20,10 @@ function getResourceRow(
     name: entry.id,
     label: resolveLabel(entry.plural, locale),
     singularLabel: resolveLabel(entry.singular, locale),
-    mentionLabel: resolveLabel(entry.singularDefinite ?? entry.singular, locale),
+    mentionLabel: resolveLabel(
+      entry.singularDefinite ?? entry.singular,
+      locale,
+    ),
     gender: entry.gender,
   };
 }
@@ -36,9 +39,15 @@ function getResourceByTable(
     name: entry.id,
     label: resolveLabel(entry.plural, locale),
     singularLabel: resolveLabel(entry.singular, locale),
+    mentionLabel: resolveLabel(
+      entry.singularDefinite ?? entry.singular,
+      locale,
+    ),
     routes: entry.routes,
   };
 }
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 async function lookupFkColumn(
   constraintName: string,
@@ -124,17 +133,29 @@ export async function describeActionFailure(
   const t = await getTranslations({ locale, namespace: "Errors" });
   const pg = extractPgError(err);
   const resource = getResourceRow(registry, resourceId, locale);
-  const label = resource?.mentionLabel ?? resource?.singularLabel ?? resource?.label ?? resourceId;
+  const label =
+    resource?.mentionLabel ??
+    resource?.singularLabel ??
+    resource?.label ??
+    resourceId;
   const subject = id !== undefined ? `${label} #${id}` : label;
-  // Dialog-header summary — deliberately generic (indefinite article, no id)
-  // since the specific record is already named in `message` below.
   const title = t("notAbleToGeneric", {
     verb,
     gender: resource?.gender ?? "masculine",
     label: (resource?.singularLabel ?? resourceId).toLowerCase(),
   });
 
-  if (id !== undefined && pg.code === "23503" && pg.table_name) {
+  // Distinguishes "blocked delete, still has children" from a dangling FK on insert/update, which falls through to mapPgError's fkMissingReference.
+  const stillReferenced = /still referenced from table "(.+)"/.test(
+    pg.details ?? "",
+  );
+
+  if (
+    id !== undefined &&
+    pg.code === "23503" &&
+    pg.table_name &&
+    stillReferenced
+  ) {
     const refs = await lookupReferencingRows(
       registry,
       pg.table_name,
@@ -157,9 +178,36 @@ export async function describeActionFailure(
     }
   }
 
+  const missingReferenceMatch = pg.details?.match(
+    /Key \(.+\)=\((.+)\) is not present in table "(.+)"/,
+  );
+  if (id !== undefined && pg.code === "23503" && missingReferenceMatch) {
+    const [, value, tableName] = missingReferenceMatch;
+    const target = getResourceByTable(registry, tableName, locale);
+    if (target) {
+      return {
+        message: t("notAbleToWithReason", {
+          verb,
+          subject,
+          reason: t("fkMissingReferenceValue", {
+            table: capitalize(target.mentionLabel),
+            value,
+          }),
+        }),
+        title,
+        code: pg.code,
+        originalMessage: pg.message,
+      };
+    }
+  }
+
   const mapped = mapPgError(pg, locale);
   return {
-    message: t("notAbleToWithReason", { verb, subject, reason: mapped.message }),
+    message: t("notAbleToWithReason", {
+      verb,
+      subject,
+      reason: mapped.message,
+    }),
     title,
     code: mapped.code,
     originalMessage: mapped.originalMessage,

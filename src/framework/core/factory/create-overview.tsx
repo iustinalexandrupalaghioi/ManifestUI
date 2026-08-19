@@ -53,6 +53,7 @@ import { AccessDeniedDialog } from "@/framework/authorization/ui/AccessDeniedDia
 import { useOverviewActionsBundle } from "../hooks/useOerviewActionsBundle";
 import { OverviewActionChrome } from "./OverviewActionChrome";
 import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFields";
+import { getEditingStore } from "@/framework/components/data-view/features/editing/editing.store";
 import { SplitOverviewShell } from "./SplitOverviewShell";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -112,8 +113,16 @@ export function createOverview<
     listColumnVisibility,
   } = config;
 
-  const { idField, keys, routes, labels, openMode, addMode, splitConfig } =
-    hooks;
+  const {
+    idField,
+    keys,
+    routes,
+    labels,
+    openMode,
+    addMode,
+    splitConfig,
+    tabs,
+  } = hooks;
 
   return function Overview(
     props: {
@@ -167,7 +176,16 @@ export function createOverview<
     const gridEditable = canUpdate && config.editable === true;
 
     const { directFields, pickupFillFields } = useMemo(
-      () => flattenFormFields(config.formConfig),
+      () =>
+        flattenFormFields(
+          config.formConfig,
+          tabs
+            .filter(
+              (tab): tab is Extract<(typeof tabs)[number], { type: "fields" }> =>
+                tab.type === "fields",
+            )
+            .map((tab) => tab.sections),
+        ),
       [],
     );
 
@@ -254,6 +272,8 @@ export function createOverview<
     const tableId = listFilter
       ? `${overviewKey}-${JSON.stringify(listFilter)}`
       : overviewKey;
+
+    const editMode = getEditingStore(tableId)((s) => s.editMode);
 
     const resolvedViewName =
       config.getOverviewTitle?.(preFilters) ??
@@ -491,7 +511,7 @@ export function createOverview<
         const columnName = col.meta?.columnName ?? col.id;
         if (!columnName) return col;
 
-        const direct = directFields.get(columnName);
+        const direct = directFields.get(col.meta?.editingField ?? columnName);
         if (direct) {
           return {
             ...col,
@@ -502,7 +522,7 @@ export function createOverview<
           };
         }
 
-        if (col.meta?.origin === "relation") {
+        if (col.meta?.origin) {
           const match = pickupFillFields.get(columnName);
           if (match) {
             return {
@@ -627,7 +647,7 @@ export function createOverview<
         data={allItems}
         preFilters={preFilters}
         activeRowId={activeRowId}
-        openOnRowClick={isSplitDesktop}
+        openOnRowClick={isSplitDesktop && !editMode}
         {...dataTableProps}
       />
     );

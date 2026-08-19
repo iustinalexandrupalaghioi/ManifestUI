@@ -15,5 +15,6 @@
   "anyFileType": "Orice tip de fișier",
   "exceedsLimit": "{files} {count, plural, one {depășește} other {depășesc}} limita de {size} MB",
   "uploaded": "Încărcat",
-  "noPreviewAvailable": "Previzualizare indisponibilă"
+  "noPreviewAvailable": "Previzualizare indisponibilă",
+  "uploadFailed": "Încărcare eșuată"
 }

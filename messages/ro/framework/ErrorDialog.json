@@ -1,11 +1,3 @@
 {
-  "title": "Eroare",
-  "copied": "Copiat",
-  "copyError": "Copiază eroarea",
-  "technicalDetails": "Detalii tehnice",
-  "andMore": "…și încă {count}",
-  "message": "Mesaj",
-  "code": "Cod",
-  "details": "Detalii",
-  "hint": "Sugestie"
+  "andMore": "…și încă {count}"
 }

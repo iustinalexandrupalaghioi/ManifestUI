@@ -17,7 +17,7 @@ export function useEditing<TData>(
   selectedCell: CellAddress | null,
 ) {
   const store = getEditingStore(tableId);
-  const armed = store((s) => s.armed);
+  const editMode = store((s) => s.editMode);
   const editingCell = store((s) => s.editingCell);
 
   const tableRef = useRef(table);
@@ -28,7 +28,7 @@ export function useEditing<TData>(
   const canUpdate = !!table.options.meta?.updateManyAsync;
 
   const handleCellDoubleClick = (cell: Cell<TData, unknown>): boolean => {
-    if (!armed || !canUpdate || !isEditableCell(cell)) return false;
+    if (!editMode || !canUpdate || !isEditableCell(cell)) return false;
     store
       .getState()
       .startEditing({ rowId: cell.row.id, columnId: cell.column.id });
@@ -36,7 +36,7 @@ export function useEditing<TData>(
   };
 
   useEffect(() => {
-    if (!armed || !canUpdate) return;
+    if (!editMode || !canUpdate) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
       const target = selectedCellRef.current;
@@ -69,7 +69,7 @@ export function useEditing<TData>(
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [armed, canUpdate, editingCell, store]);
+  }, [editMode, canUpdate, editingCell, store]);
 
-  return { armed, canUpdate, handleCellDoubleClick };
+  return { editMode, canUpdate, handleCellDoubleClick };
 }

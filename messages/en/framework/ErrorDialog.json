@@ -1,11 +1,3 @@
 {
-  "title": "Error",
-  "copied": "Copied",
-  "copyError": "Copy error",
-  "technicalDetails": "Technical details",
-  "andMore": "…and {count} more",
-  "message": "Message",
-  "code": "Code",
-  "details": "Details",
-  "hint": "Hint"
+  "andMore": "…and {count} more"
 }

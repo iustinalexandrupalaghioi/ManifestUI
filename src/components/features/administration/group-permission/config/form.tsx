@@ -74,12 +74,46 @@ export const groupPermissionsForm: FormConfig<GroupPermissionFormValues> = {
         name: "resource-permissions",
         hidden: isAction,
         render: () => <ResourcePermissionsCard />,
+        fields: [
+          {
+            type: "switch",
+            name: "can_read",
+            label: { en: "Read", ro: "Citire" },
+            hidden: isAction,
+          },
+          {
+            type: "switch",
+            name: "can_add",
+            label: { en: "Add", ro: "Adăugare" },
+            hidden: isAction,
+          },
+          {
+            type: "switch",
+            name: "can_update",
+            label: { en: "Modify", ro: "Modificare" },
+            hidden: isAction,
+          },
+          {
+            type: "switch",
+            name: "can_delete",
+            label: { en: "Delete", ro: "Ștergere" },
+            hidden: isAction,
+          },
+        ],
       },
       {
         type: "custom",
         name: "action-permissions",
         hidden: isNotAction,
         render: () => <ActionPermissionsCard />,
+        fields: [
+          {
+            type: "switch",
+            name: "allowed",
+            label: { en: "Allowed", ro: "Permis" },
+            hidden: isNotAction,
+          },
+        ],
       },
     ],
   },

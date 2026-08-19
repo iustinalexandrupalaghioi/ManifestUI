@@ -96,13 +96,6 @@ export const {
     },
   ],
 
-  // `userSchema` exposes exactly one editable field: `administrator`. That
-  // means holding the generic "users:update" permission is equivalent to
-  // holding admin-granting power — a group meant for something mundane (e.g.
-  // "support: view/unlock users") would become a privilege-escalation
-  // vector if `users:update` were ever assigned to it. Require the caller
-  // to already be an administrator, independent of the CRUD permission,
-  // before this field can be changed at all.
   updateUser: crud.update(async (tx, id: string, data: UserFormValues) => {
     const parsed = userSchema.parse(data);
     const callerId = await getCurrentUserId();
@@ -110,10 +103,6 @@ export const {
       throw new ForbiddenError("users:grant-admin");
     }
 
-    // An administrator can grant/revoke admin for anyone else, but never
-    // strip their own flag — otherwise the last admin standing could
-    // lock themselves (and everyone) out with no one left to grant it
-    // back.
     if (id === callerId && !parsed.administrator) {
       throw new ForbiddenError("users:grant-admin");
     }

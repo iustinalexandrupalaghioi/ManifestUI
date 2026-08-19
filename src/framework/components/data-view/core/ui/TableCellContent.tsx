@@ -16,25 +16,39 @@ const TableCellContent =
     const { getValue, row, column, cell } = context;
     const { tableId } = useDataViewCore();
     const store = getEditingStore(tableId);
-    const armed = store((s) => s.armed);
+    const editMode = store((s) => s.editMode);
     const editingCell = store((s) => s.editingCell);
     const columnName = column.columnDef.meta?.columnName ?? column.id;
+    const pendingKey = column.columnDef.meta?.editingField ?? columnName;
     const pendingRow = store((s) => s.pendingEdits[row.id]);
-    const pending = pendingRow?.[columnName];
+    const pending = pendingRow?.[pendingKey];
 
     const editableField = column.columnDef.meta?.editableField;
-    if (
-      armed &&
-      editingCell?.rowId === row.id &&
-      editingCell?.columnId === column.id &&
-      editableField
-    ) {
-      return <EditableCell cell={cell} />;
-    }
-
     const isDirty = pending !== undefined;
-    const value = isDirty ? pending : getValue();
+    const accessorFn = column.accessorFn as
+      | ((row: Record<string, unknown>, index: number) => unknown)
+      | undefined;
+    const value = isDirty
+      ? (accessorFn?.(
+          { ...(row.original as Record<string, unknown>), ...pendingRow },
+          0,
+        ) ?? pending)
+      : getValue();
     const label = formatByType(value, type, options);
+
+    if (
+      editMode &&
+      editingCell?.rowId === row.id &&
+      editingCell?.columnId === column.id
+    ) {
+      if (editableField) return <EditableCell cell={cell} />;
+      // Clicked "Edit" on a column with no matching field — show it the
+      // same way EditableCell shows a row-level readonly field, instead of
+      // pretending it's editable.
+      return (
+        <span className="truncate text-muted-foreground ms-2">{label}</span>
+      );
+    }
 
     const content = (() => {
       if (type === "boolean")
@@ -67,7 +81,12 @@ const TableCellContent =
     if (!isDirty) return content;
 
     return (
-      <span className={cn("-mx-1 rounded px-1", "bg-amber-500/15")}>
+      <span
+        className={cn(
+          "inline-flex max-w-full items-center rounded px-1",
+          "bg-amber-500/15",
+        )}
+      >
         {content}
       </span>
     );

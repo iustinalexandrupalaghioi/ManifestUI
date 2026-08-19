@@ -127,7 +127,7 @@ export const {
         .where(eq(relation.id, id))
         .limit(1);
       if (!row) throw new Error(`Relation ${id} not found`);
-      return row as unknown as Relation;
+      return row as Relation;
     },
   ],
 
@@ -140,12 +140,6 @@ export const {
     return result.id;
   }),
 
-  // `alsoAllow: ["add"]` — attaching an uploaded image's path runs through
-  // this same update after the add screen's background upload finishes, so
-  // a group with only "add" (no "update") still needs to complete it. That
-  // caller doesn't hold "relations:update" though, so their write is scoped
-  // to just `image`, and only while it's still unset — it can't touch any
-  // other field or repoint an already-attached image on someone else's row.
   updateRelation: resourceAction.update(
     async (tx, id: number, data: RelationFormValues) => {
       const parsed = relationSchema.parse(data);

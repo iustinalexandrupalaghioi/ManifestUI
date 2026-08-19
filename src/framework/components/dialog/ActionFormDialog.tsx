@@ -5,13 +5,13 @@ import { BaseDialog } from "@/framework/components/dialog/BaseDialog";
 import { ResourceForm } from "@/framework/components/form/form-register/ResourceForm";
 import {
   BulkActionError,
+  toFailureResult,
   type BulkActionResult,
 } from "@/framework/lib/actionResult";
 import type {
   ActionFormConfig,
   ResolvedResourceLabels,
 } from "@/framework/types/resource-hook-types";
-import { getItemId } from "@/framework/core/resource-id";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
@@ -22,7 +22,6 @@ interface ActionFormDialogProps<TItem> {
   config: ActionFormConfig<TItem, any>;
   labels: ResolvedResourceLabels;
   items: TItem[];
-  idField?: string;
   open: boolean;
   onClose: () => void;
   onError?: (result: BulkActionResult) => void;
@@ -53,7 +52,6 @@ function resolveForm<TItem, TFormValues>(
 export function ActionFormDialog<TItem>({
   config,
   items,
-  idField = "id",
   open,
   onClose,
   onError,
@@ -82,15 +80,9 @@ export function ActionFormDialog<TItem>({
       const result: BulkActionResult =
         err instanceof BulkActionError
           ? err.result
-          : {
-              ok: false,
-              succeededIds: [],
-              failures: items.map((i) => ({
-                id: String(getItemId(i as Record<string, unknown>, idField)),
-                message: err instanceof Error ? err.message : tErr("unknownError"),
-              })),
-              summary: err instanceof Error ? err.message : tErr("actionFailed"),
-            };
+          : toFailureResult({
+              message: err instanceof Error ? err.message : tErr("unknownError"),
+            });
       onError?.(result);
     } finally {
       setIsSaving(false);

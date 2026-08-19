@@ -111,7 +111,7 @@ function CellContextMenuInner<TData>({
 }: CellContextMenuProps<TData>) {
   const t = useTranslations("ContextMenu");
   const tc = useTranslations("Common");
-  const { tableId, staticColumnIds } = useDataViewCore();
+  const { tableId, staticColumnIds, table } = useDataViewCore();
   const [open, setOpen] = useState(false);
 
   const [isNarrow, setIsNarrow] = useState(false);
@@ -146,18 +146,14 @@ function CellContextMenuInner<TData>({
     deleteAction,
     actions,
     rowId,
-    editableField,
   } = state;
 
-  // Edit is one command that branches: a genuinely editable single cell
-  // starts inline editing (arming the grid if it wasn't already); anything
-  // else — multi-selection, or a column with no matching field — falls
-  // back to the same behavior as "Open".
-  const canInlineEdit = !isMulti && !!editableField;
+  const canUpdate = !!table.options.meta?.updateManyAsync;
+  const canArmEditMode = !isMulti && canUpdate;
   const handleEdit = () => {
-    if (canInlineEdit) {
+    if (canArmEditMode) {
       const editingStore = getEditingStore(tableId);
-      editingStore.getState().setArmed(true);
+      editingStore.getState().setEditMode(true);
       editingStore.getState().startEditing({ rowId, columnId: state.columnId });
       return;
     }
@@ -233,8 +229,8 @@ function CellContextMenuInner<TData>({
         alignOffset={-4}
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
-        {/* ── Edit — inline if this cell is editable, else same as Open ── */}
-        {(canInlineEdit || onOpen) && (
+        {/* ── Edit — inline if editable, else just arms edit mode; else same as Open ── */}
+        {(canArmEditMode || onOpen) && (
           <DropdownMenuItem onSelect={handleEdit}>
             <Pencil className="h-4 w-4" />
             {t("edit")}

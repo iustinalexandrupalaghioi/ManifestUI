@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorDialog } from "@/framework/components/dialog/ErrorDialog";
+import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { FormDialog } from "@/framework/components/dialog/FormDialog";
 import { AddTabs } from "@/framework/components/screen/components/AddTabs";
 import { RecordFormShell } from "@/framework/components/screen/components/RecordFormShell";
@@ -137,12 +137,13 @@ export function createAddDialog<
             />
           </FormDialog>
         </RecordScreen>
-        <ErrorDialog
+        <ResultDialog
           open={!!error}
           setOpen={(o) => {
             if (!o) clearError();
           }}
-          error={error}
+          result={error}
+          itemLabel={resolvedLabels.singular}
         />
       </>
     );

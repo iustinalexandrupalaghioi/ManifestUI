@@ -2,8 +2,7 @@
 
 import { ActionFormDialog } from "@/framework/components/dialog/ActionFormDialog";
 import { DeleteDialog } from "@/framework/components/dialog/DeleteDialog";
-import { ErrorDialog } from "@/framework/components/dialog/ErrorDialog";
-import { BulkResultDialog } from "@/framework/components/dialog/BulkResultDialog";
+import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { FormPage } from "@/framework/components/page/FormPage";
 import Loader from "@/framework/components/partials/Loader";
 import {
@@ -120,11 +119,12 @@ export function createDetailPage<
       extraActions: [],
     });
 
-    // Only one bulk-failure dialog is shown at a time — whichever fired last.
-    const activeBulkResult = actionFormError ?? bulkResult;
-    const clearActiveBulkResult = () => {
+    // Only one result dialog is shown at a time — whichever fired last.
+    const activeResult = actionFormError ?? bulkResult ?? error;
+    const clearActiveResult = () => {
       setActionFormError(null);
       clearBulkResult();
+      clearError();
     };
 
     useEffect(() => {
@@ -290,7 +290,6 @@ export function createDetailPage<
             <ActionFormDialog<TItem>
               config={activeActionForm as ActionFormConfig<TItem, any>}
               items={[item]}
-              idField={idField}
               labels={resolvedLabels}
               open={!!activeActionKey}
               onClose={() => setActiveActionKey(null)}
@@ -298,24 +297,15 @@ export function createDetailPage<
             />
           )}
 
-          <BulkResultDialog
-            open={!!activeBulkResult}
-            setOpen={(o) => !o && clearActiveBulkResult()}
-            result={activeBulkResult}
+          <ResultDialog
+            open={!!activeResult}
+            setOpen={(o) => !o && clearActiveResult()}
+            result={activeResult}
             itemLabel={resolvedLabels.singular}
-            pluralLabel={resolvedLabels.plural}
             getItemHref={routes.detail}
           />
 
           {confirmDialog}
-
-          <ErrorDialog
-            open={!!error}
-            setOpen={(o) => {
-              if (!o) clearError();
-            }}
-            error={error}
-          />
         </FormPage>
       </RecordScreen>
     );

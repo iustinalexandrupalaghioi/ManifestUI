@@ -7,13 +7,13 @@ export interface CellAddress {
 }
 
 interface EditingState {
-  armed: boolean;
+  editMode: boolean;
   editingCell: CellAddress | null;
   pendingEdits: Record<string, Record<string, unknown>>;
 }
 
 interface EditingActions {
-  setArmed(armed: boolean): void;
+  setEditMode(editMode: boolean): void;
   startEditing(cell: CellAddress): void;
   stopEditing(): void;
   commitCellEdit(rowId: string, fields: Record<string, unknown>): void;
@@ -27,11 +27,11 @@ const stores = new Map<string, ReturnType<typeof createEditingStore>>();
 
 function createEditingStore() {
   return create<EditingStore>()((set) => ({
-    armed: false,
+    editMode: false,
     editingCell: null,
     pendingEdits: {},
 
-    setArmed: (armed) => set({ armed, editingCell: null }),
+    setEditMode: (editMode) => set({ editMode, editingCell: null }),
     startEditing: (cell) => set({ editingCell: cell }),
     stopEditing: () => set({ editingCell: null }),
 
@@ -50,12 +50,12 @@ function createEditingStore() {
         rowIds.forEach((id) => delete next[id]);
         return {
           pendingEdits: next,
-          armed: Object.keys(next).length > 0 ? s.armed : false,
+          editMode: Object.keys(next).length > 0 ? s.editMode : false,
         };
       }),
 
     discardAll: () =>
-      set({ armed: false, editingCell: null, pendingEdits: {} }),
+      set({ editMode: false, editingCell: null, pendingEdits: {} }),
   }));
 }
 

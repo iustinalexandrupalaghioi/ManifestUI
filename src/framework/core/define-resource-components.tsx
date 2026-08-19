@@ -103,20 +103,13 @@ export function defineResourceComponents<
   const createTableColumnsFn = buildColumnsFn(rawColumns);
   const createListColumnsFn = buildColumnsFn(rawListColumns);
 
-  // Table and list share one TanStack table instance (for row selection /
-  // actions), so both column sets must land in the single `columns` array
-  // DataView is built from. A field authored in both configs (the common
-  // case) keeps the table version's ColumnDef — accessor/cell/size stay
-  // table-driven — but list-only meta (group/groupLabel/inlineLabel/
-  // labelPosition) is merged in from the list config, since that's the
-  // only place it's authored. A field exclusive to `listColumns` is
-  // appended as its own column, hidden from table mode via the visibility
-  // maps below.
   const createColumns =
     createTableColumnsFn || createListColumnsFn
       ? (locale: string) => {
-          const tableCols: ColumnDef<TItem>[] = createTableColumnsFn?.(locale) ?? [];
-          const listCols: ColumnDef<TItem>[] = createListColumnsFn?.(locale) ?? [];
+          const tableCols: ColumnDef<TItem>[] =
+            createTableColumnsFn?.(locale) ?? [];
+          const listCols: ColumnDef<TItem>[] =
+            createListColumnsFn?.(locale) ?? [];
           const listById = new Map(listCols.map((c) => [c.id, c]));
           const merged = tableCols.map((c) => {
             const listCol = c.id ? listById.get(c.id) : undefined;
@@ -155,10 +148,6 @@ export function defineResourceComponents<
     ? (rawPickupColumns as ColumnConfig[])
     : null;
 
-  // Computes visibility for one view's own config, then explicitly hides
-  // any field that belongs exclusively to the other view — otherwise a
-  // field absent from a VisibilityState defaults to visible in TanStack,
-  // and it would leak across views.
   const computeVisibility = (
     own: ColumnConfig[] | null,
     other: ColumnConfig[] | null,
@@ -221,11 +210,6 @@ export function defineResourceComponents<
     );
   }
 
-  // Always derived from the resource's own id against RBAC data — see
-  // src/framework/authorization for the schema this reads from. Not
-  // author-settable (see ComponentsFieldsWithDifferentAuthoringShape in
-  // define-resource-type.ts): every resource is gated the same way, with no
-  // way to accidentally bypass it.
   const permissions: ResourcePermissions = {
     read: () => hasPermission(`${config.id}:read`),
     add: () => hasPermission(`${config.id}:add`),

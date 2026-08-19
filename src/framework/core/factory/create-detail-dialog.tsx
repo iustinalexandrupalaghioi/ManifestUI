@@ -1,6 +1,6 @@
 "use client";
 
-import { ErrorDialog } from "@/framework/components/dialog/ErrorDialog";
+import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { FormDialog } from "@/framework/components/dialog/FormDialog";
 import { RecordFormShell } from "@/framework/components/screen/components/RecordFormShell";
 import {
@@ -154,12 +154,14 @@ export function createDetailDialog<
             />
           </FormDialog>
         </RecordScreen>
-        <ErrorDialog
+        <ResultDialog
           open={!!error}
           setOpen={(o) => {
             if (!o) clearError();
           }}
-          error={error}
+          result={error}
+          itemLabel={resolvedLabels.singular}
+          getItemHref={hooks.routes.detail}
         />
       </>
     );

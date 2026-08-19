@@ -13,27 +13,25 @@ import type {
   BulkActionFailure,
   BulkActionResult,
 } from "@/framework/lib/actionResult";
-import { renderErrorDetails } from "./ErrorDialog";
 import { AlertTriangleIcon, ChevronDownIcon } from "lucide-react";
+import { ReactNode } from "react";
 import { BaseDialog } from "./BaseDialog";
 
-interface BulkResultDialogProps {
+interface ResultDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   result: BulkActionResult | null;
   itemLabel?: string;
-  pluralLabel?: string;
   getItemHref?: (id: string) => string;
 }
 
-export function BulkResultDialog({
+export function ResultDialog({
   open,
   setOpen,
   result,
   itemLabel,
-  pluralLabel,
   getItemHref,
-}: BulkResultDialogProps) {
+}: ResultDialogProps) {
   const t = useTranslations("BulkResult");
   const tc = useTranslations("Common");
   const tErr = useTranslations("ErrorDialog");
@@ -41,7 +39,6 @@ export function BulkResultDialog({
   if (!result) return null;
 
   const resolvedItemLabel = itemLabel ?? t("defaultItemLabel");
-  const plural = pluralLabel ?? `${resolvedItemLabel}s`;
 
   const footer = (
     <DialogClose asChild>
@@ -51,27 +48,29 @@ export function BulkResultDialog({
     </DialogClose>
   );
 
-  const itemLink = (id: string) =>
-    getItemHref ? (
+  const itemLink = (failure: BulkActionFailure) => {
+    const label = failure.id
+      ? `${resolvedItemLabel} #${failure.id}`
+      : resolvedItemLabel;
+    return getItemHref && failure.id ? (
       <Link
         target="_blank"
-        href={getItemHref(id)}
+        href={getItemHref(failure.id)}
         onClick={(e) => e.stopPropagation()}
         className="underline underline-offset-2"
       >
-        {resolvedItemLabel} #{id}
+        {label}
       </Link>
     ) : (
-      <span>
-        {resolvedItemLabel} #{id}
-      </span>
+      <span>{label}</span>
     );
+  };
 
   const failureExtra = (failure: BulkActionFailure) =>
     renderErrorDetails(
       {
         message: failure.message,
-        originalMessage: failure.message,
+        originalMessage: failure.originalMessage ?? failure.message,
         meta: failure.meta,
       },
       tErr,
@@ -92,7 +91,7 @@ export function BulkResultDialog({
               <div className="flex flex-col gap-2 rounded-md border border-destructive/30 p-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <AlertTriangleIcon className="h-4 w-4 shrink-0 text-destructive" />
-                  {itemLink(result.failures[0].id)}
+                  {itemLink(result.failures[0])}
                 </div>
                 <p className="text-sm text-foreground">
                   {result.failures[0].message}
@@ -101,19 +100,19 @@ export function BulkResultDialog({
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {result.failures.map((failure) => {
+                {result.failures.map((failure, index) => {
                   const extra = failureExtra(failure);
                   const header = (
                     <span className="flex items-center gap-2 text-foreground">
                       <AlertTriangleIcon className="h-4 w-4 shrink-0 text-destructive" />
-                      {itemLink(failure.id)}
+                      {itemLink(failure)}
                     </span>
                   );
 
                   if (!extra) {
                     return (
                       <div
-                        key={failure.id}
+                        key={failure.id ?? index}
                         className="flex items-center rounded-md border border-destructive/30 px-3 py-2.5 text-sm font-medium"
                       >
                         {header}
@@ -123,7 +122,7 @@ export function BulkResultDialog({
 
                   return (
                     <Collapsible
-                      key={failure.id}
+                      key={failure.id ?? index}
                       className="overflow-hidden rounded-md border border-destructive/30"
                     >
                       <CollapsibleTrigger asChild>
@@ -153,3 +152,72 @@ export function BulkResultDialog({
     </BaseDialog>
   );
 }
+
+type Translator = (
+  key: string,
+  values?: Record<string, string | number | Date>,
+) => string;
+
+interface ErrorDetailsSource {
+  message: string;
+  originalMessage: string;
+  meta?: { type: string; [key: string]: unknown };
+}
+
+type ErrorExtraRenderer = (
+  meta: Record<string, unknown>,
+  t: Translator,
+) => ReactNode;
+
+const registry = new Map<string, ErrorExtraRenderer>();
+
+export function registerErrorDetails(
+  type: string,
+  renderer: ErrorExtraRenderer,
+) {
+  registry.set(type, renderer);
+}
+
+export function renderErrorDetails(
+  error: ErrorDetailsSource,
+  t: Translator,
+): ReactNode {
+  if (!error.meta?.type) return null;
+  const renderer = registry.get(error.meta.type);
+  return renderer ? renderer(error.meta, t) : null;
+}
+
+interface FkReference {
+  id: string;
+  label: string;
+  href?: string;
+}
+
+registerErrorDetails("fk-references", (meta, t) => {
+  const references = (meta.references as FkReference[] | undefined) ?? [];
+  const moreCount = (meta.moreCount as number | undefined) ?? 0;
+  if (references.length === 0) return null;
+
+  return (
+    <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
+      {references.map((ref) => (
+        <li key={ref.id}>
+          {ref.href ? (
+            <Link
+              target="_blank"
+              href={ref.href}
+              className="underline underline-offset-2"
+            >
+              {ref.label} #{ref.id}
+            </Link>
+          ) : (
+            <span>
+              {ref.label} #{ref.id}
+            </span>
+          )}
+        </li>
+      ))}
+      {moreCount > 0 && <li>{t("andMore", { count: moreCount })}</li>}
+    </ul>
+  );
+});

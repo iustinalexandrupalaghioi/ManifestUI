@@ -33,9 +33,14 @@ export const groupPermissionsResource = defineResource<
 
   labels: groupPermissionsDescriptor,
 
-  openMode: "dialog",
-  addMode: "dialog",
+  openMode: "split",
+  splitConfig: {
+    onOpen: "selectFirst",
+    defaultWidth: 50,
+  },
 
+  addMode: "dialog",
+  editable: true,
   emptyValues: {
     group_id: 0,
     resource_id: "",

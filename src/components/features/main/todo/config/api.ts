@@ -66,34 +66,38 @@ export const {
 } = defineResourceActions("todos", {
   fetchTodoList: [
     "read",
-    async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
-    const where = buildWhereConditions(filters, filterColumns);
-    const sortColumns = resolveSortColumns(sorting, filterColumns, {
-      key: "id",
-      column: todo.id,
-    });
-    const orderBy = buildOrderBy(sortColumns);
-    const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
+    async (
+      sorting: SortRule[],
+      filters: FilterRule[],
+      cursor: Cursor | null,
+    ) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const sortColumns = resolveSortColumns(sorting, filterColumns, {
+        key: "id",
+        column: todo.id,
+      });
+      const orderBy = buildOrderBy(sortColumns);
+      const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
-    const [items, [{ count }]] = await Promise.all([
-      db
-        .select(selection)
-        .from(todo)
-        .innerJoin(relation, eq(todo.user_id, relation.id))
-        .where(seekWhere)
-        .orderBy(...orderBy)
-        .limit(PAGE_SIZE),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(todo)
-        .innerJoin(relation, eq(todo.user_id, relation.id))
-        .where(where),
-    ]);
+      const [items, [{ count }]] = await Promise.all([
+        db
+          .select(selection)
+          .from(todo)
+          .innerJoin(relation, eq(todo.user_id, relation.id))
+          .where(seekWhere)
+          .orderBy(...orderBy)
+          .limit(PAGE_SIZE),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(todo)
+          .innerJoin(relation, eq(todo.user_id, relation.id))
+          .where(where),
+      ]);
 
-    const nextCursor =
-      items.length === PAGE_SIZE
-        ? extractCursor(items[items.length - 1], sortColumns)
-        : null;
+      const nextCursor =
+        items.length === PAGE_SIZE
+          ? extractCursor(items[items.length - 1], sortColumns)
+          : null;
 
       return { items: items as Todo[], total: count ?? 0, nextCursor };
     },
@@ -109,7 +113,7 @@ export const {
         .where(eq(todo.id, id))
         .limit(1);
       if (!row) throw new Error(`Todo ${id} not found`);
-      return row as unknown as Todo;
+      return row as Todo;
     },
   ],
 

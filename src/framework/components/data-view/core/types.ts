@@ -2,7 +2,6 @@ import type { Cell, Row } from "@tanstack/react-table";
 import type { ReactNode, RefObject } from "react";
 import type { Enum } from "@/framework/types/global/Enum";
 import type { ColumnType } from "../features/filtering/filters";
-import type { EditableFieldMeta } from "./tanstack-augmentations";
 
 export interface RowAction<TData> {
   label: ReactNode;
@@ -35,9 +34,8 @@ export interface ContextMenuState<TData> {
   selectOptions?: Enum[];
   origin?: string;
   canFilter?: boolean;
-  /** The right-clicked row's id — for editableField, the specific cell to start editing. */
+  /** The right-clicked row's id — the specific cell to start editing, if Edit is selected. */
   rowId: string;
-  editableField?: EditableFieldMeta;
 }
 
 export interface VirtualDataTableBodyProps<TData> {

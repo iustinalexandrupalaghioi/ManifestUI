@@ -2,19 +2,19 @@
 
 import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
-import type { BulkActionResult } from "@/framework/lib/actionResult";
+import {
+  toFailureResult,
+  type BulkActionResult,
+} from "@/framework/lib/actionResult";
 import {
   type QueryKey,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { BaseDialog } from "./BaseDialog";
-import { ErrorDialog } from "./ErrorDialog";
 import { mapErr } from "@/framework/core/resource-helpers";
-import type { AppError } from "@/framework/types/global/AppError";
 
 interface DeleteDialogProps {
   open: boolean;
@@ -62,9 +62,6 @@ export function DeleteDialog({
       })
     : t("deleteConfirmSingle", { label, gender: gender ?? "masculine" });
 
-  const [error, setError] = useState<AppError | null>(null);
-  const [errorOpen, setErrorOpen] = useState(false);
-
   const { mutate } = useMutation({
     mutationFn: deleteFn,
     onSuccess: async (result) => {
@@ -81,8 +78,7 @@ export function DeleteDialog({
       }
     },
     onError: (err: unknown) => {
-      setError(mapErr(err, locale));
-      setErrorOpen(true);
+      onBulkResult?.(toFailureResult(mapErr(err, locale), ids));
     },
   });
 
@@ -108,17 +104,13 @@ export function DeleteDialog({
   );
 
   return (
-    <>
-      <BaseDialog
-        open={open}
-        setOpen={setOpen}
-        title={t("deleteTitle", { label: isMulti ? labelPlural : label })}
-        description={confirmationMessage ?? defaultConfirmation}
-        className="md:min-w-2xl"
-        footer={footer}
-      />
-
-      <ErrorDialog open={errorOpen} setOpen={setErrorOpen} error={error} />
-    </>
+    <BaseDialog
+      open={open}
+      setOpen={setOpen}
+      title={t("deleteTitle", { label: isMulti ? labelPlural : label })}
+      description={confirmationMessage ?? defaultConfirmation}
+      className="md:min-w-2xl"
+      footer={footer}
+    />
   );
 }

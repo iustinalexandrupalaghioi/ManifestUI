@@ -156,7 +156,7 @@ export interface JsonFieldConfig<TFormValues> extends BaseField<TFormValues> {
 export type SectionConfig<TFormValues> =
   | FieldSectionConfig<TFormValues>
   | SlotSectionConfig
-  | CustomSectionConfig;
+  | CustomSectionConfig<TFormValues>;
 
 export interface FieldSectionConfig<TFormValues> {
   type?: "fields";
@@ -171,11 +171,12 @@ export interface SlotSectionConfig {
   name: string;
 }
 
-export interface CustomSectionConfig {
+export interface CustomSectionConfig<TFormValues = Record<string, unknown>> {
   type: "custom";
   name: string;
   hidden?: boolean | FieldCondition;
   render: (item?: Record<string, unknown>) => ReactNode;
+  fields?: FieldConfig<TFormValues>[];
 }
 
 // ─────────────────────────────────────────────

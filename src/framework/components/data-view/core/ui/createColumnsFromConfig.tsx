@@ -2,13 +2,20 @@ import TableCellContent from "@/framework/components/data-view/core/ui/TableCell
 import type { ColumnType } from "@/framework/components/data-view/features/filtering/filters";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import type { TranslatableText } from "@/framework/types/i18n-types";
-import { resolveLabel, resolveOptions, type EnumOptions } from "@/framework/lib/resolveLabel";
+import {
+  resolveLabel,
+  resolveOptions,
+  type EnumOptions,
+} from "@/framework/lib/resolveLabel";
 
 export interface ColumnConfig {
   field: string;
   label: TranslatableText;
   columnLabel?: TranslatableText;
   columnName?: string;
+  // Form field this column's inline editing should target, when it isn't
+  // columnName — e.g. an accessorFn display column derived from a raw id.
+  editingField?: string;
   accessorFn?: (row: any, locale: string) => any;
   type: ColumnType;
   size?: number;
@@ -21,10 +28,8 @@ export interface ColumnConfig {
   selectOptions?: EnumOptions;
   bucket?: string;
   origin?: string;
-  /** List-only: groups this field with others sharing the same key into one labeled block in the card. */
   group?: string;
   groupLabel?: TranslatableText;
-  /** List-only: inline unit suffix/prefix shown next to the value in a card, e.g. "42 years". */
   inlineLabel?: TranslatableText;
   labelPosition?: "before" | "after";
 }
@@ -61,6 +66,11 @@ export function createColumnsFromConfig<TItem>(
       meta: {
         columnId: col.field,
         columnName: col.columnName ?? col.field,
+        // Omitted (not set to undefined) when absent: table/list columns
+        // for the same field get merged with `{...tableMeta, ...listMeta}`
+        // (see define-resource-components.tsx), and an explicit `undefined`
+        // here would win that spread and blank out the table side's value.
+        ...(col.editingField ? { editingField: col.editingField } : {}),
         columnLabel: resolveLabel(col.columnLabel ?? col.label, locale),
         columnType: col.type,
         origin: col.origin,

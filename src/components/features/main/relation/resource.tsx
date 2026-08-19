@@ -30,6 +30,7 @@ export const relationsResource = defineResource<Relation, RelationFormValues>({
   splitConfig: {
     onOpen: "selectFirst",
   },
+  editable: true,
   addMode: "page",
   dialog: {
     className: "sm:max-w-full",

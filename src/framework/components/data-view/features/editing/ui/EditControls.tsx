@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 import { useDataViewCore } from "../../../core/stores/DataViewProvider";
 import { useActiveMode } from "../../../core/stores/ViewModeStore";
 import { useBeforeUnloadWarning } from "@/framework/hooks/useBeforeUnloadWarning";
+import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
+import type { BulkActionResult } from "@/framework/lib/actionResult";
 import { getEditingStore } from "../editing.store";
 
 export function EditControls() {
@@ -15,14 +17,13 @@ export function EditControls() {
   const { table, tableId } = useDataViewCore();
   const activeMode = useActiveMode(tableId);
   const store = getEditingStore(tableId);
-  const storeArmed = store((s) => s.armed);
-  const storePendingEdits = store((s) => s.pendingEdits);
+  const editMode = store((s) => s.editMode);
+  const pendingEdits = store((s) => s.pendingEdits);
   const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<BulkActionResult | null>(null);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  const armed = storeArmed;
-  const pendingEdits = storePendingEdits;
 
   const canUpdate = !!table.options.meta?.updateManyAsync;
   const dirtyRowIds = Object.keys(pendingEdits);
@@ -30,8 +31,6 @@ export function EditControls() {
 
   useBeforeUnloadWarning(isDirty || saving);
 
-  // Inline editing is a table-only affordance — no double-click/type-to-edit
-  // wiring exists for the card list, so the toolbar button has nothing to do there.
   if (!mounted || !canUpdate || activeMode === "list") return null;
 
   const handleSave = async () => {
@@ -48,14 +47,15 @@ export function EditControls() {
       };
     });
 
-    const { succeededIds } = await updateManyAsync(items);
-    store.getState().clearRows(succeededIds);
+    const bulkResult = await updateManyAsync(items);
+    store.getState().clearRows(bulkResult.succeededIds);
+    if (bulkResult.failures.length > 0) setResult(bulkResult);
     setSaving(false);
   };
 
   const handleDiscard = () => store.getState().discardAll();
 
-  if (armed) {
+  if (editMode) {
     return (
       <div className="flex items-center gap-1">
         <Button
@@ -90,6 +90,11 @@ export function EditControls() {
           <XIcon />
           {t("discard")}
         </Button>
+        <ResultDialog
+          open={!!result}
+          setOpen={(open) => !open && setResult(null)}
+          result={result}
+        />
       </div>
     );
   }
@@ -99,7 +104,7 @@ export function EditControls() {
       variant="outline"
       size="sm"
       type="button"
-      onClick={() => store.getState().setArmed(true)}
+      onClick={() => store.getState().setEditMode(true)}
       title={t("edit")}
     >
       <PencilIcon />

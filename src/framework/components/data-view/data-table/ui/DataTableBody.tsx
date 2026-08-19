@@ -66,14 +66,14 @@ export function DataTableBody({
   const { handleCellDoubleClick } = useEditing(tableId, table, selectedCell)
 
   const editingStore = getEditingStore(tableId)
-  const editingArmed = editingStore((s) => s.armed)
+  const editMode = editingStore((s) => s.editMode)
   const editingCell = editingStore((s) => s.editingCell)
   const isCellEditing = (rowId: string, columnId: string) =>
-    editingArmed &&
+    editMode &&
     editingCell?.rowId === rowId &&
     editingCell?.columnId === columnId
   const editingKey =
-    editingArmed && editingCell
+    editMode && editingCell
       ? `${editingCell.rowId}:${editingCell.columnId}`
       : null
 

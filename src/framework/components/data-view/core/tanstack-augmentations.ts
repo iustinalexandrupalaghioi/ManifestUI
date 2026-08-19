@@ -16,6 +16,7 @@ declare module "@tanstack/react-table" {
     className?: string;
     columnId?: string;
     columnName?: string;
+    editingField?: string;
     columnLabel?: string;
     origin?: string;
     columnType?: ColumnType | null;
@@ -36,7 +37,7 @@ declare module "@tanstack/react-table" {
   interface TableMeta<TData extends RowData> {
     updateManyAsync?: (
       items: { id: string | number; data: Record<string, unknown> }[],
-    ) => Promise<{ succeededIds: string[]; failures: { id: string }[] }>;
+    ) => Promise<import("../../../lib/actionResult").BulkActionResult>;
     getRecordId?: (original: TData) => string | number;
     useDetailForm?: (item: TData) => {
       form: import("react-hook-form").UseFormReturn<any>;

@@ -15,5 +15,6 @@
   "anyFileType": "Any file type",
   "exceedsLimit": "{files} {count, plural, one {exceeds} other {exceed}} the {size} MB limit",
   "uploaded": "Uploaded",
-  "noPreviewAvailable": "No preview available"
+  "noPreviewAvailable": "No preview available",
+  "uploadFailed": "Upload failed"
 }

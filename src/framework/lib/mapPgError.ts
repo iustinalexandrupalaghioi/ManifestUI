@@ -18,36 +18,49 @@ const ERRORS_MESSAGES: Record<string, Record<string, string>> = {
   ro: roErrors,
 };
 
-// Plain function (not a hook) so it's callable both from component render
-// (with `useLocale()`'s result) and from server-only, non-component call
-// sites (with `getLocale()`'s result) — see resolveLabel.ts for the same
-// pattern, and the comment there for why.
 function getErrorsTranslator(locale: string) {
-  const messages = ERRORS_MESSAGES[locale] ?? ERRORS_MESSAGES[routing.defaultLocale];
-  return createTranslator({ locale, messages: { Errors: messages }, namespace: "Errors" });
+  const messages =
+    ERRORS_MESSAGES[locale] ?? ERRORS_MESSAGES[routing.defaultLocale];
+  return createTranslator({
+    locale,
+    messages: { Errors: messages },
+    namespace: "Errors",
+  });
 }
 
 type ErrorsTranslator = ReturnType<typeof getErrorsTranslator>;
 
-const PG_ERROR_MESSAGES: Record<string, (err: PgError, t: ErrorsTranslator) => string> = {
+const PG_ERROR_MESSAGES: Record<
+  string,
+  (err: PgError, t: ErrorsTranslator) => string
+> = {
   "23503": (err, t) => {
-    // Delete blocked — record is still referenced
-    const refMatch = err.details?.match(/still referenced from table "(.+)"/);
-    if (refMatch) {
-      return t("fkStillReferenced", { table: refMatch[1] });
+    // Delete blocked — record is still referenced. No registry access here
+    // to resolve the table to a friendly resource name (see
+    // describeActionFailure.ts for the friendly version of this case) — stay
+    // generic rather than leak a raw DB table name.
+    if (/still referenced from table "(.+)"/.test(err.details ?? "")) {
+      return t("fkStillReferenced");
     }
 
-    // Insert/update blocked — foreign key value doesn't exist
-    const missingMatch = err.details?.match(/is not present in table "(.+)"/);
+    // Insert/update blocked — foreign key value doesn't exist. Same
+    // no-registry constraint — name the offending value, not the table.
+    const missingMatch = err.details?.match(
+      /Key \(.+\)=\((.+)\) is not present in table/,
+    );
     if (missingMatch) {
-      return t("fkMissingReference", { table: missingMatch[1] });
+      return t("fkMissingReference", { value: missingMatch[1] });
     }
 
     return t("fkViolation");
   },
   "23505": (err, t) => {
     const match = err.details?.match(/Key \((.+)\)=\((.+)\) already exists/);
-    if (match) return t("uniqueViolationWithValue", { column: match[1], value: match[2] });
+    if (match)
+      return t("uniqueViolationWithValue", {
+        column: match[1],
+        value: match[2],
+      });
     return t("uniqueViolation");
   },
   "23502": (err, t) => {
@@ -98,25 +111,14 @@ const PG_ERROR_MESSAGES: Record<string, (err: PgError, t: ErrorsTranslator) => s
   PGRST204: (_err, t) => t("fieldNotInDatabase"),
 };
 
-// Drizzle (postgres.js) throws a `DrizzleQueryError` whose own `message` is
-// just "Failed query: <sql>" — the actual Postgres error (with `code`,
-// `detail`, `hint`) lives on `.cause`. Server actions catch the error at the
-// `withAdminAction` boundary (see
-// framework/authorization/lib/withAdminAction.ts) before it can cross back to
-// the client, so this is the one place that needs to know about that
-// wrapping; everywhere else just deals in the resulting `AppError`.
 export function extractPgError(err: unknown): PgError {
   const top = err as PgError & { cause?: unknown };
   const cause = top?.cause;
-  const pg = (
-    cause && typeof cause === "object" ? cause : top
-  ) as PgError;
+  const pg = (cause && typeof cause === "object" ? cause : top) as PgError;
 
   return {
     message: pg?.message ?? top?.message ?? "An unexpected error occurred.",
     code: pg?.code,
-    // Drizzle/postgres.js errors expose `detail` (singular, matches the PG
-    // wire protocol) instead of the PostgREST-style `details`.
     details: pg?.details ?? (pg as { detail?: string })?.detail,
     hint: pg?.hint,
     table_name: pg?.table_name,
@@ -137,12 +139,6 @@ export function mapPgError(
     ? PG_ERROR_MESSAGES[err.code]?.(err, t)
     : undefined;
 
-  // `details`/`hint`/`originalMessage` can contain literal row values (e.g.
-  // a 23505 unique-violation message includes the exact value that already
-  // exists), which lets anyone with `add`/`update` permission on a table
-  // probe for other rows' field values via constraint errors. Only forward
-  // the raw Postgres detail outside production, where a developer debugging
-  // the error needs it; production users get the friendly message only.
   const includeRawDetail = process.env.NODE_ENV !== "production";
   const message = friendlyMessage || err.message || t("unexpectedError");
 

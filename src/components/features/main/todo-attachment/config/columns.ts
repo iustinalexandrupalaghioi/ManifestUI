@@ -1,9 +1,14 @@
-import type { ColumnConfig } from "@/framework/components/data-view/core/ui/createColumnsFromConfig"
-import { BUCKET } from "./constants"
+import type { ColumnConfig } from "@/framework/components/data-view/core/ui/createColumnsFromConfig";
+import { BUCKET } from "./constants";
 
 export const attachmentColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 70 },
-  { field: "filename", label: { en: "File name", ro: "Nume fișier" }, type: "text", size: 350 },
+  {
+    field: "filename",
+    label: { en: "File name", ro: "Nume fișier" },
+    type: "text",
+    size: 350,
+  },
   {
     field: "path",
     label: { en: "File", ro: "Fișier" },
@@ -39,6 +44,7 @@ export const attachmentColumns: ColumnConfig[] = [
     type: "number",
     size: 120,
     columnName: "id",
+    editingField: "todo_id",
     origin: "todos",
     accessorFn: (row) => row.todos?.id,
     navigationHidden: true,
@@ -50,14 +56,18 @@ export const attachmentColumns: ColumnConfig[] = [
     size: 140,
     hidden: true,
   },
-]
+];
 
 // List/card presentation. `todo_id` (the raw related-todo id) is left out
 // here — `todo_title` already represents that relation and is what's worth
 // showing on a card.
 export const attachmentListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
-  { field: "filename", label: { en: "File name", ro: "Nume fișier" }, type: "text" },
+  {
+    field: "filename",
+    label: { en: "File name", ro: "Nume fișier" },
+    type: "text",
+  },
   {
     field: "path",
     label: { en: "File", ro: "Fișier" },
@@ -93,4 +103,4 @@ export const attachmentListColumns: ColumnConfig[] = [
     type: "datetime",
     hidden: true,
   },
-]
+];

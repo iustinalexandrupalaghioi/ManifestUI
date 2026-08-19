@@ -15,10 +15,11 @@ import { buildWhereConditions } from "@/framework/components/data-view/features/
 import type { FilterColumnMap } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { Cursor } from "@/framework/types/pagination";
 import type { GroupPermission } from "@/app/types/administration/GroupPermission";
-import { groupPermissionSchema, type GroupPermissionFormValues } from "./schema";
+import {
+  groupPermissionSchema,
+  type GroupPermissionFormValues,
+} from "./schema";
 
-// Small reference table (groups x resources) — pagination/keyset cursoring
-// is intentionally skipped, a single page always covers it.
 const PAGE_SIZE = 200;
 
 const filterColumns: FilterColumnMap = {
@@ -39,10 +40,6 @@ const selection = {
   group: { id: group.id, name: group.name },
 };
 
-// Holding "group-permissions:add"/"update" alone must not let a caller grant
-// a group permissions beyond their own — otherwise it's a confused-deputy
-// escalation: a group scoped to "manage group permissions" could hand any
-// group (including its own) every permission in the system.
 async function assertCanGrantResourcePermission(
   data: GroupPermissionFormValues,
 ): Promise<void> {
@@ -135,8 +132,6 @@ export const {
   ),
 
   deleteGroupPermissions: crud.delete((tx, id: number) =>
-    tx
-      .delete(group_permission)
-      .where(eq(group_permission.id, id)),
+    tx.delete(group_permission).where(eq(group_permission.id, id)),
   ),
 });

@@ -15,8 +15,6 @@ import type { Cursor } from "@/framework/types/pagination";
 import type { UserGroup } from "@/app/types/administration/UserGroup";
 import { userGroupSchema, type UserGroupFormValues } from "./schema";
 
-// Small reference table (users x groups) — pagination/keyset cursoring is
-// intentionally skipped, a single page always covers it.
 const PAGE_SIZE = 200;
 
 const filterColumns: FilterColumnMap = {
@@ -26,7 +24,6 @@ const filterColumns: FilterColumnMap = {
 };
 
 const selection = {
-  // uuid contains only hyphens, never underscores — safe to split on "_"
   id: sql<string>`${user_group.user_id} || '_' || ${user_group.group_id}`,
   user_id: user_group.user_id,
   group_id: user_group.group_id,
@@ -40,15 +37,15 @@ function parseId(id: string) {
   return { userId: id.slice(0, idx), groupId: Number(id.slice(idx + 1)) };
 }
 
-// Holding "user-groups:add" alone must not let a caller assign a group more
-// privileged than their own — otherwise it's a confused-deputy escalation:
-// a group scoped to "manage teammates' groups" could hand out an
-// administrator-equivalent group to anyone, including the caller.
 async function assertCanGrantGroup(groupId: number): Promise<void> {
   const callerId = await getCurrentUserId();
   if (!callerId) throw new Error("Not authenticated");
   const grantedPermissions = await getPermissionsForGroupIds([groupId]);
-  await assertHasAllPermissions(callerId, grantedPermissions, "user-groups:add");
+  await assertHasAllPermissions(
+    callerId,
+    grantedPermissions,
+    "user-groups:add",
+  );
 }
 
 const crud = createResourceActions("user-groups");
@@ -84,7 +81,11 @@ export const {
           .where(where),
       ]);
 
-      return { items: items as UserGroup[], total: count ?? 0, nextCursor: null };
+      return {
+        items: items as UserGroup[],
+        total: count ?? 0,
+        nextCursor: null,
+      };
     },
   ],
 
@@ -116,20 +117,26 @@ export const {
     (data: UserGroupFormValues) => `${data.user_id}_${data.group_id}`,
   ),
 
-  updateUserGroup: crud.update(async (tx, id: string, data: UserGroupFormValues) => {
-    const parsed = userGroupSchema.parse(data);
-    await assertCanGrantGroup(parsed.group_id);
-    const { userId, groupId } = parseId(id);
-    await tx
-      .update(user_group)
-      .set(parsed)
-      .where(and(eq(user_group.user_id, userId), eq(user_group.group_id, groupId)));
-  }),
+  updateUserGroup: crud.update(
+    async (tx, id: string, data: UserGroupFormValues) => {
+      const parsed = userGroupSchema.parse(data);
+      await assertCanGrantGroup(parsed.group_id);
+      const { userId, groupId } = parseId(id);
+      await tx
+        .update(user_group)
+        .set(parsed)
+        .where(
+          and(eq(user_group.user_id, userId), eq(user_group.group_id, groupId)),
+        );
+    },
+  ),
 
   deleteUserGroups: crud.delete((tx, id: string) => {
     const { userId, groupId } = parseId(id);
     return tx
       .delete(user_group)
-      .where(and(eq(user_group.user_id, userId), eq(user_group.group_id, groupId)));
+      .where(
+        and(eq(user_group.user_id, userId), eq(user_group.group_id, groupId)),
+      );
   }),
 });

@@ -19,7 +19,7 @@ import {
   RegistryCapture,
 } from "@/framework/components/screen/components/RecordScreen";
 import { useAddSave } from "@/framework/components/screen/hooks/useAddSave";
-import { ErrorDialog } from "@/framework/components/dialog/ErrorDialog";
+import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { resolvePermission } from "@/framework/lib/resolvePermissions";
 import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 
@@ -113,12 +113,13 @@ export function createAddPage<
             }
           />
         </FormPage>
-        <ErrorDialog
+        <ResultDialog
           open={!!error}
           setOpen={(o) => {
             if (!o) clearError();
           }}
-          error={error}
+          result={error}
+          itemLabel={resolvedLabels.singular}
         />
       </RecordScreen>
     );

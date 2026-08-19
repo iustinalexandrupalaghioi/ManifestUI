@@ -4,7 +4,6 @@ export interface ActionError {
   hint?: string;
   message: string;
   originalMessage?: string;
-  // See AppError.title — short summary for the client's error dialog header.
   title?: string;
   meta?: { type: string; [key: string]: unknown };
 }
@@ -13,12 +12,6 @@ export type ActionResult<T> =
   | { ok: true; data: T }
   | { ok: false; error: ActionError };
 
-// Thrown client-side by `unwrapAction` so a failed `ActionResult` can flow
-// back through react-query's normal rejection channel (mutationFn/queryFn),
-// without ever having crossed the Server Action boundary as a thrown error
-// itself — that boundary is what strips error detail in production. The
-// `error` here already went through `mapCaughtError`/`mapPgError` on the
-// server, so it's a complete, safe-to-render `AppError`, not a raw error.
 export class ActionResultError extends Error {
   error: ActionError;
   constructor(error: ActionError) {
@@ -33,11 +26,6 @@ export function unwrapAction<T>(result: ActionResult<T>): T {
   return result.data;
 }
 
-// Thrown server-side by `withTransaction` (see transactionalAction.ts) once
-// a failure has already been described via `describeActionFailure` — lets
-// `withAdminAction` (framework/authorization/lib/withAdminAction.ts) forward
-// that friendly ActionError as-is instead of re-mapping it through the
-// generic `mapCaughtError` catalog.
 export class DescribedActionError extends Error {
   error: ActionError;
   constructor(error: ActionError) {
@@ -48,8 +36,10 @@ export class DescribedActionError extends Error {
 }
 
 export interface BulkActionFailure {
-  id: string;
+  // Absent for a failed "add" — the record was never created.
+  id?: string;
   message: string;
+  originalMessage?: string;
   meta?: ActionError["meta"];
 }
 
@@ -69,10 +59,6 @@ export class BulkActionError extends Error {
   }
 }
 
-// Builds the summary/ok fields for a per-id result (see runPerId /
-// runWithProgress) — the one place bulk-result wording is computed, shared
-// by every bulk action (delete, complete, ...). Callers supply already
-// locale-resolved wording so the summary isn't hardcoded to English.
 export function toBulkActionResult(
   total: number,
   result: { succeededIds: string[]; failures: BulkActionFailure[] },
@@ -91,4 +77,26 @@ export function toBulkActionResult(
         : format.partial(succeededIds.length, total);
 
   return { ok: failures.length === 0, succeededIds, failures, summary };
+}
+
+// Wraps a single `ActionError` into the same `BulkActionResult` shape the per-id bulk actions produce, so every failure renders through one dialog.
+export function toFailureResult(
+  error: ActionError,
+  ids: (string | number)[] = [],
+): BulkActionResult {
+  const shared = {
+    message: error.message,
+    originalMessage: error.originalMessage,
+    meta: error.meta,
+  };
+
+  return {
+    ok: false,
+    succeededIds: [],
+    failures:
+      ids.length > 0
+        ? ids.map((id) => ({ id: String(id), ...shared }))
+        : [{ ...shared }],
+    summary: error.title ?? error.message,
+  };
 }

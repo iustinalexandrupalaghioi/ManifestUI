@@ -11,13 +11,10 @@ export interface PickupFillFieldMatch<TFormValues> {
 }
 
 export interface FlattenedFormFields<TFormValues> {
-  /** Form field, keyed by its own `name` — e.g. "title", "completed", "user_id". */
   directFields: Map<string, FieldConfig<TFormValues>>;
-  /** Owning pickup field, keyed by each `fillFields[].from` it fills — e.g. "username" -> user_id's field. */
   pickupFillFields: Map<string, PickupFillFieldMatch<TFormValues>>;
 }
 
-/** Not every FieldConfig variant statically carries `pickup` (e.g. file fields don't) — narrow safely. */
 export function getPickupConfig<TFormValues>(field: FieldConfig<TFormValues>) {
   return "pickup" in field ? field.pickup : undefined;
 }
@@ -28,9 +25,14 @@ function collectFromSections<TFormValues>(
   pickupFillFields: Map<string, PickupFillFieldMatch<TFormValues>>,
 ) {
   for (const section of sections) {
-    if (section.type === "slot" || section.type === "custom") continue;
+    if (section.type === "slot") continue;
 
-    for (const field of section.fields) {
+    // A custom section's own render() is opaque to us — it only exposes
+    // fields at all if it declares them via `fields` (see CustomSectionConfig).
+    const fields =
+      section.type === "custom" ? (section.fields ?? []) : section.fields;
+
+    for (const field of fields) {
       directFields.set(field.name, field);
 
       const pickup = "pickup" in field ? field.pickup : undefined;
@@ -50,19 +52,28 @@ function collectFromSections<TFormValues>(
  */
 export function flattenFormFields<TFormValues>(
   formConfig: FormConfig<TFormValues> | undefined,
+  extraSections?: SectionConfig<TFormValues>[][],
 ): FlattenedFormFields<TFormValues> {
   const directFields = new Map<string, FieldConfig<TFormValues>>();
   const pickupFillFields = new Map<string, PickupFillFieldMatch<TFormValues>>();
 
-  if (!formConfig) return { directFields, pickupFillFields };
-
-  if (formConfig.layout.mode === "stack") {
-    collectFromSections(formConfig.layout.sections, directFields, pickupFillFields);
-  } else {
-    for (const column of formConfig.layout.columns) {
-      collectFromSections(column.sections, directFields, pickupFillFields);
+  if (formConfig) {
+    if (formConfig.layout.mode === "stack") {
+      collectFromSections(
+        formConfig.layout.sections,
+        directFields,
+        pickupFillFields,
+      );
+    } else {
+      for (const column of formConfig.layout.columns) {
+        collectFromSections(column.sections, directFields, pickupFillFields);
+      }
     }
   }
+
+  extraSections?.forEach((sections) =>
+    collectFromSections(sections, directFields, pickupFillFields),
+  );
 
   return { directFields, pickupFillFields };
 }

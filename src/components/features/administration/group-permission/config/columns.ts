@@ -27,6 +27,9 @@ export const groupPermissionColumns: ColumnConfig[] = [
     type: "text",
     size: 200,
     accessorFn: (row, locale) => describeGrantResource(row.resource_id, locale),
+    // Editing this column edits the underlying resource_id combobox field,
+    // not the derived "resource_label" — which isn't a real form field.
+    editingField: "resource_id",
   },
   {
     field: "resource_type",

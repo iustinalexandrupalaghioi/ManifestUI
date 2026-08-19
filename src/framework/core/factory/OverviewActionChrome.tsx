@@ -4,8 +4,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { ActionFormDialog } from "@/framework/components/dialog/ActionFormDialog";
 import { DeleteDialog } from "@/framework/components/dialog/DeleteDialog";
-import { ErrorDialog } from "@/framework/components/dialog/ErrorDialog";
-import { BulkResultDialog } from "@/framework/components/dialog/BulkResultDialog";
+import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import {
   Toolbar,
   type TableAction,
@@ -17,7 +16,6 @@ import type {
   ResourceId,
   ResolvedResourceLabels,
 } from "@/framework/types/resource-hook-types";
-import type { AppError } from "@/framework/types/global/AppError";
 import type { BulkActionResult } from "@/framework/lib/actionResult";
 import type { FilterInput } from "@/framework/components/data-view/features/filtering";
 import { getItemId } from "../resource-id";
@@ -54,7 +52,7 @@ interface OverviewActionChromeProps<TItem> {
   activeActionKey: string | null;
   closeActionForm: () => void;
 
-  error: AppError | null;
+  error: BulkActionResult | null;
   clearError: () => void;
 
   bulkResult?: BulkActionResult | null;
@@ -99,10 +97,11 @@ export function OverviewActionChrome<TItem>({
   const [actionFormError, setActionFormError] =
     useState<BulkActionResult | null>(null);
 
-  const activeBulkResult = actionFormError ?? bulkResult;
-  const clearActiveBulkResult = () => {
+  const activeResult = actionFormError ?? bulkResult ?? error;
+  const clearActiveResult = () => {
     setActionFormError(null);
     clearBulkResult?.();
+    clearError();
   };
 
   return (
@@ -158,31 +157,21 @@ export function OverviewActionChrome<TItem>({
           labels={labels}
           config={activeActionForm}
           items={activeActionItems}
-          idField={idField}
           open={!!activeActionKey}
           onClose={closeActionForm}
           onError={setActionFormError}
         />
       )}
 
-      <BulkResultDialog
-        open={!!activeBulkResult}
-        setOpen={(open) => !open && clearActiveBulkResult()}
-        result={activeBulkResult}
+      <ResultDialog
+        open={!!activeResult}
+        setOpen={(open) => !open && clearActiveResult()}
+        result={activeResult}
         itemLabel={labels.singular}
-        pluralLabel={labels.plural}
         getItemHref={routes?.detail}
       />
 
       {confirmDialog}
-
-      <ErrorDialog
-        open={!!error}
-        setOpen={(o) => {
-          if (!o) clearError();
-        }}
-        error={error}
-      />
     </>
   );
 }

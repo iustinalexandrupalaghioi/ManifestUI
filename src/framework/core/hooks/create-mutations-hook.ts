@@ -6,7 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   ActionResultError,
   toBulkActionResult,
+  toFailureResult,
   unwrapAction,
+  type BulkActionResult,
 } from "@/framework/lib/actionResult";
 import {
   dismissToast,
@@ -17,7 +19,6 @@ import {
 import { runWithProgress } from "@/framework/hooks/runWithProgress";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { mapErr } from "../resource-helpers";
-import type { AppError } from "@/framework/types/global/AppError";
 import type { FieldValues } from "react-hook-form";
 import type {
   ResourceConfig,
@@ -52,7 +53,7 @@ export function createMutationsHook<
 
   return function useMutations() {
     const queryClient = useQueryClient();
-    const [error, setError] = useState<AppError | null>(null);
+    const [error, setError] = useState<BulkActionResult | null>(null);
     const locale = useLocale();
     const t = useTranslations("Toast");
     const resolvedLabels = {
@@ -60,8 +61,8 @@ export function createMutationsHook<
       plural: resolveLabel(config.labels.plural, locale),
     };
 
-    const handleError = (err: unknown) => {
-      setError(mapErr(err, locale));
+    const handleError = (err: unknown, ids: ResourceId[] = []) => {
+      setError(toFailureResult(mapErr(err, locale), ids));
     };
 
     // Only ever touches this resource's own cached infinite-list pages
@@ -153,7 +154,7 @@ export function createMutationsHook<
       mutationFn: (data: TFormValues) =>
         mutationFns.add(data).then(unwrapAction),
       onSuccess: () => invalidateSelfAndRelations("add"),
-      onError: handleError,
+      onError: (err) => handleError(err),
     });
 
     const {
@@ -173,7 +174,7 @@ export function createMutationsHook<
         });
         invalidateDetailAndRelations("update", [id]);
       },
-      onError: handleError,
+      onError: (err, { id }) => handleError(err, [id]),
     });
 
     const {
@@ -231,7 +232,7 @@ export function createMutationsHook<
         removeListItems(new Set(data.succeededIds));
         invalidateDetailAndRelations("delete", data.succeededIds);
       },
-      onError: handleError,
+      onError: (err, ids) => handleError(err, ids),
     });
 
     const {
@@ -267,10 +268,9 @@ export function createMutationsHook<
                 failures: [
                   {
                     id: String(id),
-                    message:
-                      err instanceof ActionResultError
-                        ? err.error.message
-                        : String(err),
+                    ...(err instanceof ActionResultError
+                      ? err.error
+                      : { message: String(err) }),
                   },
                 ],
               })),
@@ -312,7 +312,7 @@ export function createMutationsHook<
         patchListItems(byId);
         invalidateDetailAndRelations("update", [...succeeded]);
       },
-      onError: handleError,
+      onError: (err, items) => handleError(err, items.map((i) => i.id)),
     });
 
     return useMemo(
