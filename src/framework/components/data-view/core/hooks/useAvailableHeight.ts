@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-/**
- * Measures the available vertical space from the top of the referenced element
- * to the bottom of the viewport. Re-measures on window resize and DOM changes.
- */
 export function useAvailableHeight(
   ref: React.RefObject<HTMLElement | null>,
+  deps: readonly unknown[] = [],
 ): number {
   const [height, setHeight] = useState(0);
 
@@ -35,6 +32,13 @@ export function useAvailableHeight(
         el = el.parentElement
       ) {
         ro.observe(el);
+        for (
+          let sib: Element | null = el.previousElementSibling;
+          sib;
+          sib = sib.previousElementSibling
+        ) {
+          ro.observe(sib);
+        }
       }
     } else {
       ro.observe(document.documentElement);
@@ -45,7 +49,8 @@ export function useAvailableHeight(
       window.visualViewport?.removeEventListener("resize", measure);
       ro.disconnect();
     };
-  }, [ref]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ref, ...deps]);
 
   return height;
 }

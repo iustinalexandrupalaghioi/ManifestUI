@@ -9,6 +9,7 @@ import { createResourceActions } from "@/app/[locale]/cms/createResourceActions"
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
+  buildAggregateSelection,
   buildKeysetWhere,
   buildOrderBy,
   buildWhereConditions,
@@ -16,6 +17,7 @@ import {
   resolveSortColumns,
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { Cursor } from "@/framework/types/pagination";
 import type { TodoAttachment } from "@/app/types/main/Attachment";
 import { attachmentSchema, type AttachmentFormValues } from "./schema";
@@ -46,6 +48,7 @@ const resourceAction = createResourceActions(attachmentsDescriptor.id);
 
 export const {
   fetchAttachmentList,
+  fetchAttachmentAggregates,
   fetchAttachmentDetail,
   addAttachment,
   updateAttachment,
@@ -91,6 +94,22 @@ export const {
         total: count ?? 0,
         nextCursor,
       };
+    },
+  ],
+
+  fetchAttachmentAggregates: [
+    "read",
+    async (rules: AggregateRule[], filters: FilterRule[]) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const selection = buildAggregateSelection(rules, filterColumns);
+      if (Object.keys(selection).length === 0) return {};
+
+      const [row] = await db
+        .select(selection)
+        .from(todo_attachment)
+        .innerJoin(todo, eq(todo.id, todo_attachment.todo_id))
+        .where(where);
+      return row;
     },
   ],
 

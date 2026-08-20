@@ -15,18 +15,14 @@ import {
   ne,
   notIlike,
   or,
+  sql,
 } from "drizzle-orm";
 import type { Cursor } from "@/framework/types/pagination";
 import type { SortRule } from "../../core/tanstack-augmentations";
 import type { FilterRule } from "./filters";
+import type { AggregateRule } from "../aggregates/aggregates";
+import { aggregateResultKey } from "../aggregates/aggregates";
 
-/**
- * Maps each FilterRule/SortRule to a real SQL column. Key is `columnName`, or
- * `${origin}.${columnName}` for a column coming from a joined table - mirrors
- * the `origin` convention used by FilterRule/applyFilters. The same key must
- * also resolve (via dot-path) to that column's value in a query result row,
- * since it doubles as the keyset-cursor field name.
- */
 export type FilterColumnMap = Record<string, AnyColumn>;
 
 export function buildWhereConditions(
@@ -68,7 +64,12 @@ export function buildWhereConditions(
 
       case "gt":
         conditions.push(
-          gt(col, columnType === "datetime" && typeof value === "string" ? `${value}.999` : value),
+          gt(
+            col,
+            columnType === "datetime" && typeof value === "string"
+              ? `${value}.999`
+              : value,
+          ),
         );
         break;
 
@@ -82,7 +83,12 @@ export function buildWhereConditions(
 
       case "lte":
         conditions.push(
-          lte(col, columnType === "datetime" && typeof value === "string" ? `${value}.999` : value),
+          lte(
+            col,
+            columnType === "datetime" && typeof value === "string"
+              ? `${value}.999`
+              : value,
+          ),
         );
         break;
 
@@ -121,19 +127,52 @@ export function buildWhereConditions(
   return conditions.length ? and(...conditions) : undefined;
 }
 
+// One raw SQL aggregate expression per rule, keyed by aggregateResultKey.
+export function buildAggregateSelection(
+  rules: AggregateRule[],
+  columns: FilterColumnMap,
+): Record<string, SQL<number | null>> {
+  const selection: Record<string, SQL<number | null>> = {};
+
+  for (const rule of rules) {
+    const key = rule.origin
+      ? `${rule.origin}.${rule.columnName}`
+      : rule.columnName;
+    const col = columns[key];
+    if (!col) continue;
+
+    const resultKey = aggregateResultKey(rule);
+    switch (rule.fn) {
+      case "sum":
+        selection[resultKey] = sql<number | null>`sum(${col})`;
+        break;
+      case "avg":
+        selection[resultKey] = sql<number | null>`avg(${col})`;
+        break;
+      case "min":
+        selection[resultKey] = sql<number | null>`min(${col})`;
+        break;
+      case "max":
+        selection[resultKey] = sql<number | null>`max(${col})`;
+        break;
+      case "count":
+        selection[resultKey] = sql<number | null>`count(${col})`;
+        break;
+      case "count_distinct":
+        selection[resultKey] = sql<number | null>`count(distinct ${col})`;
+        break;
+    }
+  }
+
+  return selection;
+}
+
 export interface SortColumn {
   key: string;
   column: AnyColumn;
   direction: "asc" | "desc";
 }
 
-/**
- * Resolves SortRule[] into a concrete, ordered list of (column, direction)
- * pairs, always ending in `id` as a tiebreaker so the order is deterministic
- * - required for keyset pagination to work correctly. Callable on its own so
- * callers can inspect/reuse the resolved sort independently of building the
- * SQL ORDER BY or the pagination cursor.
- */
 export function resolveSortColumns(
   sorting: SortRule[],
   columns: FilterColumnMap,
@@ -159,16 +198,11 @@ export function resolveSortColumns(
 }
 
 export function buildOrderBy(sortColumns: SortColumn[]): SQL[] {
-  return sortColumns.map((s) => (s.direction === "desc" ? desc(s.column) : asc(s.column)));
+  return sortColumns.map((s) =>
+    s.direction === "desc" ? desc(s.column) : asc(s.column),
+  );
 }
 
-/**
- * Seek/keyset predicate equivalent to `sortColumns`' ORDER BY: rows strictly
- * after `cursor` in that order. Builds the standard cascading
- * `(a > cA) OR (a = cA AND b > cB) OR ...` form (per-column `>`/`<` matching
- * each column's own direction) rather than a row-value tuple comparison,
- * since tuple comparison only works when every column shares one direction.
- */
 export function buildKeysetWhere(
   sortColumns: SortColumn[],
   cursor: Cursor | null | undefined,
@@ -193,7 +227,6 @@ function getNestedValue(row: Record<string, unknown>, path: string): unknown {
   return path.split(".").reduce<any>((acc, part) => acc?.[part], row);
 }
 
-/** Builds the cursor for the *next* page from the last row of the current page. */
 export function extractCursor(
   row: Record<string, unknown> | undefined,
   sortColumns: SortColumn[],

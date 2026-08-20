@@ -19,6 +19,9 @@ import { FormHeader, type FormHeaderProps } from "../form/partials/FormHeader";
 interface FormPageState {
   isDirty: boolean;
   isSaving: boolean;
+  isRefreshing?: boolean;
+  isRefetching?: boolean;
+  alwaysAllowReset?: boolean;
   canSave: boolean;
   readOnly: boolean;
   onSave: () => void;
@@ -38,6 +41,9 @@ export function useFormPageContext() {
 interface FormPageProps {
   isDirty: boolean;
   isSaving: boolean;
+  isRefreshing?: boolean;
+  isRefetching?: boolean;
+  alwaysAllowReset?: boolean;
   canSave?: boolean;
   readOnly?: boolean;
   onSave: () => void;
@@ -49,6 +55,9 @@ interface FormPageProps {
 export function FormPage({
   isDirty,
   isSaving,
+  isRefreshing,
+  isRefetching,
+  alwaysAllowReset,
   canSave = true,
   readOnly = false,
   onSave,
@@ -60,7 +69,18 @@ export function FormPage({
 
   return (
     <FormPageContext
-      value={{ isDirty, isSaving, canSave, readOnly, onSave, onReset, guard }}
+      value={{
+        isDirty,
+        isSaving,
+        isRefreshing,
+        isRefetching,
+        alwaysAllowReset,
+        canSave,
+        readOnly,
+        onSave,
+        onReset,
+        guard,
+      }}
     >
       <div
         className={cn(
@@ -140,10 +160,16 @@ FormPage.Toolbar = function FormPageToolbar<T>({
           size="icon"
           type="button"
           variant="outline"
-          disabled={!form.isDirty}
+          disabled={
+            form.isRefreshing || (!form.alwaysAllowReset && !form.isDirty)
+          }
           onClick={() => form.guard(form.onReset!)}
         >
-          <RotateCcwIcon className="size-4" />
+          {form.isRefetching ? (
+            <Loader2Icon className="size-4 animate-spin" />
+          ) : (
+            <RotateCcwIcon className="size-4" />
+          )}
         </Button>
       )}
     </Toolbar>

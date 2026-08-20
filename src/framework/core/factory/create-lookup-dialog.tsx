@@ -17,6 +17,9 @@ import {
   useActiveTableView,
 } from "@/framework/components/data-view/features/views";
 import { BaseDialog } from "@/framework/components/dialog/BaseDialog";
+import { Button } from "@/components/ui/button";
+import ToolbarActions from "@/framework/components/toolbar/ToolbarActions";
+import { Loader2Icon, RotateCcwIcon } from "lucide-react";
 import {
   memo,
   useCallback,
@@ -62,10 +65,12 @@ export function createLookupDialog<
   }) {
     const locale = useLocale();
     const tr = useTranslations("Resource");
+    const tt = useTranslations("Toolbar");
     const resolvedPlural = resolveLabel(labels.plural, locale);
     const resolvedSingular = resolveLabel(labels.singular, locale);
 
     const tableId = `${overviewKey}-pickup`;
+    const toolbarSlotId = `${tableId}-toolbar`;
 
     getViewsStore(
       tableId,
@@ -105,6 +110,9 @@ export function createLookupDialog<
       hasNextPage,
       isFetchingNextPage,
       isLoading,
+      isFetching,
+      isRefetching,
+      refetch,
     } = hooks.useList(sorting, activeFilters);
 
     const handleSelect = useCallback(
@@ -132,15 +140,36 @@ export function createLookupDialog<
       <BaseDialog
         open={open}
         setOpen={setOpen}
-        title={tr("selectResource", { resource: resolvedSingular.toLowerCase() })}
+        title={tr("selectResource", {
+          resource: resolvedSingular.toLowerCase(),
+        })}
         onClose={() => setOpen(false)}
         className="gap-2 bg-background md:max-w-5xl"
       >
+        <ToolbarActions slotId={toolbarSlotId}>
+          <Button
+            title={tt("refresh")}
+            variant="outline"
+            size="icon"
+            className="size-7"
+            type="button"
+            disabled={isFetching}
+            onClick={() => refetch()}
+          >
+            {isRefetching ? (
+              <Loader2Icon className="size-3 animate-spin" />
+            ) : (
+              <RotateCcwIcon className="size-3" />
+            )}
+          </Button>
+        </ToolbarActions>
+
         <div className="flex min-h-0 w-full flex-1 flex-col px-4">
           <DataView
             isLoading={isLoading}
             defaultViewName={resolvedPlural}
             tableId={tableId}
+            slotId={toolbarSlotId}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}

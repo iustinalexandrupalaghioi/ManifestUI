@@ -4,6 +4,8 @@ import { subscribeWithSelector } from "zustand/middleware"
 import { getViewModeStore } from "../../core/stores/ViewModeStore"
 import { getFilteringStore } from "../filtering/filtering.store"
 import { getSortingStore } from "../sorting/sorting.store"
+import { getAggregatesStore } from "../aggregates/aggregates.store"
+import type { AggregateRule } from "../aggregates/aggregates"
 import type {
   ListViewRecord,
   PersistedViewState,
@@ -18,7 +20,8 @@ import { DEFAULT_LIST_VIEW_ID, DEFAULT_TABLE_VIEW_ID } from "./views.types"
 function makeDefaultState(
   defaultViewName: string,
   initialColumnVisibility: VisibilityState,
-  initialListColumnVisibility: VisibilityState
+  initialListColumnVisibility: VisibilityState,
+  initialAggregates: AggregateRule[] = []
 ): PersistedViewState {
   return {
     tableViews: {
@@ -34,6 +37,7 @@ function makeDefaultState(
           columnPinning: { left: [] },
           sorting: [],
           filters: [],
+          aggregates: initialAggregates,
         },
       ],
     },
@@ -48,6 +52,7 @@ function makeDefaultState(
           listColumnOrder: [],
           sorting: [],
           filters: [],
+          aggregates: initialAggregates,
         },
       ],
     },
@@ -97,12 +102,14 @@ function createViewsStore(
   tableId: string,
   defaultViewName: string,
   initialColumnVisibility: VisibilityState,
-  initialListColumnVisibility: VisibilityState
+  initialListColumnVisibility: VisibilityState,
+  initialAggregates: AggregateRule[] = []
 ) {
   const defaultState = makeDefaultState(
     defaultViewName,
     initialColumnVisibility,
-    initialListColumnVisibility
+    initialListColumnVisibility,
+    initialAggregates
   )
 
   return create<ViewsStore>()(
@@ -158,6 +165,9 @@ function createViewsStore(
           getFilteringStore(tableId, activeView.id).setState({
             rules: activeView.filters,
           })
+          getAggregatesStore(tableId, activeView.id).setState({
+            rules: activeView.aggregates ?? [],
+          })
         }
         set({ tableDraft: null })
       },
@@ -179,6 +189,7 @@ function createViewsStore(
           columnPinning: tableDraft?.columnPinning ?? active.columnPinning,
           sorting: tableDraft?.sorting ?? active.sorting,
           filters: tableDraft?.filters ?? active.filters,
+          aggregates: tableDraft?.aggregates ?? active.aggregates ?? [],
         }
         set({
           persisted: {
@@ -265,6 +276,9 @@ function createViewsStore(
           getFilteringStore(tableId, activeView.id).setState({
             rules: activeView.filters,
           })
+          getAggregatesStore(tableId, activeView.id).setState({
+            rules: activeView.aggregates ?? [],
+          })
         }
         set({ listDraft: null })
       },
@@ -284,6 +298,7 @@ function createViewsStore(
           listColumnOrder: listDraft?.listColumnOrder ?? active.listColumnOrder,
           sorting: listDraft?.sorting ?? active.sorting,
           filters: listDraft?.filters ?? active.filters,
+          aggregates: listDraft?.aggregates ?? active.aggregates ?? [],
         }
         set({
           persisted: {
@@ -347,7 +362,8 @@ export function getViewsStore(
   tableId: string,
   defaultViewName = "Default",
   initialColumnVisibility: VisibilityState = {},
-  initialListColumnVisibility: VisibilityState = {}
+  initialListColumnVisibility: VisibilityState = {},
+  initialAggregates: AggregateRule[] = []
 ) {
   if (!stores.has(tableId)) {
     stores.set(
@@ -356,7 +372,8 @@ export function getViewsStore(
         tableId,
         defaultViewName,
         initialColumnVisibility,
-        initialListColumnVisibility
+        initialListColumnVisibility,
+        initialAggregates
       )
     )
   }

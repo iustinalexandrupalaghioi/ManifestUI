@@ -7,6 +7,7 @@ import { createResourceActions } from "@/app/[locale]/cms/createResourceActions"
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
+  buildAggregateSelection,
   buildKeysetWhere,
   buildOrderBy,
   buildWhereConditions,
@@ -14,6 +15,7 @@ import {
   resolveSortColumns,
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { Cursor } from "@/framework/types/pagination";
 import type { Group } from "@/app/types/administration/Group";
 import { groupSchema, type GroupFormValues } from "./schema";
@@ -36,8 +38,14 @@ const selection = {
 
 const crud = createResourceActions("groups");
 
-export const { fetchGroupList, fetchGroupDetail, addGroup, updateGroup, deleteGroups } =
-  defineResourceActions("groups", {
+export const {
+  fetchGroupList,
+  fetchGroupAggregates,
+  fetchGroupDetail,
+  addGroup,
+  updateGroup,
+  deleteGroups,
+} = defineResourceActions("groups", {
     fetchGroupList: [
       "read",
       async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
@@ -68,6 +76,18 @@ export const { fetchGroupList, fetchGroupDetail, addGroup, updateGroup, deleteGr
             : null;
 
         return { items: items as Group[], total: count ?? 0, nextCursor };
+      },
+    ],
+
+    fetchGroupAggregates: [
+      "read",
+      async (rules: AggregateRule[], filters: FilterRule[]) => {
+        const where = buildWhereConditions(filters, filterColumns);
+        const selection = buildAggregateSelection(rules, filterColumns);
+        if (Object.keys(selection).length === 0) return {};
+
+        const [row] = await db.select(selection).from(group).where(where);
+        return row;
       },
     ],
 

@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect } from "react"
 import { getFilteringStore } from "../filtering/filtering.store"
 import type { ViewRepository } from "../persistence/persistence.contract"
 import { getSortingStore } from "../sorting/sorting.store"
+import { getAggregatesStore } from "../aggregates/aggregates.store"
 import {
   getViewsStore,
   useActiveListView,
@@ -27,6 +28,9 @@ function hydrateViewStores(
     getFilteringStore(tableId, activeTableView.id).setState({
       rules: activeTableView.filters,
     })
+    getAggregatesStore(tableId, activeTableView.id).setState({
+      rules: activeTableView.aggregates ?? [],
+    })
   }
 
   const activeListView =
@@ -39,6 +43,9 @@ function hydrateViewStores(
     })
     getFilteringStore(tableId, activeListView.id).setState({
       rules: activeListView.filters,
+    })
+    getAggregatesStore(tableId, activeListView.id).setState({
+      rules: activeListView.aggregates ?? [],
     })
   }
 }
@@ -70,6 +77,9 @@ export function useViews(tableId: string, repository: ViewRepository) {
     getFilteringStore(tableId, activeTableView.id).setState({
       rules: activeTableView.filters,
     })
+    getAggregatesStore(tableId, activeTableView.id).setState({
+      rules: activeTableView.aggregates ?? [],
+    })
   }, [tableId, activeTableView?.id])
 
   // ── Hydrate on active list view change ───────────────────────────────────
@@ -81,6 +91,9 @@ export function useViews(tableId: string, repository: ViewRepository) {
     })
     getFilteringStore(tableId, activeListView.id).setState({
       rules: activeListView.filters,
+    })
+    getAggregatesStore(tableId, activeListView.id).setState({
+      rules: activeListView.aggregates ?? [],
     })
   }, [tableId, activeListView?.id])
 

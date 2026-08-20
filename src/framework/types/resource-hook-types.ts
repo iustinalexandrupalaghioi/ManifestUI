@@ -8,6 +8,10 @@ import type { FieldValues } from "react-hook-form";
 import type { ZodType } from "zod";
 import type { SortRule } from "../components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "../components/data-view/features/filtering";
+import type {
+  AggregateRule,
+  AggregateResult,
+} from "../components/data-view/features/aggregates/aggregates";
 import type { FormConfig } from "../components/form/types/types";
 import {
   ActionResult,
@@ -95,6 +99,10 @@ export interface ResourceConfig<
     ActionResult<{ items: TItem[]; total: number; nextCursor: Cursor | null }>
   >;
   pageSize?: number;
+  fetchAggregates?: (
+    rules: AggregateRule[],
+    filters: FilterRule[],
+  ) => Promise<ActionResult<AggregateResult>>;
   isDeleteEligible?: (item: TItem) => boolean;
   getRowUrl?: (item: TItem) => string;
   bulkActions?: () => BulkActionsHookResult<TItem>;

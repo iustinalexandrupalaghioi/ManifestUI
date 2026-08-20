@@ -41,12 +41,13 @@ export function SplitOverviewShell({
   detail: ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const availableHeight = useAvailableHeight(containerRef);
 
   const [width, setWidth] = useState(splitConfig.defaultWidth);
   const paneRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const [mainCollapsed, setMainCollapsed] = useState(false);
+
+  const availableHeight = useAvailableHeight(containerRef, [mainCollapsed]);
 
   useEffect(() => {
     if (!open) setMainCollapsed(false);

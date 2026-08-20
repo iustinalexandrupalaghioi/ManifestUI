@@ -3,6 +3,7 @@ import { cn } from "@/framework/lib/utils"
 import type { SortingState } from "@tanstack/react-table"
 import { flexRender } from "@tanstack/react-table"
 import type { FilterRule } from "../../features/filtering/filters"
+import type { AggregateFunction, AggregateRule } from "../../features/aggregates/aggregates"
 import { useDataViewCore } from "../../core/stores/DataViewProvider"
 import { DataTableHeaderDropdown } from "./DataTableHeaderDropdown"
 
@@ -13,6 +14,8 @@ interface DataViewHeaderProps {
   ) => void
   preFilters: FilterRule[]
   onOpenFilter: (columnId?: string) => void
+  aggregateRules?: AggregateRule[]
+  onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void
 }
 
 export function DataTableHeader({
@@ -20,6 +23,8 @@ export function DataTableHeader({
   setSorting,
   preFilters,
   onOpenFilter,
+  aggregateRules = [],
+  onSetAggregate,
 }: DataViewHeaderProps) {
   const { table } = useDataViewCore()
 
@@ -85,6 +90,8 @@ export function DataTableHeader({
             const sortRule = sortIndex !== -1 ? sorting[sortIndex] : null
             const isPinned = header.column.getIsPinned()
             const isMultiSort = sorting.length > 1
+            const activeAggregateFn =
+              aggregateRules.find((r) => r.columnId === columnId)?.fn ?? null
 
             return (
               <CustomTableHead
@@ -142,6 +149,8 @@ export function DataTableHeader({
                       }}
                       isPinned={!!header.column.getIsPinned()}
                       canHide={header.column.getCanHide()}
+                      activeAggregateFn={activeAggregateFn}
+                      onSetAggregate={onSetAggregate}
                     />
                   )}
                 </div>

@@ -5,6 +5,7 @@ import type { Group } from "@/app/types/administration/Group";
 import {
   fetchGroupDetail,
   fetchGroupList,
+  fetchGroupAggregates,
   addGroup,
   updateGroup,
   deleteGroups,
@@ -35,6 +36,7 @@ export const groupsResource = defineResource<Group, GroupFormValues>({
   },
 
   fetchList: fetchGroupList,
+  fetchAggregates: fetchGroupAggregates,
   fetchDetail: fetchGroupDetail,
   mutationFns: { add: addGroup, update: updateGroup, delete: deleteGroups },
 

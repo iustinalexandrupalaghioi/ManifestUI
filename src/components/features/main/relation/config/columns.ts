@@ -32,6 +32,7 @@ export const relationColumns: ColumnConfig[] = [
     label: { en: "Age", ro: "Vârstă" },
     type: "number",
     size: 90,
+    defaultAggregate: "avg",
   },
   {
     field: "birth_date",

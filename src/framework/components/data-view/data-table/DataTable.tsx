@@ -7,8 +7,14 @@ import type {
 } from "@tanstack/react-table"
 
 import type { FilterRule } from "../features/filtering/filters"
+import type {
+  AggregateFunction,
+  AggregateResult,
+  AggregateRule,
+} from "../features/aggregates/aggregates"
 import { DataTableHeader } from "./ui/DataTableHeader"
 import { DataTableBody } from "./ui/DataTableBody"
+import { DataTableFooter } from "./ui/DataTableFooter"
 
 interface DataTableProps {
   table: TTable<any>
@@ -27,6 +33,10 @@ interface DataTableProps {
   ) => void
   preFilters: FilterRule[]
   onOpenFilter: (columnId?: string) => void
+  aggregateRules?: AggregateRule[]
+  aggregateValues?: AggregateResult
+  isAggregatesFetching?: boolean
+  onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void
 }
 
 export function DataTable({
@@ -44,6 +54,10 @@ export function DataTable({
   setSorting,
   preFilters,
   onOpenFilter,
+  aggregateRules = [],
+  aggregateValues,
+  isAggregatesFetching,
+  onSetAggregate,
 }: DataTableProps) {
   const leafColumns = table.getVisibleLeafColumns()
   const lastLeafColumnId = leafColumns.at(-1)?.id
@@ -76,6 +90,8 @@ export function DataTable({
           setSorting={setSorting}
           preFilters={preFilters}
           onOpenFilter={onOpenFilter}
+          aggregateRules={aggregateRules}
+          onSetAggregate={onSetAggregate}
         />
         <DataTableBody
           columnSizing={columnSizing}
@@ -86,6 +102,11 @@ export function DataTable({
           columnOrder={columnOrder}
           columnPinning={columnPinning}
           columnVisibility={columnVisibility}
+        />
+        <DataTableFooter
+          aggregateRules={aggregateRules}
+          aggregateValues={aggregateValues}
+          isAggregatesFetching={isAggregatesFetching}
         />
       </CustomTable>
     </div>

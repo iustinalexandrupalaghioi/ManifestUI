@@ -5,6 +5,7 @@ import type { UserGroup } from "@/app/types/administration/UserGroup";
 import {
   fetchUserGroupDetail,
   fetchUserGroupList,
+  fetchUserGroupAggregates,
   addUserGroup,
   updateUserGroup,
   deleteUserGroups,
@@ -37,6 +38,7 @@ export const userGroupsResource = defineResource<
   },
 
   fetchList: fetchUserGroupList,
+  fetchAggregates: fetchUserGroupAggregates,
   fetchDetail: fetchUserGroupDetail,
   mutationFns: {
     add: addUserGroup,

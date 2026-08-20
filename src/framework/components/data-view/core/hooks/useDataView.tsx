@@ -18,6 +18,9 @@ import {
   getSelectionStore,
 } from "../../features/selection/selection.store";
 import { deleteSortingStores } from "../../features/sorting/sorting.store";
+import { deleteAggregatesStores } from "../../features/aggregates/aggregates.store";
+import type { AggregateResult } from "../../features/aggregates/aggregates";
+import { buildDefaultAggregateRules } from "../../features/aggregates/useAggregatableColumns";
 import { getViewsStore } from "../../features/views/views.store";
 import type { DataViewFeature, DataViewFeatureContext } from "../contracts";
 import {
@@ -68,6 +71,8 @@ export interface DataViewProps<TData, TValue> {
   tableMeta?: import("@tanstack/react-table").TableMeta<TData>;
   activeRowId?: string;
   openOnRowClick?: boolean;
+  aggregateValues?: AggregateResult;
+  isAggregatesFetching?: boolean;
 }
 
 export function useDataView<TData, TValue>(
@@ -89,6 +94,8 @@ export function useDataView<TData, TValue>(
     defaultViewName = "Default",
     initialListColumnVisibility,
     tableMeta,
+    aggregateValues,
+    isAggregatesFetching,
   } = props;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -102,6 +109,7 @@ export function useDataView<TData, TValue>(
     defaultViewName,
     initialColumnVisibility,
     initialListColumnVisibility ?? {},
+    buildDefaultAggregateRules(columns),
   );
 
   const selectionStore = getSelectionStore(tableId);
@@ -291,6 +299,7 @@ export function useDataView<TData, TValue>(
       deleteSelectionStore(tableId);
       deleteFilteringStores(tableId);
       deleteSortingStores(tableId);
+      deleteAggregatesStores(tableId);
       deleteEditingStore(tableId);
     };
   }, [tableId]);
@@ -332,5 +341,7 @@ export function useDataView<TData, TValue>(
     columnSizing,
     columnOrder,
     columnPinning,
+    aggregateValues,
+    isAggregatesFetching,
   };
 }

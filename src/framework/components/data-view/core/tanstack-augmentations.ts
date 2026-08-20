@@ -20,6 +20,8 @@ declare module "@tanstack/react-table" {
     columnLabel?: string;
     origin?: string;
     columnType?: ColumnType | null;
+    aggregatable?: boolean;
+    defaultAggregate?: import("../features/aggregates/aggregates").AggregateFunction | null;
     selectOptions?: Enum[];
     onSelect?: (rows: Row<TData>[]) => void;
     group?: string;

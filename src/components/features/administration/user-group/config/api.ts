@@ -9,8 +9,12 @@ import { getPermissionsForGroupIds } from "@/framework/authorization/lib/permiss
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
-import { buildWhereConditions } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import {
+  buildAggregateSelection,
+  buildWhereConditions,
+} from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { FilterColumnMap } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { Cursor } from "@/framework/types/pagination";
 import type { UserGroup } from "@/app/types/administration/UserGroup";
 import { userGroupSchema, type UserGroupFormValues } from "./schema";
@@ -52,6 +56,7 @@ const crud = createResourceActions("user-groups");
 
 export const {
   fetchUserGroupList,
+  fetchUserGroupAggregates,
   fetchUserGroupDetail,
   addUserGroup,
   updateUserGroup,
@@ -86,6 +91,18 @@ export const {
         total: count ?? 0,
         nextCursor: null,
       };
+    },
+  ],
+
+  fetchUserGroupAggregates: [
+    "read",
+    async (rules: AggregateRule[], filters: FilterRule[]) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const selection = buildAggregateSelection(rules, filterColumns);
+      if (Object.keys(selection).length === 0) return {};
+
+      const [row] = await db.select(selection).from(user_group).where(where);
+      return row;
     },
   ],
 

@@ -5,6 +5,7 @@ import type { TodoAttachment } from "@/app/types/main/Attachment";
 import { attachmentSchema, type AttachmentFormValues } from "./config/schema";
 import {
   fetchAttachmentList,
+  fetchAttachmentAggregates,
   fetchAttachmentDetail,
   addAttachment,
   updateAttachment,
@@ -37,6 +38,7 @@ export const attachmentsResource = defineResource<
   },
 
   fetchList: fetchAttachmentList,
+  fetchAggregates: fetchAttachmentAggregates,
   fetchDetail: fetchAttachmentDetail,
   mutationFns: {
     add: addAttachment,

@@ -8,6 +8,7 @@ import type {
 } from "../../types/resource-hook-types";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 
 export function createListHook<
   TItem,
@@ -45,5 +46,7 @@ export function createKeys<
     list: (sorting: SortRule[], filters: FilterRule[]) =>
       [...queryKey, "list", sorting, filters] as const,
     detail: (id: ResourceId) => [...queryKey, "detail", String(id)] as const,
+    aggregates: (rules: AggregateRule[], filters: FilterRule[]) =>
+      [...queryKey, "aggregates", rules, filters] as const,
   };
 }

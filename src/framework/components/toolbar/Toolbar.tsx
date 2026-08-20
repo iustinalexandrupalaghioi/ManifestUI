@@ -52,7 +52,9 @@ interface ToolbarProps<TData> {
   onBack?: () => void;
   onOpen?: (rows: TData[]) => void;
   getRowUrl?: (row: TData) => string;
-  reloadEnabled?: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  isRefetching?: boolean;
   setRowSelection: (selection: Record<string, boolean>) => void;
   children?: React.ReactNode;
   popOutUrl?: string;
@@ -103,7 +105,9 @@ export function Toolbar<TData>({
   onBack,
   onOpen,
   getRowUrl,
-  reloadEnabled = false,
+  onRefresh,
+  isRefreshing = false,
+  isRefetching = false,
   slotId,
   variant = "overview",
   children,
@@ -129,6 +133,7 @@ export function Toolbar<TData>({
     !addPath &&
     !onAdd &&
     !onOpen &&
+    !onRefresh &&
     !onBack &&
     !children &&
     slotId !== undefined
@@ -169,7 +174,7 @@ export function Toolbar<TData>({
       onOpen ||
       addPath ||
       onAdd ||
-      reloadEnabled ||
+      onRefresh ||
       onDelete
     );
     const hasCustomActions = !!actions?.length;
@@ -251,9 +256,13 @@ export function Toolbar<TData>({
                 </DropdownMenuItem>
               )}
 
-              {reloadEnabled && (
-                <DropdownMenuItem onSelect={() => window.location.reload()}>
-                  <RotateCcwIcon className="size-4" />
+              {onRefresh && (
+                <DropdownMenuItem disabled={isRefreshing} onSelect={onRefresh}>
+                  {isRefetching ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <RotateCcwIcon className="size-4" />
+                  )}
                   {t("refresh")}
                 </DropdownMenuItem>
               )}
@@ -358,7 +367,7 @@ export function Toolbar<TData>({
       >
         {(addPath ||
           onAdd ||
-          reloadEnabled ||
+          onRefresh ||
           onDelete ||
           !!actions?.length ||
           popOutUrl) && (
@@ -413,16 +422,20 @@ export function Toolbar<TData>({
                 </DropdownMenuItem>
               )}
 
-              {reloadEnabled && (
-                <DropdownMenuItem onSelect={() => window.location.reload()}>
-                  <RotateCcwIcon className="size-4" />
+              {onRefresh && (
+                <DropdownMenuItem disabled={isRefreshing} onSelect={onRefresh}>
+                  {isRefetching ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <RotateCcwIcon className="size-4" />
+                  )}
                   {t("refresh")}
                 </DropdownMenuItem>
               )}
 
               {!!actions?.length && (
                 <>
-                  {(addPath || onAdd || reloadEnabled || popOutUrl) && (
+                  {(addPath || onAdd || onRefresh || popOutUrl) && (
                     <DropdownMenuSeparator />
                   )}
                   <ToolbarActionsList

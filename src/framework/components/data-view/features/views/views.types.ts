@@ -4,6 +4,7 @@ import type {
   VisibilityState,
 } from "@tanstack/react-table"
 import type { FilterRule } from "../filtering/filters"
+import type { AggregateRule } from "../aggregates/aggregates"
 
 /**
  * TableViewRecord
@@ -23,6 +24,7 @@ export interface TableViewRecord {
   // Table data state — independent from list view data state
   sorting: SortingState
   filters: FilterRule[]
+  aggregates: AggregateRule[]
 }
 
 /**
@@ -41,6 +43,7 @@ export interface ListViewRecord {
   // List data state — independent from table view data state
   sorting: SortingState
   filters: FilterRule[]
+  aggregates: AggregateRule[]
 }
 
 export type ViewRecord = TableViewRecord | ListViewRecord

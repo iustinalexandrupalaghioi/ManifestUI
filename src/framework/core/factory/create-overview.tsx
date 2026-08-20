@@ -8,6 +8,7 @@ import {
 import { useActiveMode } from "@/framework/components/data-view/core/stores/ViewModeStore";
 import { getFilteringStore } from "@/framework/components/data-view/features/filtering/filtering.store";
 import { getSortingStore } from "@/framework/components/data-view/features/sorting/sorting.store";
+import { getAggregatesStore } from "@/framework/components/data-view/features/aggregates/aggregates.store";
 import {
   useActiveListView,
   useActiveTableView,
@@ -17,6 +18,7 @@ import {
   DEFAULT_TABLE_VIEW_ID,
 } from "@/framework/components/data-view/features/views/views.types";
 import { useNavigatorStore } from "@/framework/components/screen/stores/useNavigatorStore";
+import { usePendingChanges } from "@/framework/hooks/usePendingChanges";
 
 import {
   preFilterToFormKey,
@@ -197,6 +199,10 @@ export function createOverview<
       : overviewKey;
 
     const editMode = getEditingStore(tableId)((s) => s.editMode);
+    const pendingEdits = getEditingStore(tableId)((s) => s.pendingEdits);
+    const gridIsDirty = Object.keys(pendingEdits).length > 0;
+    const { guard: guardRefresh, pendingChangesDialog } =
+      usePendingChanges(gridIsDirty);
 
     const resolvedViewName =
       config.getOverviewTitle?.(preFilters) ??
@@ -232,6 +238,16 @@ export function createOverview<
       [preFilters, userFilters],
     );
 
+    const activeAggregateRules = getAggregatesStore(
+      tableId,
+      activeViewId,
+    )((s) => s.rules);
+    const {
+      data: aggregateValues,
+      isFetching: isAggregatesFetching,
+      refetch: refetchAggregates,
+    } = hooks.useAggregates(activeAggregateRules, activeFilters);
+
     const [openingItem, setOpeningItem] = useState<TItem | null>(null);
     const [addOpen, setAddOpen] = useState(false);
 
@@ -247,7 +263,17 @@ export function createOverview<
       hasNextPage,
       isFetchingNextPage,
       isLoading: listIsLoading,
+      isFetching: isRefreshing,
+      isRefetching,
+      refetch,
     } = hooks.useList(sorting, activeFilters, canRead);
+
+    const onRefresh = () =>
+      guardRefresh(() => {
+        getEditingStore(tableId).getState().discardAll();
+        refetch();
+        refetchAggregates();
+      });
 
     const isLoading = !permissionsLoaded || listIsLoading;
 
@@ -361,6 +387,9 @@ export function createOverview<
         preFilters={preFilters}
         popOutUrl={popOutUrl}
         toolbarChildren={config.overviewSlots?.toolbarExtra?.(selectedRows)}
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+        isRefetching={isRefetching}
         routes={routes}
         queryKeyAll={keys.all}
         labels={resolvedLabels}
@@ -428,6 +457,8 @@ export function createOverview<
         preFilters={preFilters}
         activeRowId={activeRowId}
         openOnRowClick={isSplitDesktop && !editMode}
+        aggregateValues={aggregateValues}
+        isAggregatesFetching={isAggregatesFetching}
         {...dataTableProps}
       />
     );
@@ -478,6 +509,7 @@ export function createOverview<
         {tableNode}
         {config.overviewSlots?.afterTable?.(allItems)}
         {addDialogNode}
+        {pendingChangesDialog}
       </>
     );
 

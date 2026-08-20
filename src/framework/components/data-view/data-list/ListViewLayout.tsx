@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchIcon, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type RefObject, useMemo, useState } from "react";
+import { type RefObject, useMemo, useRef, useState } from "react";
 import type { SortingState, Table as TTable } from "@tanstack/react-table";
+import { cn } from "@/framework/lib/utils";
 import type { DataViewFeature } from "../core/contracts";
+import { useAvailableHeight } from "../core/hooks/useAvailableHeight";
 import { useCoreStore } from "../core/stores/DataViewStore";
 import { ColumnManagerButton } from "../core/ui/ColumnManagerButton";
 import { DataListModeToggle } from "./ui/DataListModeToggle";
@@ -23,6 +25,15 @@ import { getSortingStore } from "../features/sorting/sorting.store";
 import { buildSortableColumns } from "../features/sorting/useSortableColumns";
 import { SortButton } from "../features/sorting/ui/SortButton";
 import { SortPanel } from "../features/sorting/ui/SortPanel";
+import { getAggregatesStore } from "../features/aggregates/aggregates.store";
+import { buildAggregatableColumns } from "../features/aggregates/useAggregatableColumns";
+import { TotalsButton } from "../features/aggregates/ui/TotalsButton";
+import { TotalsPanel } from "../features/aggregates/ui/TotalsPanel";
+import { ListSummaryBar, useSummaryPosition } from "./ui/ListSummaryBar";
+import type {
+  AggregateRule,
+  AggregateResult,
+} from "../features/aggregates/aggregates";
 import { getViewsStore } from "../features/views/views.store";
 import { DataList } from "./DataList";
 import { useDataList } from "./useDataList";
@@ -44,6 +55,8 @@ interface ListViewLayoutProps {
   height?: number;
   isLookup?: boolean;
   hasListMode: boolean;
+  aggregateValues?: AggregateResult;
+  isAggregatesFetching?: boolean;
 }
 
 export function ListViewLayout({
@@ -63,10 +76,14 @@ export function ListViewLayout({
   height,
   isLookup,
   hasListMode,
+  aggregateValues,
+  isAggregatesFetching,
 }: ListViewLayoutProps) {
   const t = useTranslations("DataView");
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortPanelOpen, setSortPanelOpen] = useState(false);
+  const { position, setPosition, collapsed, toggleCollapsed, size, setSize } =
+    useSummaryPosition();
 
   const globalFilter = useCoreStore(tableId, (s) => s.globalFilter);
   const setGlobalFilter = useCoreStore(tableId, (s) => s.setGlobalFilter);
@@ -75,6 +92,10 @@ export function ListViewLayout({
 
   const sorting = table.getState().sorting;
   const sortableColumns = useMemo(() => buildSortableColumns(table), [table]);
+  const aggregatableColumns = useMemo(
+    () => buildAggregatableColumns(table),
+    [table],
+  );
   const setSorting = (next: SortingState) => {
     getSortingStore(tableId, listViewId).getState().setSorting(next);
     getViewsStore(tableId).getState().updateListDraft({ sorting: next });
@@ -98,6 +119,33 @@ export function ListViewLayout({
       getFilteringStore(tableId, listViewId).getState().closePanel(),
   };
 
+  const listAggregates = {
+    rules: getAggregatesStore(tableId, listViewId)((s) => s.rules),
+    panelOpen: getAggregatesStore(tableId, listViewId)((s) => s.panelOpen),
+    focusColumnId: getAggregatesStore(
+      tableId,
+      listViewId,
+    )((s) => s.focusColumnId),
+    setRules: (rules: AggregateRule[]) => {
+      getAggregatesStore(tableId, listViewId).getState().setRules(rules);
+      getViewsStore(tableId).getState().updateListDraft({ aggregates: rules });
+    },
+    openPanel: (columnId?: string) =>
+      getAggregatesStore(tableId, listViewId).getState().openPanel(columnId),
+    closePanel: () =>
+      getAggregatesStore(tableId, listViewId).getState().closePanel(),
+  };
+
+  const hasAggregates = listAggregates.rules.length > 0 && !isLookup;
+
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const wrapperHeight = useAvailableHeight(wrapperRef, [
+    position,
+    collapsed,
+    size,
+    hasAggregates,
+  ]);
+
   return (
     <>
       {/* ── filters + search + cols ── */}
@@ -110,6 +158,10 @@ export function ListViewLayout({
           />
 
           <SortButton sorting={sorting} onOpen={() => setSortPanelOpen(true)} />
+          <TotalsButton
+            rules={listAggregates.rules}
+            onOpen={() => listAggregates.openPanel()}
+          />
           <ColumnManagerButton type="list" />
           {quickSearchEnabled && (
             <Button
@@ -169,48 +221,95 @@ export function ListViewLayout({
         </div>
       )}
 
-      {/* ── Scroll container ── */}
+      {/* ── Scroll container + summary bar ── */}
       <div
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-        className="@container scrollbar-thumb-rounded scrollbar-thin overflow-x-auto overflow-y-auto scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80"
-        style={{ height: height || undefined }}
+        ref={wrapperRef}
+        className={cn(
+          "flex min-h-0",
+          position === "left" || position === "right" ? "flex-row" : "flex-col",
+        )}
+        style={{ height: wrapperHeight || height || undefined }}
       >
-        <DataList
-          table={table}
-          isLoading={isLoading}
-          activeRowId={activeRowId}
-          openOnRowClick={openOnRowClick}
-          list={list}
-          isLookup={isLookup}
-        />
-
-        <FilterPanel
-          open={listFiltering.panelOpen}
-          onOpenChange={(open) =>
-            open ? listFiltering.openPanel() : listFiltering.closePanel()
-          }
-          initialFilters={listFiltering.rules}
-          filterableColumns={filterableColumns}
-          focusColumnId={listFiltering.focusColumnId}
-          onApply={(rules) => listFiltering.setRules(rules)}
-          staticFilters={enrichedPreFilters}
-        />
-
-        <SortPanel
-          open={sortPanelOpen}
-          onOpenChange={setSortPanelOpen}
-          initialSorting={sorting}
-          sortableColumns={sortableColumns}
-          onApply={setSorting}
-        />
-
-        {features.map((f) => f.Panel && <f.Panel key={f.id} />)}
+        {hasAggregates && (position === "left" || position === "top") && (
+          <ListSummaryBar
+            rules={listAggregates.rules}
+            values={aggregateValues}
+            isFetching={isAggregatesFetching}
+            position={position}
+            onPositionChange={setPosition}
+            collapsed={collapsed}
+            onToggleCollapsed={toggleCollapsed}
+            size={size}
+            onSizeChange={setSize}
+          />
+        )}
 
         <div
-          ref={loadMoreRef}
-          className="flex h-10 items-center justify-center"
-        />
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+          className="@container scrollbar-thumb-rounded scrollbar-thin min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80"
+        >
+          <DataList
+            table={table}
+            isLoading={isLoading}
+            activeRowId={activeRowId}
+            openOnRowClick={openOnRowClick}
+            list={list}
+            isLookup={isLookup}
+          />
+
+          <FilterPanel
+            open={listFiltering.panelOpen}
+            onOpenChange={(open) =>
+              open ? listFiltering.openPanel() : listFiltering.closePanel()
+            }
+            initialFilters={listFiltering.rules}
+            filterableColumns={filterableColumns}
+            focusColumnId={listFiltering.focusColumnId}
+            onApply={(rules) => listFiltering.setRules(rules)}
+            staticFilters={enrichedPreFilters}
+          />
+
+          <SortPanel
+            open={sortPanelOpen}
+            onOpenChange={setSortPanelOpen}
+            initialSorting={sorting}
+            sortableColumns={sortableColumns}
+            onApply={setSorting}
+          />
+
+          <TotalsPanel
+            open={listAggregates.panelOpen}
+            onOpenChange={(open) =>
+              open ? listAggregates.openPanel() : listAggregates.closePanel()
+            }
+            initialRules={listAggregates.rules}
+            aggregatableColumns={aggregatableColumns}
+            focusColumnId={listAggregates.focusColumnId}
+            onApply={(rules) => listAggregates.setRules(rules)}
+          />
+
+          {features.map((f) => f.Panel && <f.Panel key={f.id} />)}
+
+          <div
+            ref={loadMoreRef}
+            className="flex h-10 items-center justify-center"
+          />
+        </div>
+
+        {hasAggregates && (position === "right" || position === "bottom") && (
+          <ListSummaryBar
+            rules={listAggregates.rules}
+            values={aggregateValues}
+            isFetching={isAggregatesFetching}
+            position={position}
+            onPositionChange={setPosition}
+            collapsed={collapsed}
+            onToggleCollapsed={toggleCollapsed}
+            size={size}
+            onSizeChange={setSize}
+          />
+        )}
       </div>
     </>
   );

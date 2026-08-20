@@ -2,6 +2,7 @@ import type { FieldValues } from "react-hook-form"
 import type { ResourceConfig, ResourceId } from "../../types/resource-hook-types"
 import { DEFAULT_SPLIT_CONFIG } from "../../types/split-config-type"
 import { createActionsHook } from "./create-actions-hooks"
+import { createAggregatesHook } from "./create-aggregates-hook"
 import { createDetailHook } from "./create-detail-hook"
 import { createFormHooks } from "./create-form-hooks"
 import { createKeys, createListHook } from "./create-list-hooks"
@@ -56,6 +57,7 @@ export function createResourceHooks<
 
     // Hooks
     useList: createListHook(config, keys),
+    useAggregates: createAggregatesHook(config, keys),
     useDetail: createDetailHook(config, keys),
     useMutations: createMutationsHook(config, keys),
     useDetailTabs: createTabsHook(config),

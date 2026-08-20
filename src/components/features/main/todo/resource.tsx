@@ -8,6 +8,7 @@ import { completeWithNotes } from "./config/actions/complete-with-notes";
 import {
   fetchTodoDetail,
   fetchTodoList,
+  fetchTodoAggregates,
   addTodo,
   updateTodo,
   deleteTodos,
@@ -51,6 +52,7 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
   },
 
   fetchList: fetchTodoList,
+  fetchAggregates: fetchTodoAggregates,
   fetchDetail: fetchTodoDetail,
   mutationFns: { add: addTodo, update: updateTodo, delete: deleteTodos },
 

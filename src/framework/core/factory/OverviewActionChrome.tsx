@@ -35,6 +35,9 @@ interface OverviewActionChromeProps<TItem> {
   preFilters?: FilterInput[];
   popOutUrl?: string;
   toolbarChildren?: ReactNode;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  isRefetching?: boolean;
 
   routes?: { detail?: (id: string) => string };
   queryKeyAll: readonly string[];
@@ -75,6 +78,9 @@ export function OverviewActionChrome<TItem>({
   preFilters,
   popOutUrl,
   toolbarChildren,
+  onRefresh,
+  isRefreshing,
+  isRefetching,
   routes,
   queryKeyAll,
   labels,
@@ -121,6 +127,9 @@ export function OverviewActionChrome<TItem>({
         setRowSelection={setRowSelection}
         preFilters={preFilters}
         popOutUrl={popOutUrl}
+        onRefresh={onRefresh}
+        isRefreshing={isRefreshing}
+        isRefetching={isRefetching}
       >
         {toolbarChildren}
       </Toolbar>

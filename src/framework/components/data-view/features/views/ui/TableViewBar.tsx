@@ -19,6 +19,7 @@ import {
   XIcon,
   SaveIcon,
   RotateCcw,
+  CircleXIcon,
 } from "lucide-react";
 import { cn } from "@/framework/lib/utils";
 import { useTranslations } from "next-intl";
@@ -226,7 +227,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
               }
             }}
           >
-            <SaveIcon className="size-3" />
+            <SaveIcon className="size-3.5" />
           </Button>
           <Button
             type="button"
@@ -236,7 +237,7 @@ export function TableViewBar({ viewsApi, tableId, viewId }: TableViewBarProps) {
             className="size-7"
             onClick={discardChanges}
           >
-            <RotateCcw className="size-3" />
+            <CircleXIcon className="size-3.5" />
           </Button>
         </div>
       )}

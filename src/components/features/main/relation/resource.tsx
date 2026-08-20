@@ -5,6 +5,7 @@ import { type Relation } from "@/app/types/main/Relation";
 import {
   fetchRelationDetail,
   fetchRelationList,
+  fetchRelationAggregates,
   addRelation,
   updateRelation,
   deleteRelations,
@@ -56,6 +57,7 @@ export const relationsResource = defineResource<Relation, RelationFormValues>({
   },
 
   fetchList: fetchRelationList,
+  fetchAggregates: fetchRelationAggregates,
   fetchDetail: fetchRelationDetail,
   mutationFns: {
     add: addRelation,

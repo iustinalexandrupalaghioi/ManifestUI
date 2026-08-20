@@ -20,6 +20,15 @@ import { getSortingStore } from "../features/sorting/sorting.store";
 import { buildSortableColumns } from "../features/sorting/useSortableColumns";
 import { SortButton } from "../features/sorting/ui/SortButton";
 import { SortPanel } from "../features/sorting/ui/SortPanel";
+import { getAggregatesStore } from "../features/aggregates/aggregates.store";
+import { buildAggregatableColumns } from "../features/aggregates/useAggregatableColumns";
+import { TotalsButton } from "../features/aggregates/ui/TotalsButton";
+import { TotalsPanel } from "../features/aggregates/ui/TotalsPanel";
+import type {
+  AggregateFunction,
+  AggregateRule,
+  AggregateResult,
+} from "../features/aggregates/aggregates";
 import { getViewsStore } from "../features/views/views.store";
 import { DataTable } from "./DataTable";
 
@@ -40,6 +49,8 @@ interface TableViewLayoutProps {
   handleScroll: () => void;
   height?: number;
   hasListMode: boolean;
+  aggregateValues?: AggregateResult;
+  isAggregatesFetching?: boolean;
 }
 
 export function TableViewLayout({
@@ -59,6 +70,8 @@ export function TableViewLayout({
   handleScroll,
   height,
   hasListMode,
+  aggregateValues,
+  isAggregatesFetching,
 }: TableViewLayoutProps) {
   const t = useTranslations("DataView");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -72,6 +85,10 @@ export function TableViewLayout({
   const columnPinning = table.getState().columnPinning as { left: string[] };
   const sorting = table.getState().sorting;
   const sortableColumns = useMemo(() => buildSortableColumns(table), [table]);
+  const aggregatableColumns = useMemo(
+    () => buildAggregatableColumns(table),
+    [table],
+  );
   const setSorting = (
     updater: SortingState | ((old: SortingState) => SortingState),
   ) => {
@@ -98,6 +115,49 @@ export function TableViewLayout({
       getFilteringStore(tableId, tableViewId).getState().closePanel(),
   };
 
+  const tableAggregates = {
+    rules: getAggregatesStore(tableId, tableViewId)((s) => s.rules),
+    panelOpen: getAggregatesStore(tableId, tableViewId)((s) => s.panelOpen),
+    focusColumnId: getAggregatesStore(
+      tableId,
+      tableViewId,
+    )((s) => s.focusColumnId),
+    setRules: (rules: AggregateRule[]) => {
+      getAggregatesStore(tableId, tableViewId).getState().setRules(rules);
+      getViewsStore(tableId)
+        .getState()
+        .updateTableDraft({ aggregates: rules });
+    },
+    openPanel: (columnId?: string) =>
+      getAggregatesStore(tableId, tableViewId).getState().openPanel(columnId),
+    closePanel: () =>
+      getAggregatesStore(tableId, tableViewId).getState().closePanel(),
+  };
+
+  const handleSetColumnAggregate = (
+    columnId: string,
+    fn: AggregateFunction | null,
+  ) => {
+    const others = tableAggregates.rules.filter((r) => r.columnId !== columnId);
+    if (fn === null) {
+      tableAggregates.setRules(others);
+      return;
+    }
+    const col = aggregatableColumns.find((c) => c.id === columnId);
+    if (!col) return;
+    tableAggregates.setRules([
+      ...others,
+      {
+        columnId: col.id,
+        columnName: col.dbName,
+        columnLabel: col.name,
+        columnType: col.type,
+        ...(col.origin ? { origin: col.origin } : {}),
+        fn,
+      },
+    ]);
+  };
+
   return (
     <>
       {/* ── filters + search ── */}
@@ -109,6 +169,10 @@ export function TableViewLayout({
             onOpen={tableFiltering.openPanel}
           />
           <SortButton sorting={sorting} onOpen={() => setSortPanelOpen(true)} />
+          <TotalsButton
+            rules={tableAggregates.rules}
+            onOpen={() => tableAggregates.openPanel()}
+          />
           {quickSearchEnabled && (
             <Button
               variant="outline"
@@ -189,6 +253,10 @@ export function TableViewLayout({
           setSorting={setSorting}
           preFilters={enrichedPreFilters}
           onOpenFilter={tableFiltering.openPanel}
+          aggregateRules={tableAggregates.rules}
+          aggregateValues={aggregateValues}
+          isAggregatesFetching={isAggregatesFetching}
+          onSetAggregate={handleSetColumnAggregate}
         />
 
         <FilterPanel
@@ -209,6 +277,17 @@ export function TableViewLayout({
           initialSorting={sorting}
           sortableColumns={sortableColumns}
           onApply={setSorting}
+        />
+
+        <TotalsPanel
+          open={tableAggregates.panelOpen}
+          onOpenChange={(open) =>
+            open ? tableAggregates.openPanel() : tableAggregates.closePanel()
+          }
+          initialRules={tableAggregates.rules}
+          aggregatableColumns={aggregatableColumns}
+          focusColumnId={tableAggregates.focusColumnId}
+          onApply={(rules) => tableAggregates.setRules(rules)}
         />
 
         {features.map((f) => f.Panel && <f.Panel key={f.id} />)}

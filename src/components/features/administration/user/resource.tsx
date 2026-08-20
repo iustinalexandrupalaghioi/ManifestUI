@@ -5,6 +5,7 @@ import type { User } from "@/app/types/administration/User";
 import {
   fetchUserDetail,
   fetchUserList,
+  fetchUserAggregates,
   addUser,
   updateUser,
   deleteUsers,
@@ -39,6 +40,7 @@ export const usersResource = defineResource<User, UserFormValues, string>({
   },
 
   fetchList: fetchUserList,
+  fetchAggregates: fetchUserAggregates,
   fetchDetail: fetchUserDetail,
   mutationFns: { add: addUser, update: updateUser, delete: deleteUsers },
 

@@ -137,9 +137,11 @@ export function createDetailPage<
       isError,
       isDirty,
       handleSubmit,
-      reset,
       confirmSaved,
       dataUpdatedAt,
+      refetch,
+      isFetching: isRefreshing,
+      isRefetching,
     } = hooks.useDetailPageForm(id!);
 
     const { formOpen, setFormOpen, activeTab, setActiveTab, hasTabs } =
@@ -216,10 +218,13 @@ export function createDetailPage<
         <FormPage
           isDirty={isDirty || hasFileChanges}
           isSaving={isUpdating}
+          isRefreshing={isRefreshing}
+          isRefetching={isRefetching}
+          alwaysAllowReset
           canSave={canUpdate}
           readOnly={!canUpdate}
           onSave={onSave}
-          onReset={() => onReset(reset)}
+          onReset={() => onReset(refetch)}
           className={isEmbedded ? "h-full px-4" : undefined}
         >
           {!isEmbedded && toolbarElement}

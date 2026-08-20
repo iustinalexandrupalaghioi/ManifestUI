@@ -7,6 +7,7 @@ import { createResourceActions } from "@/app/[locale]/cms/createResourceActions"
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
+  buildAggregateSelection,
   buildKeysetWhere,
   buildOrderBy,
   buildWhereConditions,
@@ -14,6 +15,7 @@ import {
   resolveSortColumns,
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { Cursor } from "@/framework/types/pagination";
 import type { Todo } from "@/app/types/main/Todo";
 import { completeTodoSchema, todoSchema, type TodoFormValues } from "./schema";
@@ -58,6 +60,7 @@ const resourceAction = createResourceActions(todosDescriptor.id);
 
 export const {
   fetchTodoList,
+  fetchTodoAggregates,
   fetchTodoDetail,
   addTodo,
   updateTodo,
@@ -100,6 +103,22 @@ export const {
           : null;
 
       return { items: items as Todo[], total: count ?? 0, nextCursor };
+    },
+  ],
+
+  fetchTodoAggregates: [
+    "read",
+    async (rules: AggregateRule[], filters: FilterRule[]) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const selection = buildAggregateSelection(rules, filterColumns);
+      if (Object.keys(selection).length === 0) return {};
+
+      const [row] = await db
+        .select(selection)
+        .from(todo)
+        .innerJoin(relation, eq(todo.user_id, relation.id))
+        .where(where);
+      return row;
     },
   ],
 

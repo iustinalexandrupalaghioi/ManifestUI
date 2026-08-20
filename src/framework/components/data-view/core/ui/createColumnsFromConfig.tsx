@@ -1,5 +1,6 @@
 import TableCellContent from "@/framework/components/data-view/core/ui/TableCellContent";
 import type { ColumnType } from "@/framework/components/data-view/features/filtering/filters";
+import type { AggregateFunction } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import type { TranslatableText } from "@/framework/types/i18n-types";
 import {
@@ -25,6 +26,8 @@ export interface ColumnConfig {
   pickupHidden?: boolean;
   sortable?: boolean;
   filterable?: boolean;
+  aggregatable?: boolean;
+  defaultAggregate?: AggregateFunction;
   selectOptions?: EnumOptions;
   bucket?: string;
   origin?: string;
@@ -73,6 +76,8 @@ export function createColumnsFromConfig<TItem>(
         ...(col.editingField ? { editingField: col.editingField } : {}),
         columnLabel: resolveLabel(col.columnLabel ?? col.label, locale),
         columnType: col.type,
+        aggregatable: col.aggregatable,
+        defaultAggregate: col.defaultAggregate,
         origin: col.origin,
         selectOptions,
         group: col.group,

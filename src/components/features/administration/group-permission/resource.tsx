@@ -5,6 +5,7 @@ import type { GroupPermission } from "@/app/types/administration/GroupPermission
 import {
   fetchGroupPermissionDetail,
   fetchGroupPermissionList,
+  fetchGroupPermissionAggregates,
   addGroupPermission,
   updateGroupPermission,
   deleteGroupPermissions,
@@ -52,6 +53,7 @@ export const groupPermissionsResource = defineResource<
   },
 
   fetchList: fetchGroupPermissionList,
+  fetchAggregates: fetchGroupPermissionAggregates,
   fetchDetail: fetchGroupPermissionDetail,
   mutationFns: {
     add: addGroupPermission,

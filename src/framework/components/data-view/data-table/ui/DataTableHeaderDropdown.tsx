@@ -2,7 +2,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -10,15 +14,19 @@ import {
   ArrowDownZaIcon,
   ArrowUpAzIcon,
   ArrowUpIcon,
+  CheckIcon,
   EyeOffIcon,
   FilterIcon,
   PinIcon,
+  SigmaIcon,
   X,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { Enum } from "@/framework/types/global/Enum"
 import type { ColumnType } from "../../features/filtering/filters"
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations"
+import type { AggregateFunction } from "../../features/aggregates/aggregates"
+import { AGGREGATES_BY_TYPE, getAggregateLabel } from "../../features/aggregates/aggregates"
 
 interface DataTableHeaderDropdownProps {
   columnId: string
@@ -47,6 +55,8 @@ interface DataTableHeaderDropdownProps {
   onTogglePin?: () => void
   isPinned?: boolean
   canHide?: boolean
+  activeAggregateFn?: AggregateFunction | null
+  onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void
 }
 
 export function DataTableHeaderDropdown({
@@ -70,14 +80,19 @@ export function DataTableHeaderDropdown({
   isPinned,
   onTogglePin,
   onHide,
+  activeAggregateFn,
+  onSetAggregate,
 }: DataTableHeaderDropdownProps) {
   const t = useTranslations("DataTable")
+  const ta = useTranslations("Aggregates")
   const SortIcon = sortRule
     ? sortRule.desc
       ? ArrowDownIcon
       : ArrowUpIcon
     : null
-  if (!canSort && (!canFilter || locked)) {
+  const aggregateFns = columnType ? AGGREGATES_BY_TYPE[columnType] : []
+  const canAggregate = !!onSetAggregate && aggregateFns.length > 0
+  if (!canSort && (!canFilter || locked) && !canAggregate) {
     return <span className="px-0.5">{columnLabel}</span>
   }
 
@@ -157,6 +172,36 @@ export function DataTableHeaderDropdown({
             <FilterIcon className="mr-2 h-3.5 w-3.5" />
             {t("addFilter")}
           </DropdownMenuItem>
+        )}
+        {canAggregate && (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <SigmaIcon className="mr-2 h-3.5 w-3.5" />
+              {ta("totals")}
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                {aggregateFns.map((fn) => (
+                  <DropdownMenuItem
+                    key={fn}
+                    onClick={() =>
+                      onSetAggregate!(
+                        columnId,
+                        activeAggregateFn === fn ? null : fn,
+                      )
+                    }
+                  >
+                    {activeAggregateFn === fn ? (
+                      <CheckIcon className="mr-2 h-3.5 w-3.5" />
+                    ) : (
+                      <span className="mr-2 w-3.5" />
+                    )}
+                    {getAggregateLabel(fn)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
         )}
         {(canHide || onTogglePin) && <DropdownMenuSeparator />}
         {onTogglePin && (

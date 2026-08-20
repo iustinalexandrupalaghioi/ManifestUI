@@ -11,8 +11,12 @@ import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
-import { buildWhereConditions } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import {
+  buildAggregateSelection,
+  buildWhereConditions,
+} from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { FilterColumnMap } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { Cursor } from "@/framework/types/pagination";
 import type { GroupPermission } from "@/app/types/administration/GroupPermission";
 import {
@@ -60,6 +64,7 @@ const crud = createResourceActions("group-permissions");
 
 export const {
   fetchGroupPermissionList,
+  fetchGroupPermissionAggregates,
   fetchGroupPermissionDetail,
   addGroupPermission,
   updateGroupPermission,
@@ -93,6 +98,21 @@ export const {
         total: count ?? 0,
         nextCursor: null,
       };
+    },
+  ],
+
+  fetchGroupPermissionAggregates: [
+    "read",
+    async (rules: AggregateRule[], filters: FilterRule[]) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const selection = buildAggregateSelection(rules, filterColumns);
+      if (Object.keys(selection).length === 0) return {};
+
+      const [row] = await db
+        .select(selection)
+        .from(group_permission)
+        .where(where);
+      return row;
     },
   ],
 
