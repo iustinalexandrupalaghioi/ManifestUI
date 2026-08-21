@@ -14,13 +14,15 @@ import {
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Row } from "@tanstack/react-table";
-import type { AggregateRule } from "../../features/aggregates/aggregates";
 import {
   aggregateResultKey,
   formatAggregateLabel,
 } from "../../features/aggregates/aggregates";
-import type { GroupAggregateRow } from "../../features/grouping/grouping";
-import { lookupGroupAggregate } from "../../features/grouping/grouping";
+import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping";
+import {
+  countLeafRows,
+  lookupGroupAggregate,
+} from "../../features/grouping/grouping";
 
 export type GroupSummaryPosition = "top" | "bottom";
 
@@ -29,7 +31,7 @@ const THIN_SCROLLBAR =
 
 interface DataListGroupTotalsProps<TData> {
   row: Row<TData>;
-  groupAggregateRules: AggregateRule[];
+  grouping: GroupByRule[];
   groupAggregateLookup: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
   position: GroupSummaryPosition;
@@ -53,7 +55,7 @@ const COLLAPSE_ICONS = {
 
 export function DataListGroupTotals<TData>({
   row,
-  groupAggregateRules,
+  grouping,
   groupAggregateLookup,
   isGroupAggregatesFetching,
   position,
@@ -62,6 +64,8 @@ export function DataListGroupTotals<TData>({
   onToggleCollapsed,
 }: DataListGroupTotalsProps<TData>) {
   const t = useTranslations("Aggregates");
+  // Each level's totals are configured independently in the Group By panel.
+  const levelAggregateRules = grouping[row.depth]?.aggregates ?? [];
   const CollapseIcon = collapsed
     ? COLLAPSE_ICONS[position].expand
     : COLLAPSE_ICONS[position].collapse;
@@ -80,6 +84,13 @@ export function DataListGroupTotals<TData>({
   }, [row]);
 
   const aggregateRow = lookupGroupAggregate(groupAggregateLookup, path);
+
+  const groupColumnLabel = useMemo(() => {
+    const cell = row
+      .getAllCells()
+      .find((c) => c.column.id === row.groupingColumnId);
+    return cell?.column.columnDef.meta?.columnLabel ?? row.groupingColumnId;
+  }, [row]);
 
   if (collapsed) {
     return (
@@ -142,7 +153,19 @@ export function DataListGroupTotals<TData>({
           THIN_SCROLLBAR,
         )}
       >
-        {groupAggregateRules.map((rule) => (
+        <div
+          key="__count"
+          className="shrink-0 rounded-md border bg-background px-2.5 py-1.5 text-[11px]"
+        >
+          <div className="whitespace-nowrap text-muted-foreground">
+            {groupColumnLabel}
+          </div>
+          <div className="font-medium whitespace-nowrap">
+            {t("fnCount")}: {countLeafRows(row)}
+          </div>
+        </div>
+
+        {levelAggregateRules.map((rule) => (
           <div
             key={rule.columnId}
             className={cn(

@@ -2,7 +2,6 @@ import type { Cell, Row, Table } from "@tanstack/react-table";
 import type { ReactNode, RefObject } from "react";
 import type { Enum } from "@/framework/types/global/Enum";
 import type { ColumnType } from "../features/filtering/filters";
-import type { AggregateRule } from "../features/aggregates/aggregates";
 import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
 
 export interface RowAction<TData> {
@@ -46,7 +45,6 @@ export interface VirtualDataTableBodyProps<TData> {
   lastColumnId: string | undefined;
   columnsLength: number;
   grouping: GroupByRule[];
-  groupAggregateRules: AggregateRule[];
   groupAggregateLookup: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;

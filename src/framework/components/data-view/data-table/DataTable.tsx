@@ -39,7 +39,6 @@ interface DataTableProps {
   isAggregatesFetching?: boolean
   onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void
   grouping?: GroupByRule[]
-  groupAggregateRules?: AggregateRule[]
   groupAggregateLookup?: Map<string, GroupAggregateRow>
   isGroupAggregatesFetching?: boolean
 }
@@ -64,7 +63,6 @@ export function DataTable({
   isAggregatesFetching,
   onSetAggregate,
   grouping = [],
-  groupAggregateRules,
   groupAggregateLookup,
   isGroupAggregatesFetching,
 }: DataTableProps) {
@@ -112,7 +110,6 @@ export function DataTable({
           columnPinning={columnPinning}
           columnVisibility={columnVisibility}
           grouping={grouping}
-          groupAggregateRules={groupAggregateRules ?? aggregateRules}
           groupAggregateLookup={groupAggregateLookup ?? new Map()}
           isGroupAggregatesFetching={isGroupAggregatesFetching}
         />

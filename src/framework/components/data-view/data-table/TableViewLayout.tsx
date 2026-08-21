@@ -159,11 +159,6 @@ export function TableViewLayout({
     closePanel: () => getGroupingStore(tableId, tableViewId).getState().closePanel(),
   };
 
-  // Per-group-level gating (GroupByRule.showTotals) is applied at render
-  // time (DataTableBody), not here — this is just "is there anything to
-  // total at all".
-  const groupAggregateRules = tableAggregates.rules;
-
   const groupAggregateLookup = useMemo(
     () => buildGroupAggregateLookup(groupAggregateRows ?? [], tableGrouping.grouping),
     [groupAggregateRows, tableGrouping.grouping],
@@ -297,7 +292,6 @@ export function TableViewLayout({
           isAggregatesFetching={isAggregatesFetching}
           onSetAggregate={handleSetColumnAggregate}
           grouping={tableGrouping.grouping}
-          groupAggregateRules={groupAggregateRules}
           groupAggregateLookup={groupAggregateLookup}
           isGroupAggregatesFetching={isGroupAggregatesFetching}
         />
@@ -340,6 +334,7 @@ export function TableViewLayout({
           }
           initialGrouping={tableGrouping.grouping}
           groupableColumns={groupableColumns}
+          aggregatableColumns={aggregatableColumns}
           onApply={(grouping) => tableGrouping.setGrouping(grouping)}
         />
 

@@ -13,6 +13,7 @@ export {
   groupingFlagKey,
   buildGroupAggregateLookup,
   lookupGroupAggregate,
+  unionGroupAggregateRules,
   countLeafRows,
 } from "./grouping";
 export type {

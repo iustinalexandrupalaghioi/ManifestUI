@@ -3,7 +3,6 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useDataViewCore } from "../../core/stores/DataViewProvider";
 import { useSelection } from "../../features/selection/useSelection";
-import type { AggregateRule } from "../../features/aggregates/aggregates";
 import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping";
 import { DataListItem } from "./DataListItem";
 import { DataListGroupHeader } from "./DataListGroupHeader";
@@ -94,7 +93,6 @@ export interface DataListGridProps<TData> {
   activeRowId?: string;
   openOnRowClick?: boolean;
   grouping: GroupByRule[];
-  groupAggregateRules: AggregateRule[];
   groupAggregateLookup: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
 }
@@ -107,7 +105,6 @@ export function DataListGrid<TData>({
   activeRowId,
   openOnRowClick,
   grouping,
-  groupAggregateRules,
   groupAggregateLookup,
   isGroupAggregatesFetching,
 }: DataListGridProps<TData>) {
@@ -127,14 +124,8 @@ export function DataListGrid<TData>({
     groupBarState[rowId] ?? DEFAULT_GROUP_BAR_STATE;
 
   const displayItems = useMemo(
-    () =>
-      buildDisplayItems(
-        rows,
-        groupAggregateRules.length > 0,
-        grouping,
-        getBarState,
-      ),
-    [rows, groupAggregateRules.length, grouping, groupBarState],
+    () => buildDisplayItems(rows, grouping.length > 0, grouping, getBarState),
+    [rows, grouping, groupBarState],
   );
 
   if (isLoading) {
@@ -164,7 +155,7 @@ export function DataListGrid<TData>({
             <DataListGroupTotals
               key={`${item.row.id}__totals`}
               row={item.row}
-              groupAggregateRules={groupAggregateRules}
+              grouping={grouping}
               groupAggregateLookup={groupAggregateLookup}
               isGroupAggregatesFetching={isGroupAggregatesFetching}
               position={barState.position}

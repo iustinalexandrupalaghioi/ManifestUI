@@ -76,7 +76,6 @@ function VirtualTableBodyInner<TData>({
   lastColumnId,
   columnsLength,
   grouping,
-  groupAggregateRules,
   groupAggregateLookup,
   isGroupAggregatesFetching,
   scrollContainerRef,
@@ -99,7 +98,7 @@ function VirtualTableBodyInner<TData>({
   const t = useTranslations("DataView");
 
   const displayItems = useMemo<DisplayItem<TData>[]>(() => {
-    if (groupAggregateRules.length === 0) {
+    if (grouping.length === 0) {
       return rows.map((row) => ({ kind: "row" as const, row }));
     }
     const out: DisplayItem<TData>[] = [];
@@ -126,7 +125,7 @@ function VirtualTableBodyInner<TData>({
     flushTo(-Infinity);
 
     return out;
-  }, [rows, groupAggregateRules.length, grouping]);
+  }, [rows, grouping]);
 
   const virtualizer = useVirtualizer({
     count: displayItems.length,
@@ -202,7 +201,7 @@ function VirtualTableBodyInner<TData>({
               key={`${item.row.id}__totals`}
               row={item.row}
               table={table}
-              groupAggregateRules={groupAggregateRules}
+              grouping={grouping}
               groupAggregateLookup={groupAggregateLookup}
               isGroupAggregatesFetching={isGroupAggregatesFetching}
               dataIndex={virtualRow.index}

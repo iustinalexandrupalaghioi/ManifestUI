@@ -1,6 +1,8 @@
 import type { Row } from "@tanstack/react-table";
 import type { ColumnType } from "../filtering/filters";
 import type { SortRule } from "../../core/tanstack-augmentations";
+import type { AggregateRule } from "../aggregates/aggregates";
+import { aggregateResultKey } from "../aggregates/aggregates";
 
 export function countLeafRows<TData>(row: Row<TData>): number {
   return row.getLeafRows().filter((r) => !r.getIsGrouped()).length;
@@ -13,6 +15,22 @@ export interface GroupByRule {
   columnType: ColumnType;
   origin?: string;
   showTotals?: boolean;
+  // Per-level totals — independent of the table's own Totals (Σ) rules,
+  // so a group can show e.g. avg(price) without that also landing in the
+  // whole-table grand-total footer.
+  aggregates?: AggregateRule[];
+}
+
+// The rollup query computes every level's aggregates in one pass, so the
+// backend needs the deduped union across all levels' rule lists.
+export function unionGroupAggregateRules(groupBy: GroupByRule[]): AggregateRule[] {
+  const byKey = new Map<string, AggregateRule>();
+  for (const level of groupBy) {
+    for (const rule of level.aggregates ?? []) {
+      byKey.set(aggregateResultKey(rule), rule);
+    }
+  }
+  return [...byKey.values()];
 }
 
 export interface GroupableColumn {

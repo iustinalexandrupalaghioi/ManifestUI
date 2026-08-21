@@ -10,6 +10,7 @@ import { getFilteringStore } from "@/framework/components/data-view/features/fil
 import { getSortingStore } from "@/framework/components/data-view/features/sorting/sorting.store";
 import { getAggregatesStore } from "@/framework/components/data-view/features/aggregates/aggregates.store";
 import { getGroupingStore } from "@/framework/components/data-view/features/grouping/grouping.store";
+import { unionGroupAggregateRules } from "@/framework/components/data-view/features/grouping/grouping";
 import {
   useActiveListView,
   useActiveTableView,
@@ -168,7 +169,9 @@ export function createOverview<
           config.formConfig,
           tabs
             .filter(
-              (tab): tab is Extract<(typeof tabs)[number], { type: "fields" }> =>
+              (
+                tab,
+              ): tab is Extract<(typeof tabs)[number], { type: "fields" }> =>
                 tab.type === "fields",
             )
             .map((tab) => tab.sections),
@@ -253,12 +256,16 @@ export function createOverview<
       tableId,
       activeViewId,
     )((s) => s.grouping);
+    const groupAggregateRules = useMemo(
+      () => unionGroupAggregateRules(activeGrouping),
+      [activeGrouping],
+    );
     const {
       data: groupAggregateRows,
       isFetching: isGroupAggregatesFetching,
       refetch: refetchGroupAggregates,
     } = hooks.useGroupAggregates(
-      activeAggregateRules,
+      groupAggregateRules,
       activeFilters,
       activeGrouping,
     );

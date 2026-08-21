@@ -9,18 +9,20 @@ import { Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Row, Table } from "@tanstack/react-table";
-import type { AggregateRule } from "../../features/aggregates/aggregates";
 import {
   aggregateResultKey,
   formatAggregateLabel,
 } from "../../features/aggregates/aggregates";
-import type { GroupAggregateRow } from "../../features/grouping/grouping";
-import { lookupGroupAggregate } from "../../features/grouping/grouping";
+import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping";
+import {
+  countLeafRows,
+  lookupGroupAggregate,
+} from "../../features/grouping/grouping";
 
 interface DataTableGroupTotalsRowProps<TData> {
   row: Row<TData>;
   table: Table<TData>;
-  groupAggregateRules: AggregateRule[];
+  grouping: GroupByRule[];
   groupAggregateLookup: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
   dataIndex: number;
@@ -33,13 +35,15 @@ interface DataTableGroupTotalsRowProps<TData> {
 export function DataTableGroupTotalsRow<TData>({
   row,
   table,
-  groupAggregateRules,
+  grouping,
   groupAggregateLookup,
   isGroupAggregatesFetching,
   dataIndex,
   measureRef,
 }: DataTableGroupTotalsRowProps<TData>) {
   const t = useTranslations("Aggregates");
+  // Each level's totals are configured independently in the Group By panel.
+  const levelAggregateRules = grouping[row.depth]?.aggregates ?? [];
 
   const path = useMemo(() => {
     const levels: { columnId: string; value: unknown }[] = [];
@@ -88,7 +92,12 @@ export function DataTableGroupTotalsRow<TData>({
           );
         }
 
-        const rule = groupAggregateRules.find((r) => r.columnId === col.id);
+        // The column this group level is grouped on always gets the row
+        // count for that group — same slot a user-configured rule would
+        // otherwise render into, since the two are mutually exclusive in
+        // practice (you don't aggregate the column you're grouping by).
+        const isGroupedColumn = col.id === row.groupingColumnId;
+        const rule = levelAggregateRules.find((r) => r.columnId === col.id);
 
         return (
           <CustomTableCell
@@ -114,7 +123,10 @@ export function DataTableGroupTotalsRow<TData>({
               !isLast && "border-r",
             )}
           >
-            {rule &&
+            {isGroupedColumn ? (
+              `${t("fnCount")}: ${countLeafRows(row)}`
+            ) : (
+              rule &&
               (isGroupAggregatesFetching ? (
                 <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
               ) : (
@@ -126,7 +138,8 @@ export function DataTableGroupTotalsRow<TData>({
                     | undefined,
                   t,
                 )
-              ))}
+              ))
+            )}
           </CustomTableCell>
         );
       })}

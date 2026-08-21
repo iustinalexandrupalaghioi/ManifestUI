@@ -168,11 +168,6 @@ export function ListViewLayout({
     closePanel: () => getGroupingStore(tableId, listViewId).getState().closePanel(),
   };
 
-  // Per-group-level gating (GroupByRule.showTotals) is applied at render
-  // time (DataListGrid), not here — this is just "is there anything to
-  // total at all".
-  const groupAggregateRules = listAggregates.rules;
-
   const groupAggregateLookup = useMemo(
     () => buildGroupAggregateLookup(groupAggregateRows ?? [], listGrouping.grouping),
     [groupAggregateRows, listGrouping.grouping],
@@ -304,7 +299,6 @@ export function ListViewLayout({
             list={list}
             isLookup={isLookup}
             grouping={listGrouping.grouping}
-            groupAggregateRules={groupAggregateRules}
             groupAggregateLookup={groupAggregateLookup}
             isGroupAggregatesFetching={isGroupAggregatesFetching}
           />
@@ -347,6 +341,7 @@ export function ListViewLayout({
             }
             initialGrouping={listGrouping.grouping}
             groupableColumns={groupableColumns}
+            aggregatableColumns={aggregatableColumns}
             onApply={(grouping) => listGrouping.setGrouping(grouping)}
           />
 

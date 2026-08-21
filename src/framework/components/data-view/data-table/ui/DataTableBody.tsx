@@ -12,7 +12,6 @@ import { getEditingStore } from "../../features/editing/editing.store"
 import { CellContextMenu } from "../../core/ui/CellContextMenu"
 import { VirtualDataTableBody } from "./VirtualDataTableBody"
 import type { RowAction } from "../../core/types"
-import type { AggregateRule } from "../../features/aggregates/aggregates"
 import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping"
 
 declare module "@tanstack/react-table" {
@@ -36,7 +35,6 @@ interface DataViewBodyProps {
   columnVisibility: VisibilityState
   columnSizing: Record<string, number>
   grouping: GroupByRule[]
-  groupAggregateRules: AggregateRule[]
   groupAggregateLookup: Map<string, GroupAggregateRow>
   isGroupAggregatesFetching?: boolean
 }
@@ -51,7 +49,6 @@ export function DataTableBody({
   columnVisibility,
   columnSizing,
   grouping,
-  groupAggregateRules,
   groupAggregateLookup,
   isGroupAggregatesFetching,
 }: DataViewBodyProps) {
@@ -137,7 +134,6 @@ export function DataTableBody({
         lastColumnId={table.getAllLeafColumns().at(-1)?.id}
         columnsLength={table.getVisibleLeafColumns().length}
         grouping={grouping}
-        groupAggregateRules={groupAggregateRules}
         groupAggregateLookup={groupAggregateLookup}
         isGroupAggregatesFetching={isGroupAggregatesFetching}
         scrollContainerRef={scrollContainerRef}
