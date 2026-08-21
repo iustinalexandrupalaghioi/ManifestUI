@@ -195,7 +195,7 @@ export function TotalsPanel({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         showCloseButton={false}
-        className="flex flex-col p-0"
+        className="flex flex-col p-0 data-[side=right]:w-[92%]"
         side="right"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >

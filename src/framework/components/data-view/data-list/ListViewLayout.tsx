@@ -101,7 +101,7 @@ export function ListViewLayout({
     size,
     setSize,
     isMobile,
-  } = useSummaryPosition();
+  } = useSummaryPosition(`${tableId}:${listViewId}`);
 
   const globalFilter = useCoreStore(tableId, (s) => s.globalFilter);
   const setGlobalFilter = useCoreStore(tableId, (s) => s.setGlobalFilter);
@@ -305,6 +305,7 @@ export function ListViewLayout({
             grouping={listGrouping.grouping}
             groupAggregateLookup={groupAggregateLookup}
             isGroupAggregatesFetching={isGroupAggregatesFetching}
+            listViewId={listViewId}
           />
 
           <FilterPanel

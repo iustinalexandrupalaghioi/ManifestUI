@@ -126,54 +126,56 @@ function LevelAggregatesPicker({
         const col = aggregatableColumns.find((c) => c.id === draft.columnId)
         const fns = col ? AGGREGATES_BY_TYPE[col.type] : []
         return (
-          <div key={draft._key} className="flex items-center gap-1.5">
-            <Select
-              value={draft.columnId}
-              onValueChange={(columnId) => {
-                const newCol = aggregatableColumns.find((c) => c.id === columnId)!
-                const fn = AGGREGATES_BY_TYPE[newCol.type]?.[0]
-                updateRule(draft._key, { ...draft, columnId, fn })
-              }}
-            >
-              <SelectTrigger className="h-8 flex-1 text-xs">
-                <SelectValue placeholder={t("columnPlaceholder")} />
-              </SelectTrigger>
-              <SelectContent>
-                {aggregatableColumns
-                  .filter(
-                    (c) => c.id === draft.columnId || !usedColumnIds.has(c.id),
-                  )
-                  .map((c) => (
-                    <SelectItem key={c.id} value={c.id} className="text-xs">
-                      {c.name}
+          <div key={draft._key} className="flex items-start gap-2 rounded-md border p-3">
+            <div className="flex flex-1 flex-col gap-2">
+              <Select
+                value={draft.columnId}
+                onValueChange={(columnId) => {
+                  const newCol = aggregatableColumns.find((c) => c.id === columnId)!
+                  const fn = AGGREGATES_BY_TYPE[newCol.type]?.[0]
+                  updateRule(draft._key, { ...draft, columnId, fn })
+                }}
+              >
+                <SelectTrigger className="h-8 w-full text-xs">
+                  <SelectValue placeholder={t("columnPlaceholder")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {aggregatableColumns
+                    .filter(
+                      (c) => c.id === draft.columnId || !usedColumnIds.has(c.id),
+                    )
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id} className="text-xs">
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={draft.fn}
+                onValueChange={(fn) =>
+                  updateRule(draft._key, { ...draft, fn: fn as AggregateFunction })
+                }
+              >
+                <SelectTrigger className="h-8 w-full text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {fns.map((fn) => (
+                    <SelectItem key={fn} value={fn} className="text-xs">
+                      {getAggregateLabel(fn, t)}
                     </SelectItem>
                   ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={draft.fn}
-              onValueChange={(fn) =>
-                updateRule(draft._key, { ...draft, fn: fn as AggregateFunction })
-              }
-            >
-              <SelectTrigger className="h-8 w-28 shrink-0 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {fns.map((fn) => (
-                  <SelectItem key={fn} value={fn} className="text-xs">
-                    {getAggregateLabel(fn, t)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                </SelectContent>
+              </Select>
+            </div>
 
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+              className="h-6 w-8 text-muted-foreground hover:text-destructive"
               onClick={() => removeRule(draft._key)}
               aria-label={t("removeRule")}
             >
@@ -279,7 +281,7 @@ function LevelRow({
           </SelectContent>
         </Select>
 
-        <div className="flex items-center justify-between gap-2 pt-0.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
           <Label
             htmlFor={`show-totals-${draft._key}`}
             className="text-xs font-normal text-muted-foreground"
@@ -435,7 +437,7 @@ export function GroupByPanel({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         showCloseButton={false}
-        className="flex flex-col p-0"
+        className="flex flex-col p-0 data-[side=right]:w-[92%]"
         side="right"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >

@@ -19,6 +19,7 @@ interface DataListProps {
   grouping?: GroupByRule[];
   groupAggregateLookup?: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
+  listViewId?: string;
 }
 
 export function DataList({
@@ -31,6 +32,7 @@ export function DataList({
   grouping = [],
   groupAggregateLookup = new Map(),
   isGroupAggregatesFetching,
+  listViewId,
 }: DataListProps) {
   const t = useTranslations("DataView");
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
@@ -77,6 +79,7 @@ export function DataList({
         grouping={grouping}
         groupAggregateLookup={groupAggregateLookup}
         isGroupAggregatesFetching={isGroupAggregatesFetching}
+        listViewId={listViewId}
       />
 
       {/* List column manager panel — overview only */}

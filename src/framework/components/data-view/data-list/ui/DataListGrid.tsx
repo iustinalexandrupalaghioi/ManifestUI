@@ -1,6 +1,7 @@
 import { type Column, type Row } from "@tanstack/react-table";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { usePersistedState } from "@/framework/lib/usePersistedState";
 import { useDataViewCore } from "../../core/stores/DataViewProvider";
 import { useSelection } from "../../features/selection/useSelection";
 import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping";
@@ -95,6 +96,7 @@ export interface DataListGridProps<TData> {
   grouping: GroupByRule[];
   groupAggregateLookup: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
+  listViewId?: string;
 }
 
 // No scroll container — owned by DataViewLayout's shared scroll div
@@ -107,6 +109,7 @@ export function DataListGrid<TData>({
   grouping,
   groupAggregateLookup,
   isGroupAggregatesFetching,
+  listViewId,
 }: DataListGridProps<TData>) {
   const t = useTranslations("DataView");
   const { table, tableId } = useDataViewCore();
@@ -114,12 +117,12 @@ export function DataListGrid<TData>({
     openOnClick: openOnRowClick,
   });
 
-  // Per-group summary bar dock/collapse state — ephemeral UI state, like
-  // ListSummaryBar's own useSummaryPosition, keyed by group row id so each
-  // group's choice is independent.
-  const [groupBarState, setGroupBarState] = useState<
+  // Per-group summary bar dock/collapse state, keyed by group row id so each
+  // group's choice is independent — persisted like ListSummaryBar's own
+  // useSummaryPosition so it survives reloads.
+  const [groupBarState, setGroupBarState] = usePersistedState<
     Record<string, GroupBarState>
-  >({});
+  >(`dv-group-bars:${tableId}:${listViewId}`, {});
   const getBarState = (rowId: string) =>
     groupBarState[rowId] ?? DEFAULT_GROUP_BAR_STATE;
 

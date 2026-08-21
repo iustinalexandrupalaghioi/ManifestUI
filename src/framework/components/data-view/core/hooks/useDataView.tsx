@@ -8,10 +8,12 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type ExpandedState,
   type VisibilityState,
 } from "@tanstack/react-table";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
+import { usePersistedState } from "@/framework/lib/usePersistedState";
 import { deleteEditingStore } from "../../features/editing/editing.store";
 import { deleteFilteringStores } from "../../features/filtering/filtering.store";
 import type { FilterInput } from "../../features/filtering/filters";
@@ -176,6 +178,11 @@ export function useDataView<TData, TValue>(
     [grouping],
   );
 
+  const [expanded, setExpanded] = usePersistedState<ExpandedState>(
+    `dv-expanded:${tableId}:${activeMode === "list" ? listViewId : tableViewId}`,
+    {},
+  );
+
   // ── Column change handlers ───────────────────────────────────────────────
   const columnHandlers = useColumnHandlers(
     tableId,
@@ -286,6 +293,7 @@ export function useDataView<TData, TValue>(
     defaultColumn: { enableResizing: true },
     manualPagination: true,
     groupedColumnMode: false,
+    autoResetExpanded: false,
     enableRowSelection: (row) => !row.getIsGrouped(),
     getRowId: getRowId ?? ((_, index) => String(index)),
     state: {
@@ -319,9 +327,11 @@ export function useDataView<TData, TValue>(
           : undefined,
       sorting,
       globalFilter,
+      expanded,
     },
     onRowSelectionChange: setRowSelection,
     onGroupingChange,
+    onExpandedChange: setExpanded,
     onGlobalFilterChange: (updater) => {
       const next =
         typeof updater === "function" ? updater(globalFilter) : updater;

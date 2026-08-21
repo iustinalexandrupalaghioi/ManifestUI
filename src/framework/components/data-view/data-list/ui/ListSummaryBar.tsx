@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/framework/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePersistedState } from "@/framework/lib/usePersistedState";
 import {
   Loader2Icon,
   PanelBottomClose,
@@ -34,20 +35,22 @@ export type SummaryPosition = "left" | "right" | "top" | "bottom";
 const THIN_SCROLLBAR =
   "scrollbar-thumb-rounded scrollbar-thin scrollbar-thumb-primary scrollbar-track-muted/80 dark:scrollbar-track-muted/80";
 
-// row min must fit the header's label + 6 icon buttons, or a dragged-down
-// bar hides some of them with no way to reach them.
 const SIZE_LIMITS = { row: [200, 480], column: [56, 280] } as const;
 
-// Default follows viewport (desktop → right, mobile → bottom) until the
-// user overrides it via the dock controls. `size: null` means "auto" —
-// intrinsic, shrink-to-fit content — until the user drags the handle.
-// Mobile never allows left/right — there's no room for a sidebar next to
-// the list — so a stale override from a wider viewport is ignored there.
-export function useSummaryPosition() {
+export function useSummaryPosition(storageKey: string) {
   const isMobile = useIsMobile();
-  const [override, setOverride] = useState<SummaryPosition | null>(null);
-  const [collapsed, setCollapsed] = useState(false);
-  const [size, setSize] = useState<number | null>(null);
+  const [override, setOverride] = usePersistedState<SummaryPosition | null>(
+    `dv-summary-position:${storageKey}`,
+    null,
+  );
+  const [collapsed, setCollapsed] = usePersistedState(
+    `dv-summary-collapsed:${storageKey}`,
+    false,
+  );
+  const [size, setSize] = usePersistedState<number | null>(
+    `dv-summary-size:${storageKey}`,
+    null,
+  );
 
   const isSideways = override === "left" || override === "right";
   const position = isMobile
@@ -161,14 +164,11 @@ export function ListSummaryBar({
     };
   }, [position, min, max, onSizeChange]);
 
-  // Manual double-tap detection instead of onDoubleClick — preventDefault()
-  // on pointerdown (needed to stop text selection while dragging) can
-  // suppress the browser's synthesized click events dblclick depends on.
   const handlePointerDown = (e: React.PointerEvent) => {
     const now = Date.now();
     if (now - lastPointerDownRef.current < 350) {
       lastPointerDownRef.current = 0;
-      onSizeChange(null); // reset to auto/intrinsic sizing
+      onSizeChange(null);
       return;
     }
     lastPointerDownRef.current = now;
@@ -200,9 +200,6 @@ export function ListSummaryBar({
     );
   }
 
-  // Clamp defensively in render too, not just while dragging — a size
-  // stored before SIZE_LIMITS changed (or from any other stale state)
-  // should never render smaller than what the header controls need.
   const clampedSize = size === null ? null : Math.min(max, Math.max(min, size));
 
   return (
@@ -252,7 +249,7 @@ export function ListSummaryBar({
         className={cn(
           "min-h-0 flex-1 gap-2",
           isRow
-            ? `grid grid-cols-[max-content] justify-start overflow-y-auto ${THIN_SCROLLBAR}`
+            ? `grid grid-cols-[max-content] content-start justify-start overflow-y-auto ${THIN_SCROLLBAR}`
             : `flex flex-row items-start overflow-x-auto overflow-y-auto pb-1 ${THIN_SCROLLBAR}`,
         )}
       >
