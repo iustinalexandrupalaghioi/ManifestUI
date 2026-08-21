@@ -16,27 +16,17 @@ type DisplayItem<TData> =
   | { kind: "row"; row: Row<TData> }
   | { kind: "totals"; row: Row<TData> };
 
-interface GroupBarState {
-  position: GroupSummaryPosition;
-  collapsed: boolean;
-}
-
-const DEFAULT_GROUP_BAR_STATE: GroupBarState = {
-  position: "bottom",
-  collapsed: false,
-};
-
 // Same "totals attached to its group" placement as the table view's
-// VirtualDataTableBody, except each group's own position choice (top of its
-// block vs. bottom, after its children/nested subgroups) decides where the
-// totals entry lands — a group at "top" is emitted right after its header;
-// "bottom" (default) is flushed once the next row at <= its depth appears
-// (or the list ends), via a stack of still-open ancestor groups.
+// VirtualDataTableBody, except the shared position setting (top of each
+// group's block vs. bottom, after its children/nested subgroups) decides
+// where the totals entry lands — "top" is emitted right after the group's
+// header; "bottom" (default) is flushed once the next row at <= its depth
+// appears (or the list ends), via a stack of still-open ancestor groups.
 function buildDisplayItems<TData>(
   rows: Row<TData>[],
   hasGroupTotals: boolean,
   grouping: GroupByRule[],
-  getBarState: (rowId: string) => GroupBarState,
+  position: GroupSummaryPosition,
 ): DisplayItem<TData>[] {
   if (!hasGroupTotals) return rows.map((row) => ({ kind: "row" as const, row }));
 
@@ -63,7 +53,6 @@ function buildDisplayItems<TData>(
     out.push({ kind: "row", row });
     if (row.getIsGrouped()) {
       if (!showTotalsForDepth(row.depth)) continue;
-      const { position } = getBarState(row.id);
       if (position === "top") {
         if (row.getIsExpanded()) out.push({ kind: "totals", row });
       } else {
@@ -117,18 +106,21 @@ export function DataListGrid<TData>({
     openOnClick: openOnRowClick,
   });
 
-  // Per-group summary bar dock/collapse state, keyed by group row id so each
-  // group's choice is independent — persisted like ListSummaryBar's own
-  // useSummaryPosition so it survives reloads.
-  const [groupBarState, setGroupBarState] = usePersistedState<
-    Record<string, GroupBarState>
-  >(`dv-group-bars:${tableId}:${listViewId}`, {});
-  const getBarState = (rowId: string) =>
-    groupBarState[rowId] ?? DEFAULT_GROUP_BAR_STATE;
+  // Dock position is shared across every group's totals bar so they stay in
+  // sync; collapsed state stays per-group row id so collapsing one group's
+  // totals doesn't affect the others. Both persisted like ListSummaryBar's
+  // own useSummaryPosition so they survive reloads.
+  const [groupPosition, setGroupPosition] = usePersistedState<GroupSummaryPosition>(
+    `dv-group-bars-position:${tableId}:${listViewId}`,
+    "bottom",
+  );
+  const [groupCollapsed, setGroupCollapsed] = usePersistedState<
+    Record<string, boolean>
+  >(`dv-group-bars-collapsed:${tableId}:${listViewId}`, {});
 
   const displayItems = useMemo(
-    () => buildDisplayItems(rows, grouping.length > 0, grouping, getBarState),
-    [rows, grouping, groupBarState],
+    () => buildDisplayItems(rows, grouping.length > 0, grouping, groupPosition),
+    [rows, grouping, groupPosition],
   );
 
   if (isLoading) {
@@ -153,7 +145,6 @@ export function DataListGrid<TData>({
     <div className="grid grid-cols-1 gap-3 p-1 @2xl:grid-cols-2 @5xl:grid-cols-3">
       {displayItems.map((item) => {
         if (item.kind === "totals") {
-          const barState = getBarState(item.row.id);
           return (
             <DataListGroupTotals
               key={`${item.row.id}__totals`}
@@ -161,21 +152,13 @@ export function DataListGrid<TData>({
               grouping={grouping}
               groupAggregateLookup={groupAggregateLookup}
               isGroupAggregatesFetching={isGroupAggregatesFetching}
-              position={barState.position}
-              collapsed={barState.collapsed}
-              onPositionChange={(position) =>
-                setGroupBarState((prev) => ({
-                  ...prev,
-                  [item.row.id]: { ...getBarState(item.row.id), position },
-                }))
-              }
+              position={groupPosition}
+              collapsed={groupCollapsed[item.row.id] ?? false}
+              onPositionChange={setGroupPosition}
               onToggleCollapsed={() =>
-                setGroupBarState((prev) => ({
+                setGroupCollapsed((prev) => ({
                   ...prev,
-                  [item.row.id]: {
-                    ...getBarState(item.row.id),
-                    collapsed: !getBarState(item.row.id).collapsed,
-                  },
+                  [item.row.id]: !(prev[item.row.id] ?? false),
                 }))
               }
             />
