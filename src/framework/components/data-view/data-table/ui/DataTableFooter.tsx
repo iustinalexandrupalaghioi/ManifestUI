@@ -2,18 +2,24 @@ import {
   CustomTableFooter,
   CustomTableCell,
   CustomTableRow,
-} from "@/framework/components/ui/CustomTable"
-import { cn } from "@/framework/lib/utils"
-import { Loader2Icon } from "lucide-react"
-import { useTranslations } from "next-intl"
-import { useDataViewCore } from "../../core/stores/DataViewProvider"
-import type { AggregateResult, AggregateRule } from "../../features/aggregates/aggregates"
-import { aggregateResultKey, formatAggregateLabel } from "../../features/aggregates/aggregates"
+} from "@/framework/components/ui/CustomTable";
+import { cn } from "@/framework/lib/utils";
+import { Loader2Icon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useDataViewCore } from "../../core/stores/DataViewProvider";
+import type {
+  AggregateResult,
+  AggregateRule,
+} from "../../features/aggregates/aggregates";
+import {
+  aggregateResultKey,
+  formatAggregateLabel,
+} from "../../features/aggregates/aggregates";
 
 interface DataTableFooterProps {
-  aggregateRules: AggregateRule[]
-  aggregateValues?: AggregateResult
-  isAggregatesFetching?: boolean
+  aggregateRules: AggregateRule[];
+  aggregateValues?: AggregateResult;
+  isAggregatesFetching?: boolean;
 }
 
 export function DataTableFooter({
@@ -21,20 +27,20 @@ export function DataTableFooter({
   aggregateValues,
   isAggregatesFetching,
 }: DataTableFooterProps) {
-  const { table } = useDataViewCore()
-  const t = useTranslations("Aggregates")
-  if (aggregateRules.length === 0) return null
+  const { table } = useDataViewCore();
+  const t = useTranslations("Aggregates");
+  if (aggregateRules.length === 0) return null;
 
-  const leafColumns = table.getVisibleLeafColumns()
-  const lastLeafColumnId = leafColumns.at(-1)?.id
+  const leafColumns = table.getVisibleLeafColumns();
+  const lastLeafColumnId = leafColumns.at(-1)?.id;
 
   return (
     <CustomTableFooter className="bg-background">
       <CustomTableRow>
         {leafColumns.map((col) => {
-          const isLast = col.id === lastLeafColumnId
-          const isPinned = col.getIsPinned()
-          const rule = aggregateRules.find((r) => r.columnId === col.id)
+          const isLast = col.id === lastLeafColumnId;
+          const isPinned = col.getIsPinned();
+          const rule = aggregateRules.find((r) => r.columnId === col.id);
 
           return (
             <CustomTableCell
@@ -43,10 +49,8 @@ export function DataTableFooter({
                 position: "sticky",
                 bottom: 0,
                 left: isPinned ? col.getStart("left") : undefined,
-                // Above the body's pinned cells (z-20) and the header's
-                // (z-30) so a pinned row column never renders over the
-                // footer at the sticky-bottom/sticky-left corner.
                 zIndex: isPinned ? 35 : 25,
+                transform: "translateZ(0)",
                 width: isLast
                   ? undefined
                   : `calc(var(--col-${col.id}-size) * 1px)`,
@@ -75,9 +79,9 @@ export function DataTableFooter({
                   )
                 ))}
             </CustomTableCell>
-          )
+          );
         })}
       </CustomTableRow>
     </CustomTableFooter>
-  )
+  );
 }

@@ -22,6 +22,8 @@ import type { SortRule } from "../../core/tanstack-augmentations";
 import type { FilterRule } from "./filters";
 import type { AggregateRule } from "../aggregates/aggregates";
 import { aggregateResultKey } from "../aggregates/aggregates";
+import type { GroupByRule } from "../grouping/grouping";
+import { groupingFlagKey } from "../grouping/grouping";
 
 export type FilterColumnMap = Record<string, AnyColumn>;
 
@@ -165,6 +167,51 @@ export function buildAggregateSelection(
   }
 
   return selection;
+}
+
+export interface GroupKeyColumn {
+  key: string;
+  columnId: string;
+  column: AnyColumn;
+}
+
+export function resolveGroupKeyColumns(
+  groupBy: GroupByRule[],
+  columns: FilterColumnMap,
+): GroupKeyColumn[] {
+  const resolved: GroupKeyColumn[] = [];
+  for (const rule of groupBy) {
+    const key = rule.origin
+      ? `${rule.origin}.${rule.columnName}`
+      : rule.columnName;
+    const column = columns[key];
+    if (!column) continue;
+    resolved.push({ key, columnId: rule.columnId, column });
+  }
+  return resolved;
+}
+
+// Selection for the per-group rollup aggregate query: each group key column
+// (aliased by columnId, so a rollup row carries its own group path) plus its
+// GROUPING() flag, alongside the existing aggregate expressions.
+export function buildGroupedAggregateSelection(
+  rules: AggregateRule[],
+  groupKeyColumns: GroupKeyColumn[],
+  columns: FilterColumnMap,
+): Record<string, SQL<unknown>> {
+  const selection: Record<string, SQL<unknown>> = {};
+  for (const gc of groupKeyColumns) {
+    selection[gc.columnId] = sql`${gc.column}`;
+    selection[groupingFlagKey(gc.columnId)] =
+      sql<number>`grouping(${gc.column})`;
+  }
+  Object.assign(selection, buildAggregateSelection(rules, columns));
+  return selection;
+}
+
+export function buildRollupClause(groupKeyColumns: GroupKeyColumn[]): SQL {
+  const cols = groupKeyColumns.map((gc) => sql`${gc.column}`);
+  return sql`ROLLUP (${sql.join(cols, sql`, `)})`;
 }
 
 export interface SortColumn {

@@ -12,6 +12,10 @@ import type {
   AggregateRule,
   AggregateResult,
 } from "../components/data-view/features/aggregates/aggregates";
+import type {
+  GroupByRule,
+  GroupAggregateRow,
+} from "../components/data-view/features/grouping/grouping";
 import type { FormConfig } from "../components/form/types/types";
 import {
   ActionResult,
@@ -95,6 +99,7 @@ export interface ResourceConfig<
     sorting: SortRule[],
     filters: FilterRule[],
     cursor: Cursor | null,
+    groupBy: GroupByRule[],
   ) => Promise<
     ActionResult<{ items: TItem[]; total: number; nextCursor: Cursor | null }>
   >;
@@ -103,6 +108,11 @@ export interface ResourceConfig<
     rules: AggregateRule[],
     filters: FilterRule[],
   ) => Promise<ActionResult<AggregateResult>>;
+  fetchGroupAggregates?: (
+    rules: AggregateRule[],
+    filters: FilterRule[],
+    groupBy: GroupByRule[],
+  ) => Promise<ActionResult<GroupAggregateRow[]>>;
   isDeleteEligible?: (item: TItem) => boolean;
   getRowUrl?: (item: TItem) => string;
   bulkActions?: () => BulkActionsHookResult<TItem>;

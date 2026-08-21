@@ -9,6 +9,7 @@ import {
   fetchTodoDetail,
   fetchTodoList,
   fetchTodoAggregates,
+  fetchTodoGroupAggregates,
   addTodo,
   updateTodo,
   deleteTodos,
@@ -53,6 +54,7 @@ export const todosResource = defineResource<Todo, TodoFormValues>({
 
   fetchList: fetchTodoList,
   fetchAggregates: fetchTodoAggregates,
+  fetchGroupAggregates: fetchTodoGroupAggregates,
   fetchDetail: fetchTodoDetail,
   mutationFns: { add: addTodo, update: updateTodo, delete: deleteTodos },
 

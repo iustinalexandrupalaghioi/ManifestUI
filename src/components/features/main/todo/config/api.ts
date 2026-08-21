@@ -8,14 +8,19 @@ import type { SortRule } from "@/framework/components/data-view/core/tanstack-au
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
   buildAggregateSelection,
+  buildGroupedAggregateSelection,
   buildKeysetWhere,
   buildOrderBy,
+  buildRollupClause,
   buildWhereConditions,
   extractCursor,
+  resolveGroupKeyColumns,
   resolveSortColumns,
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
+import { buildGroupingSortRules } from "@/framework/components/data-view/features/grouping/grouping";
+import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
 import type { Cursor } from "@/framework/types/pagination";
 import type { Todo } from "@/app/types/main/Todo";
 import { completeTodoSchema, todoSchema, type TodoFormValues } from "./schema";
@@ -61,6 +66,7 @@ const resourceAction = createResourceActions(todosDescriptor.id);
 export const {
   fetchTodoList,
   fetchTodoAggregates,
+  fetchTodoGroupAggregates,
   fetchTodoDetail,
   addTodo,
   updateTodo,
@@ -73,13 +79,38 @@ export const {
       sorting: SortRule[],
       filters: FilterRule[],
       cursor: Cursor | null,
+      groupBy: GroupByRule[],
     ) => {
       const where = buildWhereConditions(filters, filterColumns);
-      const sortColumns = resolveSortColumns(sorting, filterColumns, {
+      const effectiveSorting = groupBy.length
+        ? [...buildGroupingSortRules(groupBy), ...sorting]
+        : sorting;
+      const sortColumns = resolveSortColumns(effectiveSorting, filterColumns, {
         key: "id",
         column: todo.id,
       });
       const orderBy = buildOrderBy(sortColumns);
+
+      if (groupBy.length > 0) {
+        // Grouping needs the complete result set — a group's count/totals
+        // aren't correct from a partial cursor page — so fetch everything,
+        // uncapped, in one shot instead of the usual keyset pagination.
+        const [items, [{ count }]] = await Promise.all([
+          db
+            .select(selection)
+            .from(todo)
+            .innerJoin(relation, eq(todo.user_id, relation.id))
+            .where(where)
+            .orderBy(...orderBy),
+          db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(todo)
+            .innerJoin(relation, eq(todo.user_id, relation.id))
+            .where(where),
+        ]);
+        return { items: items as Todo[], total: count ?? 0, nextCursor: null };
+      }
+
       const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
       const [items, [{ count }]] = await Promise.all([
@@ -119,6 +150,33 @@ export const {
         .innerJoin(relation, eq(todo.user_id, relation.id))
         .where(where);
       return row;
+    },
+  ],
+
+  fetchTodoGroupAggregates: [
+    "read",
+    async (
+      rules: AggregateRule[],
+      filters: FilterRule[],
+      groupBy: GroupByRule[],
+    ) => {
+      const where = buildWhereConditions(filters, filterColumns);
+      const groupKeyColumns = resolveGroupKeyColumns(groupBy, filterColumns);
+      if (groupKeyColumns.length === 0) return [];
+
+      const groupSelection = buildGroupedAggregateSelection(
+        rules,
+        groupKeyColumns,
+        filterColumns,
+      );
+
+      const rows = await db
+        .select(groupSelection)
+        .from(todo)
+        .innerJoin(relation, eq(todo.user_id, relation.id))
+        .where(where)
+        .groupBy(buildRollupClause(groupKeyColumns));
+      return rows;
     },
   ],
 

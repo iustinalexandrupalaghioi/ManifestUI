@@ -2,13 +2,16 @@
 
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
+  getGroupedRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type VisibilityState,
 } from "@tanstack/react-table";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { deleteEditingStore } from "../../features/editing/editing.store";
 import { deleteFilteringStores } from "../../features/filtering/filtering.store";
 import type { FilterInput } from "../../features/filtering/filters";
@@ -21,6 +24,17 @@ import { deleteSortingStores } from "../../features/sorting/sorting.store";
 import { deleteAggregatesStores } from "../../features/aggregates/aggregates.store";
 import type { AggregateResult } from "../../features/aggregates/aggregates";
 import { buildDefaultAggregateRules } from "../../features/aggregates/useAggregatableColumns";
+import {
+  deleteGroupingStores,
+  getGroupingStore,
+} from "../../features/grouping/grouping.store";
+import { buildDefaultGrouping } from "../../features/grouping/useGroupableColumns";
+import { countLeafRows } from "../../features/grouping/grouping";
+import { GroupValueDisplay } from "../../features/grouping/ui/GroupValueDisplay";
+import type {
+  GroupAggregateRow,
+  GroupByRule,
+} from "../../features/grouping/grouping";
 import { getViewsStore } from "../../features/views/views.store";
 import type { DataViewFeature, DataViewFeatureContext } from "../contracts";
 import {
@@ -28,13 +42,14 @@ import {
   getCoreStore,
   useCoreStore,
 } from "../stores/DataViewStore";
-import { deleteViewModeStore } from "../stores/ViewModeStore";
+import { deleteViewModeStore, getViewModeStore } from "../stores/ViewModeStore";
 import "../tanstack-augmentations";
 import { useAvailableHeight } from "./useAvailableHeight";
 import { useColumnHandlers } from "./useColumnHandler";
 import { useColumnState } from "./useColumnState";
 import { useInfiniteScroll } from "./useInfiniteScroll";
 import { useScrollFreeze } from "./useScrollFreeze";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 function sameSelection(a: Record<string, boolean>, b: Record<string, boolean>) {
   const aKeys = Object.keys(a)
@@ -73,6 +88,8 @@ export interface DataViewProps<TData, TValue> {
   openOnRowClick?: boolean;
   aggregateValues?: AggregateResult;
   isAggregatesFetching?: boolean;
+  groupAggregateRows?: GroupAggregateRow[];
+  isGroupAggregatesFetching?: boolean;
 }
 
 export function useDataView<TData, TValue>(
@@ -96,6 +113,8 @@ export function useDataView<TData, TValue>(
     tableMeta,
     aggregateValues,
     isAggregatesFetching,
+    groupAggregateRows,
+    isGroupAggregatesFetching,
   } = props;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -110,6 +129,7 @@ export function useDataView<TData, TValue>(
     initialColumnVisibility,
     initialListColumnVisibility ?? {},
     buildDefaultAggregateRules(columns),
+    buildDefaultGrouping(columns),
   );
 
   const selectionStore = getSelectionStore(tableId);
@@ -145,10 +165,16 @@ export function useDataView<TData, TValue>(
     columnOrder,
     columnPinning,
     sorting,
+    grouping,
     tableViewId,
     listViewId,
     activeMode,
   } = useColumnState(tableId, initialColumnVisibility);
+
+  const groupingIds = useMemo(
+    () => grouping.map((g) => g.columnId),
+    [grouping],
+  );
 
   // ── Column change handlers ───────────────────────────────────────────────
   const columnHandlers = useColumnHandlers(
@@ -169,35 +195,125 @@ export function useDataView<TData, TValue>(
   const globalFilter = useCoreStore(tableId, (s) => s.globalFilter);
   const setGlobalFilter = useCoreStore(tableId, (s) => s.setGlobalFilter);
 
+  // ── Grouping ──────────────────────────────────────────────────────────────
+  const onGroupingChange = (
+    updater: string[] | ((old: string[]) => string[]),
+  ) => {
+    const nextIds =
+      typeof updater === "function" ? updater(groupingIds) : updater;
+    const byId = new Map(grouping.map((g) => [g.columnId, g]));
+    const next: GroupByRule[] = nextIds.map((id) => {
+      const existing = byId.get(id);
+      if (existing) return existing;
+      const meta = tableRef.current?.getColumn(id)?.columnDef.meta;
+      return {
+        columnId: id,
+        columnName: meta?.columnName ?? id,
+        columnLabel: meta?.columnLabel ?? id,
+        columnType: meta?.columnType ?? "text",
+        ...(meta?.origin ? { origin: meta.origin } : {}),
+      };
+    });
+    const mode = getViewModeStore(tableId).getState().activeMode;
+    if (mode === "list") {
+      getGroupingStore(tableId, listViewId).getState().setGrouping(next);
+      getViewsStore(tableId).getState().updateListDraft({ grouping: next });
+    } else {
+      getGroupingStore(tableId, tableViewId).getState().setGrouping(next);
+      getViewsStore(tableId).getState().updateTableDraft({ grouping: next });
+    }
+  };
+
+  // ── Group column ─────────────────────────────────────────────────────────
+  const tGrouping = useTranslations("Grouping");
+  const groupColumn: ColumnDef<TData> = useMemo(
+    () => ({
+      id: "group",
+      header: () => tGrouping("group"),
+      cell: ({ row }) => {
+        if (!row.getIsGrouped()) return null;
+        const meta = tableRef.current?.getColumn(row.groupingColumnId!)
+          ?.columnDef.meta;
+        return (
+          <button
+            type="button"
+            className="flex h-full w-full items-center gap-1.5 text-left"
+            style={{ paddingLeft: `${row.depth * 20}px` }}
+            onClick={row.getToggleExpandedHandler()}
+          >
+            <span className="inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground">
+              {row.getIsExpanded() ? <ChevronDown /> : <ChevronRight />}
+            </span>
+            <span className="shrink-0 text-muted-foreground">
+              {meta?.columnLabel ?? row.groupingColumnId}:{" "}
+            </span>
+            <span className="truncate font-semibold">
+              <GroupValueDisplay
+                value={row.getValue(row.groupingColumnId!)}
+                type={meta?.columnType ?? "text"}
+                options={meta?.selectOptions}
+                bucket={meta?.bucket}
+              />
+            </span>
+            <span className="shrink-0 text-muted-foreground">
+              ({countLeafRows(row)})
+            </span>
+          </button>
+        );
+      },
+      enableSorting: false,
+      enableColumnFilter: false,
+      enableResizing: true,
+      enableHiding: false,
+      enableGrouping: false,
+      size: 220,
+      minSize: 140,
+    }),
+    [tGrouping],
+  );
+
+  const tableColumns = useMemo(
+    () => [groupColumn, ...columns],
+    [groupColumn, columns],
+  );
+
   // ── TanStack table ───────────────────────────────────────────────────────
   const table = useReactTable({
     data,
-    columns,
+    columns: tableColumns,
     enableColumnResizing: true,
     columnResizeMode: "onChange",
     defaultColumn: { enableResizing: true },
     manualPagination: true,
+    groupedColumnMode: false,
+    enableRowSelection: (row) => !row.getIsGrouped(),
     getRowId: getRowId ?? ((_, index) => String(index)),
     state: {
       rowSelection,
-      columnVisibility,
+      grouping: groupingIds,
+      columnVisibility: {
+        ...columnVisibility,
+        group: groupingIds.length > 0,
+      },
       columnSizing,
       columnPinning: {
         left: [
+          "group",
           "select",
           "columns",
           ...columnPinning.left.filter(
-            (id) => id !== "select" && id !== "columns",
+            (id) => !["group", "select", "columns"].includes(id),
           ),
         ],
       },
       columnOrder:
         columnOrder.length > 0
           ? [
+              "group",
               "select",
               "columns",
               ...columnOrder.filter(
-                (id) => id !== "select" && id !== "columns",
+                (id) => !["group", "select", "columns"].includes(id),
               ),
             ]
           : undefined,
@@ -205,6 +321,7 @@ export function useDataView<TData, TValue>(
       globalFilter,
     },
     onRowSelectionChange: setRowSelection,
+    onGroupingChange,
     onGlobalFilterChange: (updater) => {
       const next =
         typeof updater === "function" ? updater(globalFilter) : updater;
@@ -215,6 +332,8 @@ export function useDataView<TData, TValue>(
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getGroupedRowModel: getGroupedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
   });
 
   // Keep tableRef current so useColumnHandlers can read it lazily
@@ -300,6 +419,7 @@ export function useDataView<TData, TValue>(
       deleteFilteringStores(tableId);
       deleteSortingStores(tableId);
       deleteAggregatesStores(tableId);
+      deleteGroupingStores(tableId);
       deleteEditingStore(tableId);
     };
   }, [tableId]);
@@ -343,5 +463,8 @@ export function useDataView<TData, TValue>(
     columnPinning,
     aggregateValues,
     isAggregatesFetching,
+    grouping,
+    groupAggregateRows,
+    isGroupAggregatesFetching,
   };
 }

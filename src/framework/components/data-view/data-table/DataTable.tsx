@@ -12,6 +12,7 @@ import type {
   AggregateResult,
   AggregateRule,
 } from "../features/aggregates/aggregates"
+import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping"
 import { DataTableHeader } from "./ui/DataTableHeader"
 import { DataTableBody } from "./ui/DataTableBody"
 import { DataTableFooter } from "./ui/DataTableFooter"
@@ -37,6 +38,10 @@ interface DataTableProps {
   aggregateValues?: AggregateResult
   isAggregatesFetching?: boolean
   onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void
+  grouping?: GroupByRule[]
+  groupAggregateRules?: AggregateRule[]
+  groupAggregateLookup?: Map<string, GroupAggregateRow>
+  isGroupAggregatesFetching?: boolean
 }
 
 export function DataTable({
@@ -58,6 +63,10 @@ export function DataTable({
   aggregateValues,
   isAggregatesFetching,
   onSetAggregate,
+  grouping = [],
+  groupAggregateRules,
+  groupAggregateLookup,
+  isGroupAggregatesFetching,
 }: DataTableProps) {
   const leafColumns = table.getVisibleLeafColumns()
   const lastLeafColumnId = leafColumns.at(-1)?.id
@@ -102,6 +111,10 @@ export function DataTable({
           columnOrder={columnOrder}
           columnPinning={columnPinning}
           columnVisibility={columnVisibility}
+          grouping={grouping}
+          groupAggregateRules={groupAggregateRules ?? aggregateRules}
+          groupAggregateLookup={groupAggregateLookup ?? new Map()}
+          isGroupAggregatesFetching={isGroupAggregatesFetching}
         />
         <DataTableFooter
           aggregateRules={aggregateRules}

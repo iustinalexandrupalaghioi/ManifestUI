@@ -5,7 +5,10 @@ import { useTranslations } from "next-intl";
 import type { Todo } from "@/app/types/main/Todo";
 import { CheckIcon } from "lucide-react";
 import { useCompleteTodos } from "../../hooks/useCompleteTodo";
-import { BulkActionError, type BulkActionResult } from "@/framework/lib/actionResult";
+import {
+  BulkActionError,
+  type BulkActionResult,
+} from "@/framework/lib/actionResult";
 
 export function useTodoBulkActions() {
   const t = useTranslations("Todos");

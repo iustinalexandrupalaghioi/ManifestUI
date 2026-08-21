@@ -7,6 +7,8 @@ import { DataListColumnManager } from "../core/ui/ColumnManager";
 import type { DataListFeatureApi } from "./DataList.contract";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import type { AggregateRule } from "../features/aggregates/aggregates";
+import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
 
 interface DataListProps {
   table: TTable<any>;
@@ -15,6 +17,10 @@ interface DataListProps {
   openOnRowClick?: boolean;
   list: DataListFeatureApi;
   isLookup?: boolean;
+  grouping?: GroupByRule[];
+  groupAggregateRules?: AggregateRule[];
+  groupAggregateLookup?: Map<string, GroupAggregateRow>;
+  isGroupAggregatesFetching?: boolean;
 }
 
 export function DataList({
@@ -24,6 +30,10 @@ export function DataList({
   openOnRowClick,
   list,
   isLookup,
+  grouping = [],
+  groupAggregateRules = [],
+  groupAggregateLookup = new Map(),
+  isGroupAggregatesFetching,
 }: DataListProps) {
   const t = useTranslations("DataView");
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
@@ -67,6 +77,10 @@ export function DataList({
         isLoading={isLoading}
         activeRowId={activeRowId}
         openOnRowClick={openOnRowClick}
+        grouping={grouping}
+        groupAggregateRules={groupAggregateRules}
+        groupAggregateLookup={groupAggregateLookup}
+        isGroupAggregatesFetching={isGroupAggregatesFetching}
       />
 
       {/* List column manager panel — overview only */}

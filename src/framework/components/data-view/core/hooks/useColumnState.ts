@@ -6,6 +6,7 @@ import {
   useActiveListView,
 } from "../../features/views/views.store";
 import { getSortingStore } from "../../features/sorting/sorting.store";
+import { getGroupingStore } from "../../features/grouping/grouping.store";
 import {
   DEFAULT_TABLE_VIEW_ID,
   DEFAULT_LIST_VIEW_ID,
@@ -48,12 +49,21 @@ export function useColumnState(
   const listSorting = getSortingStore(tableId, listViewId)((s) => s.sorting);
   const sorting = activeMode === "list" ? listSorting : tableSorting;
 
+  const tableGrouping = getGroupingStore(tableId, tableViewId)(
+    (s) => s.grouping,
+  );
+  const listGrouping = getGroupingStore(tableId, listViewId)(
+    (s) => s.grouping,
+  );
+  const grouping = activeMode === "list" ? listGrouping : tableGrouping;
+
   return {
     columnVisibility,
     columnSizing,
     columnOrder,
     columnPinning,
     sorting,
+    grouping,
     tableViewId,
     listViewId,
     activeMode,

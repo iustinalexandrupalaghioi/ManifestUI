@@ -34,6 +34,12 @@ import type {
   AggregateRule,
   AggregateResult,
 } from "../features/aggregates/aggregates";
+import { getGroupingStore } from "../features/grouping/grouping.store";
+import { buildGroupableColumns } from "../features/grouping/useGroupableColumns";
+import { GroupByButton } from "../features/grouping/ui/GroupByButton";
+import { GroupByPanel } from "../features/grouping/ui/GroupByPanel";
+import { buildGroupAggregateLookup } from "../features/grouping/grouping";
+import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
 import { getViewsStore } from "../features/views/views.store";
 import { DataList } from "./DataList";
 import { useDataList } from "./useDataList";
@@ -57,6 +63,8 @@ interface ListViewLayoutProps {
   hasListMode: boolean;
   aggregateValues?: AggregateResult;
   isAggregatesFetching?: boolean;
+  groupAggregateRows?: GroupAggregateRow[];
+  isGroupAggregatesFetching?: boolean;
 }
 
 export function ListViewLayout({
@@ -78,6 +86,8 @@ export function ListViewLayout({
   hasListMode,
   aggregateValues,
   isAggregatesFetching,
+  groupAggregateRows,
+  isGroupAggregatesFetching,
 }: ListViewLayoutProps) {
   const t = useTranslations("DataView");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -101,6 +111,10 @@ export function ListViewLayout({
   const sortableColumns = useMemo(() => buildSortableColumns(table), [table]);
   const aggregatableColumns = useMemo(
     () => buildAggregatableColumns(table),
+    [table],
+  );
+  const groupableColumns = useMemo(
+    () => buildGroupableColumns(table),
     [table],
   );
   const setSorting = (next: SortingState) => {
@@ -143,6 +157,27 @@ export function ListViewLayout({
       getAggregatesStore(tableId, listViewId).getState().closePanel(),
   };
 
+  const listGrouping = {
+    grouping: getGroupingStore(tableId, listViewId)((s) => s.grouping),
+    panelOpen: getGroupingStore(tableId, listViewId)((s) => s.panelOpen),
+    setGrouping: (grouping: GroupByRule[]) => {
+      getGroupingStore(tableId, listViewId).getState().setGrouping(grouping);
+      getViewsStore(tableId).getState().updateListDraft({ grouping });
+    },
+    openPanel: () => getGroupingStore(tableId, listViewId).getState().openPanel(),
+    closePanel: () => getGroupingStore(tableId, listViewId).getState().closePanel(),
+  };
+
+  // Per-group-level gating (GroupByRule.showTotals) is applied at render
+  // time (DataListGrid), not here — this is just "is there anything to
+  // total at all".
+  const groupAggregateRules = listAggregates.rules;
+
+  const groupAggregateLookup = useMemo(
+    () => buildGroupAggregateLookup(groupAggregateRows ?? [], listGrouping.grouping),
+    [groupAggregateRows, listGrouping.grouping],
+  );
+
   const hasAggregates = listAggregates.rules.length > 0 && !isLookup;
 
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -168,6 +203,10 @@ export function ListViewLayout({
           <TotalsButton
             rules={listAggregates.rules}
             onOpen={() => listAggregates.openPanel()}
+          />
+          <GroupByButton
+            grouping={listGrouping.grouping}
+            onOpen={() => listGrouping.openPanel()}
           />
           <ColumnManagerButton type="list" />
           {quickSearchEnabled && (
@@ -264,6 +303,10 @@ export function ListViewLayout({
             openOnRowClick={openOnRowClick}
             list={list}
             isLookup={isLookup}
+            grouping={listGrouping.grouping}
+            groupAggregateRules={groupAggregateRules}
+            groupAggregateLookup={groupAggregateLookup}
+            isGroupAggregatesFetching={isGroupAggregatesFetching}
           />
 
           <FilterPanel
@@ -295,6 +338,16 @@ export function ListViewLayout({
             aggregatableColumns={aggregatableColumns}
             focusColumnId={listAggregates.focusColumnId}
             onApply={(rules) => listAggregates.setRules(rules)}
+          />
+
+          <GroupByPanel
+            open={listGrouping.panelOpen}
+            onOpenChange={(open) =>
+              open ? listGrouping.openPanel() : listGrouping.closePanel()
+            }
+            initialGrouping={listGrouping.grouping}
+            groupableColumns={groupableColumns}
+            onApply={(grouping) => listGrouping.setGrouping(grouping)}
           />
 
           {features.map((f) => f.Panel && <f.Panel key={f.id} />)}

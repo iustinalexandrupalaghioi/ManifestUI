@@ -1,7 +1,15 @@
 "use client"
 
 import type { Table, Cell, Row } from "@tanstack/react-table"
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import {
+  Fragment,
+  createElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 import { useTranslations } from "next-intl"
 import type { ContextMenuState, ResolvedAction } from "../../core/types"
 
@@ -16,7 +24,11 @@ function buildLabel(
   isMulti: boolean
 ): ReactNode {
   if (!isMulti) return label
-  return [label, ` (${eligible}/${total})`]
+  // Not a raw [label, text] array — React treats that exactly like a
+  // .map() result and requires a key on each item. A Fragment is a single
+  // node wrapping two static (non-list) children, which never need keys.
+  // (This file is .ts, not .tsx, so createElement instead of JSX syntax.)
+  return createElement(Fragment, null, label, ` (${eligible}/${total})`)
 }
 
 // ─────────────────────────────────────────────

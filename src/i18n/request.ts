@@ -13,6 +13,7 @@ const NAMESPACES = [
   { group: "framework", name: "Filtering" },
   { group: "framework", name: "Sorting" },
   { group: "framework", name: "Aggregates" },
+  { group: "framework", name: "Grouping" },
   { group: "framework", name: "Views" },
   { group: "framework", name: "Pagination" },
   { group: "framework", name: "Toast" },

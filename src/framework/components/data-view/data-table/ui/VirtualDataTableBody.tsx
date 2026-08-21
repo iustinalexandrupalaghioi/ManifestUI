@@ -6,11 +6,12 @@ import {
   CustomTableRow,
 } from "@/framework/components/ui/CustomTable";
 import { cn } from "@/framework/lib/utils";
-import { flexRender } from "@tanstack/react-table";
+import { flexRender, type Row } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { memo, useEffect, useRef, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useRef, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import type { VirtualDataTableBodyProps } from "../../core/types";
+import { DataTableGroupTotalsRow } from "./DataTableGroupTotalsRow";
 
 const SKELETON_ROW_COUNT = 12;
 
@@ -65,10 +66,19 @@ function SkeletonRows({
   );
 }
 
+type DisplayItem<TData> =
+  | { kind: "row"; row: Row<TData> }
+  | { kind: "totals"; row: Row<TData> };
+
 function VirtualTableBodyInner<TData>({
   rows,
+  table,
   lastColumnId,
   columnsLength,
+  grouping,
+  groupAggregateRules,
+  groupAggregateLookup,
+  isGroupAggregatesFetching,
   scrollContainerRef,
   isResizing,
   onCellContextMenu,
@@ -87,8 +97,39 @@ function VirtualTableBodyInner<TData>({
   columnStateKey,
 }: VirtualDataTableBodyProps<TData>) {
   const t = useTranslations("DataView");
+
+  const displayItems = useMemo<DisplayItem<TData>[]>(() => {
+    if (groupAggregateRules.length === 0) {
+      return rows.map((row) => ({ kind: "row" as const, row }));
+    }
+    const out: DisplayItem<TData>[] = [];
+    const openGroups: Row<TData>[] = [];
+
+    const flushTo = (depth: number) => {
+      while (
+        openGroups.length > 0 &&
+        openGroups[openGroups.length - 1].depth >= depth
+      ) {
+        const group = openGroups.pop()!;
+        const showTotals = grouping[group.depth]?.showTotals !== false;
+        if (group.getIsExpanded() && showTotals) {
+          out.push({ kind: "totals", row: group });
+        }
+      }
+    };
+
+    for (const row of rows) {
+      flushTo(row.depth);
+      out.push({ kind: "row", row });
+      if (row.getIsGrouped()) openGroups.push(row);
+    }
+    flushTo(-Infinity);
+
+    return out;
+  }, [rows, groupAggregateRules.length, grouping]);
+
   const virtualizer = useVirtualizer({
-    count: rows.length,
+    count: displayItems.length,
     getScrollElement: () => scrollContainerRef.current,
     estimateSize: () => 33,
     overscan: isResizing ? 0 : 5,
@@ -147,71 +188,105 @@ function VirtualTableBodyInner<TData>({
       )}
 
       {virtualRows.map((virtualRow) => {
-        const row = rows[virtualRow.index];
+        const item = displayItems[virtualRow.index];
+        const measureRef = (node: HTMLTableRowElement | null) => {
+          if (!isResizing && node && !node.dataset.measured) {
+            node.dataset.measured = "true";
+            virtualizer.measureElement(node);
+          }
+        };
+
+        if (item.kind === "totals") {
+          return (
+            <DataTableGroupTotalsRow
+              key={`${item.row.id}__totals`}
+              row={item.row}
+              table={table}
+              groupAggregateRules={groupAggregateRules}
+              groupAggregateLookup={groupAggregateLookup}
+              isGroupAggregatesFetching={isGroupAggregatesFetching}
+              dataIndex={virtualRow.index}
+              measureRef={measureRef}
+            />
+          );
+        }
+
+        const row = item.row;
+        const isGroupHeader = row.getIsGrouped();
 
         return (
           <CustomTableRow
             key={row.id}
             data-index={virtualRow.index}
-            ref={(node) => {
-              if (!isResizing && node && !node.dataset.measured) {
-                node.dataset.measured = "true";
-                virtualizer.measureElement(node);
-              }
-            }}
+            ref={measureRef}
             className={cn(
               "select-none",
-              virtualRow.index % 2 === 0 && "bg-muted/60",
+              isGroupHeader
+                ? "bg-muted/40"
+                : virtualRow.index % 2 === 0 && "bg-muted/60",
               row.id === activeRowId && "bg-primary/5",
             )}
             data-state={row.getIsSelected() ? "selected" : undefined}
-            onClick={(e) => onRowClick?.(e, row)}
+            onClick={(e) => {
+              if (!isGroupHeader) onRowClick?.(e, row);
+            }}
           >
             {row.getVisibleCells().map((cell) => {
               const isLast = cell.column.id === lastColumnId;
               const isPinned = cell.column.getIsPinned();
-              const editing = isCellEditing(row.id, cell.column.id);
+              const isGroupCell = cell.column.id === "group";
+              const editing =
+                !isGroupHeader && isCellEditing(row.id, cell.column.id);
 
               return (
                 <CustomTableCell
                   key={cell.id}
                   data-editing={editing || undefined}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCellClick(e, cell);
+                  onClick={
+                    isGroupHeader
+                      ? undefined
+                      : (e) => {
+                          e.stopPropagation();
+                          onCellClick(e, cell);
 
-                    const now = Date.now();
-                    const last = lastClickRef.current;
+                          const now = Date.now();
+                          const last = lastClickRef.current;
 
-                    if (last?.rowId === row.id && now - last.time < 300) {
-                      lastClickRef.current = null;
-                      const handled = onCellDoubleClick?.(cell) ?? false;
-                      if (!handled) onRowDoubleClick?.(row);
-                    } else {
-                      lastClickRef.current = { rowId: row.id, time: now };
-                      onRowClick?.(e, row);
-                    }
-                  }}
-                  onContextMenu={(e) => {
-                    onCellContextClick(cell);
-                    onRowContextClick(row);
+                          if (last?.rowId === row.id && now - last.time < 300) {
+                            lastClickRef.current = null;
+                            const handled = onCellDoubleClick?.(cell) ?? false;
+                            if (!handled) onRowDoubleClick?.(row);
+                          } else {
+                            lastClickRef.current = { rowId: row.id, time: now };
+                            onRowClick?.(e, row);
+                          }
+                        }
+                  }
+                  onContextMenu={
+                    isGroupHeader
+                      ? undefined
+                      : (e) => {
+                          onCellContextClick(cell);
+                          onRowContextClick(row);
 
-                    const sel = rowSelection;
-                    const isSelected = sel[row.id];
-                    const selectedCount = Object.keys(sel).filter(
-                      (id) => sel[id],
-                    ).length;
-                    const effectiveRows =
-                      isSelected && selectedCount > 1
-                        ? rows.filter((r) => sel[r.id])
-                        : [row];
+                          const sel = rowSelection;
+                          const isSelected = sel[row.id];
+                          const selectedCount = Object.keys(sel).filter(
+                            (id) => sel[id],
+                          ).length;
+                          const effectiveRows =
+                            isSelected && selectedCount > 1
+                              ? table.getSelectedRowModel().rows
+                              : [row];
 
-                    onCellContextMenu(e, cell, effectiveRows);
-                  }}
+                          onCellContextMenu(e, cell, effectiveRows);
+                        }
+                  }
                   style={{
                     position: isPinned ? "sticky" : undefined,
                     left: isPinned ? cell.column.getStart("left") : undefined,
                     zIndex: isPinned ? 20 : 0,
+                    transform: isPinned ? "translateZ(0)" : undefined,
                   }}
                   className={cn(
                     "relative border-b text-xs",
@@ -219,8 +294,10 @@ function VirtualTableBodyInner<TData>({
                       ? "overflow-hidden bg-background outline -outline-offset-1 outline-primary"
                       : "h-0 truncate overflow-hidden px-3 whitespace-nowrap",
                     !isLast && "border-r",
-                    isPinned && "bg-background",
-                    isCellSelected(row.id, cell.column.id) &&
+                    !isPinned && isGroupHeader && "bg-muted/40",
+                    isPinned && (isGroupHeader ? "bg-muted" : "bg-background"),
+                    !isGroupHeader &&
+                      isCellSelected(row.id, cell.column.id) &&
                       "bg-primary/5 outline -outline-offset-1 outline-primary",
                     cell.column.columnDef.meta?.className,
                   )}
@@ -232,7 +309,12 @@ function VirtualTableBodyInner<TData>({
                         : "min-w-0 truncate"
                     }
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    {isGroupHeader && !isGroupCell
+                      ? null
+                      : flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
                   </div>
                 </CustomTableCell>
               );

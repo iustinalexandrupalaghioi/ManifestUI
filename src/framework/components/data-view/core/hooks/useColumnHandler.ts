@@ -78,7 +78,9 @@ export function useColumnHandlers<TData>(
       getViewsStore(tableId)
         .getState()
         .updateTableDraft({
-          columnOrder: next.filter((id) => id !== "select" && id !== "columns"),
+          columnOrder: next.filter(
+            (id) => !["group", "select", "columns"].includes(id),
+          ),
         });
     },
 
@@ -90,17 +92,19 @@ export function useColumnHandlers<TData>(
       const current = { left: columnPinning.left };
       const next = typeof updater === "function" ? updater(current) : updater;
       const newPinnedIds = (next.left ?? []).filter(
-        (id) => id !== "select" && id !== "columns",
+        (id) => !["group", "select", "columns"].includes(id),
       );
 
       // Fall back to all leaf column IDs when no order has been set yet.
       // tableRef.current is always set by the time this callback fires.
       const base =
         columnOrder.length > 0
-          ? columnOrder.filter((id) => id !== "select" && id !== "columns")
+          ? columnOrder.filter(
+              (id) => !["group", "select", "columns"].includes(id),
+            )
           : (tableRef.current?.getAllLeafColumns() ?? [])
               .map((c) => c.id)
-              .filter((id) => id !== "select" && id !== "columns");
+              .filter((id) => !["group", "select", "columns"].includes(id));
 
       const unpinned = base.filter((id) => !newPinnedIds.includes(id));
 

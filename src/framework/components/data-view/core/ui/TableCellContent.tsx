@@ -6,9 +6,7 @@ import type { ColumnType } from "../../features/filtering/filters";
 import { getEditingStore } from "../../features/editing/editing.store";
 import { EditableCell } from "../../features/editing/ui/EditableCell";
 import { useDataViewCore } from "../stores/DataViewProvider";
-import BooleanDisplay from "./BooleanDisplay";
-import { CellFilePreview } from "./CellFilePreview";
-import { getStorageHandler } from "../../../files";
+import { CellValueDisplay } from "./CellValueDisplay";
 
 const TableCellContent =
   (type: ColumnType, options?: Enum[], bucket?: string) =>
@@ -50,33 +48,9 @@ const TableCellContent =
       );
     }
 
-    const content = (() => {
-      if (type === "boolean")
-        return <BooleanDisplay value={value as boolean} title={label} />;
-
-      if (type === "file") {
-        const path = String(value ?? "");
-        if (!path) return null;
-        return (
-          <CellFilePreview
-            src={getStorageHandler().getPublicUrl({
-              bucket: bucket ?? "",
-              path,
-            })}
-            path={path}
-          />
-        );
-      }
-
-      if (
-        ["date", "datetime", "time", "select", "json"].includes(type) ||
-        options
-      ) {
-        return <span title={label}>{label}</span>;
-      }
-
-      return <span title={String(value ?? "")}>{String(value ?? "")}</span>;
-    })();
+    const content = (
+      <CellValueDisplay value={value} type={type} options={options} bucket={bucket} />
+    );
 
     if (!isDirty) return content;
 

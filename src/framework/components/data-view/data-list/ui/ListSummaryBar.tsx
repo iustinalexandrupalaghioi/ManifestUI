@@ -259,7 +259,7 @@ export function ListSummaryBar({
         {rules.map((rule) => (
           <div
             key={rule.columnId}
-            className="shrink-0 rounded-md border bg-background p-2 text-xs"
+            className="shrink-0 rounded-md border bg-background py-1.5 px-2.5 text-xs"
           >
             <div className="text-muted-foreground whitespace-nowrap">
               {rule.columnLabel}

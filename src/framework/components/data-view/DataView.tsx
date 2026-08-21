@@ -10,6 +10,7 @@ import { sortingFeature } from "./features/sorting/sorting.feature";
 import { selectionFeature } from "./features/selection/selection.feature";
 import { filteringFeature } from "./features/filtering/filtering.feature";
 import { aggregatesFeature } from "./features/aggregates/aggregates.feature";
+import { groupingFeature } from "./features/grouping/grouping.feature";
 import { editingFeature } from "./features/editing/editing.feature";
 import { listFeature } from "./data-list/DataList.feature";
 
@@ -20,6 +21,7 @@ const DEFAULT_FEATURES: DataViewFeature[] = [
   selectionFeature,
   filteringFeature,
   aggregatesFeature,
+  groupingFeature,
   editingFeature,
   listFeature,
 ];
@@ -57,6 +59,8 @@ function DataView<TData, TValue>({
         isLookup={isLookup}
         aggregateValues={props.aggregateValues}
         isAggregatesFetching={props.isAggregatesFetching}
+        groupAggregateRows={props.groupAggregateRows}
+        isGroupAggregatesFetching={props.isGroupAggregatesFetching}
       />
     </DataViewProvider>
   );

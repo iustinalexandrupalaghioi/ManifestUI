@@ -12,6 +12,7 @@ import { ListViewLayout } from "../../data-list/ListViewLayout";
 import { TableViewLayout } from "../../data-table/TableViewLayout";
 import type { FilterInput, FilterRule } from "../../features/filtering/filters";
 import type { AggregateResult } from "../../features/aggregates/aggregates";
+import type { GroupAggregateRow } from "../../features/grouping/grouping";
 import { buildFilterableColumns } from "../../features/filtering/useFiltering";
 import { SelectionToolbar } from "../../features/selection";
 import {
@@ -39,6 +40,8 @@ interface DataViewLayoutProps {
   isLookup?: boolean;
   aggregateValues?: AggregateResult;
   isAggregatesFetching?: boolean;
+  groupAggregateRows?: GroupAggregateRow[];
+  isGroupAggregatesFetching?: boolean;
 }
 
 export function DataViewLayout({
@@ -57,6 +60,8 @@ export function DataViewLayout({
   isLookup,
   aggregateValues,
   isAggregatesFetching,
+  groupAggregateRows,
+  isGroupAggregatesFetching,
 }: DataViewLayoutProps) {
   const { table, tableId, scrollContainerRef, handleScroll, staticColumnIds } =
     useDataViewCore();
@@ -148,6 +153,8 @@ export function DataViewLayout({
           hasListMode={hasTable && hasList}
           aggregateValues={aggregateValues}
           isAggregatesFetching={isAggregatesFetching}
+          groupAggregateRows={groupAggregateRows}
+          isGroupAggregatesFetching={isGroupAggregatesFetching}
         />
       ) : (
         <TableViewLayout
@@ -169,6 +176,8 @@ export function DataViewLayout({
           hasListMode={hasTable && hasList}
           aggregateValues={aggregateValues}
           isAggregatesFetching={isAggregatesFetching}
+          groupAggregateRows={groupAggregateRows}
+          isGroupAggregatesFetching={isGroupAggregatesFetching}
         />
       )}
     </div>

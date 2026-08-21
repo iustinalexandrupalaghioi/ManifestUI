@@ -15,10 +15,10 @@ function SelectAllCheckbox<TData>({ table }: { table: Table<TData> }) {
     <Checkbox
       className="ms-1"
       checked={
-        table.getIsAllPageRowsSelected() ||
-        (table.getIsSomePageRowsSelected() && "indeterminate")
+        table.getIsAllRowsSelected() ||
+        (table.getIsSomeRowsSelected() && "indeterminate")
       }
-      onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+      onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
       aria-label={t("selectAll")}
     />
   );

@@ -110,6 +110,7 @@ export function DataTableHeader({
                     : `calc(var(--header-${header.id}-size) * 1px)`,
                   left: isPinned ? header.column.getStart("left") : undefined,
                   zIndex: isPinned ? 30 : 20,
+                  transform: "translateZ(0)",
                 }}
                 className={cn(
                   "relative h-0 border-b px-3 text-xs font-medium",

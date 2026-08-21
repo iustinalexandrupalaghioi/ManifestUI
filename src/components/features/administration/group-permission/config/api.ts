@@ -17,6 +17,7 @@ import {
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { FilterColumnMap } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
+import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
 import type { Cursor } from "@/framework/types/pagination";
 import type { GroupPermission } from "@/app/types/administration/GroupPermission";
 import {
@@ -76,6 +77,7 @@ export const {
       _sorting: SortRule[],
       filters: FilterRule[],
       _cursor: Cursor | null,
+      _groupBy: GroupByRule[],
     ) => {
       const where = buildWhereConditions(filters, filterColumns);
 

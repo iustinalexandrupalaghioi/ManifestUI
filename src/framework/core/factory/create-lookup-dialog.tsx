@@ -113,7 +113,7 @@ export function createLookupDialog<
       isFetching,
       isRefetching,
       refetch,
-    } = hooks.useList(sorting, activeFilters);
+    } = hooks.useList(sorting, activeFilters, []);
 
     const handleSelect = useCallback(
       (item: TItem) => {

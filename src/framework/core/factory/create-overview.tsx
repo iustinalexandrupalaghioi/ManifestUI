@@ -9,6 +9,7 @@ import { useActiveMode } from "@/framework/components/data-view/core/stores/View
 import { getFilteringStore } from "@/framework/components/data-view/features/filtering/filtering.store";
 import { getSortingStore } from "@/framework/components/data-view/features/sorting/sorting.store";
 import { getAggregatesStore } from "@/framework/components/data-view/features/aggregates/aggregates.store";
+import { getGroupingStore } from "@/framework/components/data-view/features/grouping/grouping.store";
 import {
   useActiveListView,
   useActiveTableView,
@@ -248,6 +249,20 @@ export function createOverview<
       refetch: refetchAggregates,
     } = hooks.useAggregates(activeAggregateRules, activeFilters);
 
+    const activeGrouping = getGroupingStore(
+      tableId,
+      activeViewId,
+    )((s) => s.grouping);
+    const {
+      data: groupAggregateRows,
+      isFetching: isGroupAggregatesFetching,
+      refetch: refetchGroupAggregates,
+    } = hooks.useGroupAggregates(
+      activeAggregateRules,
+      activeFilters,
+      activeGrouping,
+    );
+
     const [openingItem, setOpeningItem] = useState<TItem | null>(null);
     const [addOpen, setAddOpen] = useState(false);
 
@@ -266,13 +281,14 @@ export function createOverview<
       isFetching: isRefreshing,
       isRefetching,
       refetch,
-    } = hooks.useList(sorting, activeFilters, canRead);
+    } = hooks.useList(sorting, activeFilters, activeGrouping, canRead);
 
     const onRefresh = () =>
       guardRefresh(() => {
         getEditingStore(tableId).getState().discardAll();
         refetch();
         refetchAggregates();
+        refetchGroupAggregates();
       });
 
     const isLoading = !permissionsLoaded || listIsLoading;
@@ -459,6 +475,8 @@ export function createOverview<
         openOnRowClick={isSplitDesktop && !editMode}
         aggregateValues={aggregateValues}
         isAggregatesFetching={isAggregatesFetching}
+        groupAggregateRows={groupAggregateRows}
+        isGroupAggregatesFetching={isGroupAggregatesFetching}
         {...dataTableProps}
       />
     );

@@ -5,6 +5,7 @@ import { getFilteringStore } from "../filtering/filtering.store"
 import type { ViewRepository } from "../persistence/persistence.contract"
 import { getSortingStore } from "../sorting/sorting.store"
 import { getAggregatesStore } from "../aggregates/aggregates.store"
+import { getGroupingStore } from "../grouping/grouping.store"
 import {
   getViewsStore,
   useActiveListView,
@@ -31,6 +32,9 @@ function hydrateViewStores(
     getAggregatesStore(tableId, activeTableView.id).setState({
       rules: activeTableView.aggregates ?? [],
     })
+    getGroupingStore(tableId, activeTableView.id).setState({
+      grouping: activeTableView.grouping ?? [],
+    })
   }
 
   const activeListView =
@@ -46,6 +50,9 @@ function hydrateViewStores(
     })
     getAggregatesStore(tableId, activeListView.id).setState({
       rules: activeListView.aggregates ?? [],
+    })
+    getGroupingStore(tableId, activeListView.id).setState({
+      grouping: activeListView.grouping ?? [],
     })
   }
 }
@@ -80,6 +87,9 @@ export function useViews(tableId: string, repository: ViewRepository) {
     getAggregatesStore(tableId, activeTableView.id).setState({
       rules: activeTableView.aggregates ?? [],
     })
+    getGroupingStore(tableId, activeTableView.id).setState({
+      grouping: activeTableView.grouping ?? [],
+    })
   }, [tableId, activeTableView?.id])
 
   // ── Hydrate on active list view change ───────────────────────────────────
@@ -94,6 +104,9 @@ export function useViews(tableId: string, repository: ViewRepository) {
     })
     getAggregatesStore(tableId, activeListView.id).setState({
       rules: activeListView.aggregates ?? [],
+    })
+    getGroupingStore(tableId, activeListView.id).setState({
+      grouping: activeListView.grouping ?? [],
     })
   }, [tableId, activeListView?.id])
 

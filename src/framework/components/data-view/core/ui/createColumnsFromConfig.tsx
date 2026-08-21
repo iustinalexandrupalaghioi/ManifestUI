@@ -28,6 +28,8 @@ export interface ColumnConfig {
   filterable?: boolean;
   aggregatable?: boolean;
   defaultAggregate?: AggregateFunction;
+  groupable?: boolean;
+  defaultGroupBy?: number;
   selectOptions?: EnumOptions;
   bucket?: string;
   origin?: string;
@@ -78,8 +80,11 @@ export function createColumnsFromConfig<TItem>(
         columnType: col.type,
         aggregatable: col.aggregatable,
         defaultAggregate: col.defaultAggregate,
+        groupable: col.groupable,
+        defaultGroupBy: col.defaultGroupBy,
         origin: col.origin,
         selectOptions,
+        bucket: col.bucket,
         group: col.group,
         groupLabel: col.groupLabel
           ? resolveLabel(col.groupLabel, locale)

@@ -22,7 +22,15 @@ declare module "@tanstack/react-table" {
     columnType?: ColumnType | null;
     aggregatable?: boolean;
     defaultAggregate?: import("../features/aggregates/aggregates").AggregateFunction | null;
+    // Row grouping (grouping.ts) — distinct from group/groupLabel below,
+    // which are unrelated column-header section labels.
+    groupable?: boolean;
+    defaultGroupBy?: number | null;
     selectOptions?: Enum[];
+    // Storage bucket for file-type columns — needed to reuse CellValueDisplay
+    // (the same renderer TableCellContent uses) outside a real cell, e.g. a
+    // grouped row's label.
+    bucket?: string;
     onSelect?: (rows: Row<TData>[]) => void;
     group?: string;
     groupLabel?: string;

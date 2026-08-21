@@ -16,6 +16,8 @@ import {
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
+import { buildGroupingSortRules } from "@/framework/components/data-view/features/grouping/grouping";
+import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
 import type { Cursor } from "@/framework/types/pagination";
 import type { Group } from "@/app/types/administration/Group";
 import { groupSchema, type GroupFormValues } from "./schema";
@@ -48,13 +50,33 @@ export const {
 } = defineResourceActions("groups", {
     fetchGroupList: [
       "read",
-      async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null) => {
+      async (
+        sorting: SortRule[],
+        filters: FilterRule[],
+        cursor: Cursor | null,
+        groupBy: GroupByRule[],
+      ) => {
         const where = buildWhereConditions(filters, filterColumns);
-        const sortColumns = resolveSortColumns(sorting, filterColumns, {
+        const effectiveSorting = groupBy.length
+          ? [...buildGroupingSortRules(groupBy), ...sorting]
+          : sorting;
+        const sortColumns = resolveSortColumns(effectiveSorting, filterColumns, {
           key: "id",
           column: group.id,
         });
         const orderBy = buildOrderBy(sortColumns);
+
+        if (groupBy.length > 0) {
+          const [items, [{ count }]] = await Promise.all([
+            db.select(selection).from(group).where(where).orderBy(...orderBy),
+            db
+              .select({ count: sql<number>`count(*)::int` })
+              .from(group)
+              .where(where),
+          ]);
+          return { items: items as Group[], total: count ?? 0, nextCursor: null };
+        }
+
         const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
 
         const [items, [{ count }]] = await Promise.all([

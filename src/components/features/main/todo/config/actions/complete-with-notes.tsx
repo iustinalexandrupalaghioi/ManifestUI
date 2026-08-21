@@ -12,7 +12,7 @@ function CompleteWithNoteLabel() {
   const t = useTranslations("Todos");
   return (
     <>
-      <BookmarkCheck /> {t("completeWithNote")}
+      <BookmarkCheck className="h-4 w-4" /> {t("completeWithNote")}
     </>
   );
 }

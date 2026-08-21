@@ -1,0 +1,16 @@
+{
+  "group": "Group",
+  "groupBy": "Group by",
+  "addGroupLevels": "Add group levels",
+  "noGroupingApplied": "No grouping applied",
+  "showGroupTotals": "Show group totals",
+  "addLevel": "Add level",
+  "apply": "Apply",
+  "clearAll": "Clear all",
+  "removeLevel": "Remove level",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "level": "Level {index}",
+  "columnPlaceholder": "Column...",
+  "emptyGroupValue": "(empty)"
+}
