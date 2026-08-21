@@ -33,6 +33,7 @@ import { getGroupingStore } from "../features/grouping/grouping.store";
 import { buildGroupableColumns } from "../features/grouping/useGroupableColumns";
 import { GroupByButton } from "../features/grouping/ui/GroupByButton";
 import { GroupByPanel } from "../features/grouping/ui/GroupByPanel";
+import { ExpandCollapseAllButton } from "../features/grouping/ui/ExpandCollapseAllButton";
 import { buildGroupAggregateLookup } from "../features/grouping/grouping";
 import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
 import { getViewsStore } from "../features/views/views.store";
@@ -207,6 +208,9 @@ export function TableViewLayout({
             grouping={tableGrouping.grouping}
             onOpen={() => tableGrouping.openPanel()}
           />
+          {tableGrouping.grouping.length > 0 && (
+            <ExpandCollapseAllButton table={table} />
+          )}
           {quickSearchEnabled && (
             <Button
               variant="outline"

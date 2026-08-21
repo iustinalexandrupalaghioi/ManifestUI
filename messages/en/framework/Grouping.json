@@ -12,5 +12,7 @@
   "moveDown": "Move down",
   "level": "Level {index}",
   "columnPlaceholder": "Column...",
-  "emptyGroupValue": "(empty)"
+  "emptyGroupValue": "(empty)",
+  "expandAll": "Expand all",
+  "collapseAll": "Collapse all"
 }

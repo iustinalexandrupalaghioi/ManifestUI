@@ -7,6 +7,7 @@ export {
 export { getGroupingStore, deleteGroupingStores } from "./grouping.store";
 export { GroupByButton } from "./ui/GroupByButton";
 export { GroupByPanel } from "./ui/GroupByPanel";
+export { ExpandCollapseAllButton } from "./ui/ExpandCollapseAllButton";
 export { GroupValueDisplay } from "./ui/GroupValueDisplay";
 export {
   buildGroupingSortRules,

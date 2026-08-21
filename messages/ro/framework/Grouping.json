@@ -12,5 +12,7 @@
   "moveDown": "Mută în jos",
   "level": "Nivelul {index}",
   "columnPlaceholder": "Coloană...",
-  "emptyGroupValue": "(gol)"
+  "emptyGroupValue": "(gol)",
+  "expandAll": "Extinde tot",
+  "collapseAll": "Restrânge tot"
 }
