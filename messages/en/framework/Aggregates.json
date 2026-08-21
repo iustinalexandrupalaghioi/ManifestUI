@@ -8,5 +8,11 @@
   "removeRule": "Remove rule",
   "columnPlaceholder": "Column...",
   "collapse": "Collapse",
-  "resize": "Drag to resize, double-click to fit content"
+  "resize": "Drag to resize, double-click to fit content",
+  "fnSum": "Sum",
+  "fnAvg": "Average",
+  "fnMin": "Min",
+  "fnMax": "Max",
+  "fnCount": "Count",
+  "fnCountDistinct": "Count (distinct)"
 }

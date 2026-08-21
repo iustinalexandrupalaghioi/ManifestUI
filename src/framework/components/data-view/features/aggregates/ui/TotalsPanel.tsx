@@ -109,7 +109,7 @@ function RuleRow({
           <SelectContent>
             {fns.map((fn) => (
               <SelectItem key={fn} value={fn} className="text-xs">
-                {getAggregateLabel(fn)}
+                {getAggregateLabel(fn, t)}
               </SelectItem>
             ))}
           </SelectContent>

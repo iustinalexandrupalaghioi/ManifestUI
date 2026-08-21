@@ -82,8 +82,15 @@ export function ListViewLayout({
   const t = useTranslations("DataView");
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortPanelOpen, setSortPanelOpen] = useState(false);
-  const { position, setPosition, collapsed, toggleCollapsed, size, setSize } =
-    useSummaryPosition();
+  const {
+    position,
+    setPosition,
+    collapsed,
+    toggleCollapsed,
+    size,
+    setSize,
+    isMobile,
+  } = useSummaryPosition();
 
   const globalFilter = useCoreStore(tableId, (s) => s.globalFilter);
   const setGlobalFilter = useCoreStore(tableId, (s) => s.setGlobalFilter);
@@ -241,6 +248,7 @@ export function ListViewLayout({
             onToggleCollapsed={toggleCollapsed}
             size={size}
             onSizeChange={setSize}
+            isMobile={isMobile}
           />
         )}
 
@@ -308,6 +316,7 @@ export function ListViewLayout({
             onToggleCollapsed={toggleCollapsed}
             size={size}
             onSizeChange={setSize}
+            isMobile={isMobile}
           />
         )}
       </div>

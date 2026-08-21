@@ -41,18 +41,29 @@ const SIZE_LIMITS = { row: [200, 480], column: [56, 280] } as const;
 // Default follows viewport (desktop → right, mobile → bottom) until the
 // user overrides it via the dock controls. `size: null` means "auto" —
 // intrinsic, shrink-to-fit content — until the user drags the handle.
+// Mobile never allows left/right — there's no room for a sidebar next to
+// the list — so a stale override from a wider viewport is ignored there.
 export function useSummaryPosition() {
   const isMobile = useIsMobile();
   const [override, setOverride] = useState<SummaryPosition | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [size, setSize] = useState<number | null>(null);
+
+  const isSideways = override === "left" || override === "right";
+  const position = isMobile
+    ? isSideways
+      ? "bottom"
+      : (override ?? "bottom")
+    : (override ?? "right");
+
   return {
-    position: override ?? (isMobile ? "bottom" : "right"),
+    position,
     setPosition: setOverride,
     collapsed,
     toggleCollapsed: () => setCollapsed((c) => !c),
     size,
     setSize,
+    isMobile,
   } as const;
 }
 
@@ -66,6 +77,7 @@ interface ListSummaryBarProps {
   onToggleCollapsed: () => void;
   size: number | null;
   onSizeChange: (size: number | null) => void;
+  isMobile: boolean;
 }
 
 const DOCK_OPTIONS: { value: SummaryPosition; icon: typeof PanelLeftIcon }[] = [
@@ -92,11 +104,15 @@ export function ListSummaryBar({
   onToggleCollapsed,
   size,
   onSizeChange,
+  isMobile,
 }: ListSummaryBarProps) {
   const t = useTranslations("Aggregates");
   const isRow = position === "left" || position === "right";
   const dimension = isRow ? "row" : "column";
   const [min, max] = SIZE_LIMITS[dimension];
+  const dockOptions = isMobile
+    ? DOCK_OPTIONS.filter((o) => o.value !== "left" && o.value !== "right")
+    : DOCK_OPTIONS;
 
   const barRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
@@ -207,7 +223,7 @@ export function ListSummaryBar({
           {t("totals")}
         </span>
         <div className="flex items-center gap-0.5">
-          {DOCK_OPTIONS.map(({ value, icon: Icon }) => (
+          {dockOptions.map(({ value, icon: Icon }) => (
             <Button
               key={value}
               type="button"
@@ -252,7 +268,11 @@ export function ListSummaryBar({
               {isFetching ? (
                 <Loader2Icon className="size-3 animate-spin" />
               ) : (
-                formatAggregateLabel(rule, values?.[aggregateResultKey(rule)])
+                formatAggregateLabel(
+                  rule,
+                  values?.[aggregateResultKey(rule)],
+                  t,
+                )
               )}
             </div>
           </div>

@@ -8,5 +8,11 @@
   "removeRule": "Elimină regula",
   "columnPlaceholder": "Coloană...",
   "collapse": "Restrânge",
-  "resize": "Trage pentru a redimensiona, dublu-clic pentru a se potrivi conținutului"
+  "resize": "Trage pentru a redimensiona, dublu-clic pentru a se potrivi conținutului",
+  "fnSum": "Sumă",
+  "fnAvg": "Medie",
+  "fnMin": "Min",
+  "fnMax": "Max",
+  "fnCount": "Număr",
+  "fnCountDistinct": "Număr (distinct)"
 }

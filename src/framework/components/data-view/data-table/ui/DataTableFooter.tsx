@@ -5,6 +5,7 @@ import {
 } from "@/framework/components/ui/CustomTable"
 import { cn } from "@/framework/lib/utils"
 import { Loader2Icon } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { useDataViewCore } from "../../core/stores/DataViewProvider"
 import type { AggregateResult, AggregateRule } from "../../features/aggregates/aggregates"
 import { aggregateResultKey, formatAggregateLabel } from "../../features/aggregates/aggregates"
@@ -21,6 +22,7 @@ export function DataTableFooter({
   isAggregatesFetching,
 }: DataTableFooterProps) {
   const { table } = useDataViewCore()
+  const t = useTranslations("Aggregates")
   if (aggregateRules.length === 0) return null
 
   const leafColumns = table.getVisibleLeafColumns()
@@ -69,6 +71,7 @@ export function DataTableFooter({
                   formatAggregateLabel(
                     rule,
                     aggregateValues?.[aggregateResultKey(rule)],
+                    t,
                   )
                 ))}
             </CustomTableCell>

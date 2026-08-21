@@ -38,21 +38,20 @@ export const AGGREGATES_BY_TYPE: Record<ColumnType, AggregateFunction[]> = {
   json: ["count"],
 };
 
-export function getAggregateLabel(fn: AggregateFunction): string {
-  switch (fn) {
-    case "sum":
-      return "Sum";
-    case "avg":
-      return "Average";
-    case "min":
-      return "Min";
-    case "max":
-      return "Max";
-    case "count":
-      return "Count";
-    case "count_distinct":
-      return "Count (distinct)";
-  }
+const AGGREGATE_LABEL_KEYS: Record<AggregateFunction, string> = {
+  sum: "fnSum",
+  avg: "fnAvg",
+  min: "fnMin",
+  max: "fnMax",
+  count: "fnCount",
+  count_distinct: "fnCountDistinct",
+};
+
+export function getAggregateLabel(
+  fn: AggregateFunction,
+  t: (key: string) => string,
+): string {
+  return t(AGGREGATE_LABEL_KEYS[fn]);
 }
 
 const COUNT_LIKE: AggregateFunction[] = ["count", "count_distinct"];
@@ -66,8 +65,9 @@ function roundAvg(value: unknown): unknown {
 export function formatAggregateLabel(
   rule: AggregateRule,
   value: unknown,
+  t: (key: string) => string,
 ): string {
-  const fnLabel = getAggregateLabel(rule.fn);
+  const fnLabel = getAggregateLabel(rule.fn, t);
   if (value === null || value === undefined) return `${fnLabel}: —`;
   const type: ColumnType = COUNT_LIKE.includes(rule.fn)
     ? "number"

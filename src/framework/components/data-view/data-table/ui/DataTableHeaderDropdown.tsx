@@ -196,7 +196,7 @@ export function DataTableHeaderDropdown({
                     ) : (
                       <span className="mr-2 w-3.5" />
                     )}
-                    {getAggregateLabel(fn)}
+                    {getAggregateLabel(fn, ta)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuSubContent>
