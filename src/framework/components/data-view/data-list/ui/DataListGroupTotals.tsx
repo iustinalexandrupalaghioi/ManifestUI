@@ -18,7 +18,10 @@ import {
   aggregateResultKey,
   formatAggregateLabel,
 } from "../../features/aggregates/aggregates";
-import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping";
+import type {
+  GroupAggregateRow,
+  GroupByRule,
+} from "../../features/grouping/grouping";
 import {
   countLeafRows,
   lookupGroupAggregate,
@@ -92,6 +95,10 @@ export function DataListGroupTotals<TData>({
     return cell?.column.columnDef.meta?.columnLabel ?? row.groupingColumnId;
   }, [row]);
 
+  const hasRuleForGroupedColumn = levelAggregateRules.some(
+    (r) => r.columnId === row.groupingColumnId,
+  );
+
   if (collapsed) {
     return (
       <div
@@ -153,17 +160,19 @@ export function DataListGroupTotals<TData>({
           THIN_SCROLLBAR,
         )}
       >
-        <div
-          key="__count"
-          className="shrink-0 rounded-md border bg-background px-2.5 py-1.5 text-[11px]"
-        >
-          <div className="whitespace-nowrap text-muted-foreground">
-            {groupColumnLabel}
+        {!hasRuleForGroupedColumn && (
+          <div
+            key="__count"
+            className="shrink-0 rounded-md border bg-background px-2.5 py-1.5 text-[11px]"
+          >
+            <div className="whitespace-nowrap text-muted-foreground">
+              {groupColumnLabel}
+            </div>
+            <div className="font-medium whitespace-nowrap">
+              {t("fnCount")}: {countLeafRows(row)}
+            </div>
           </div>
-          <div className="font-medium whitespace-nowrap">
-            {t("fnCount")}: {countLeafRows(row)}
-          </div>
-        </div>
+        )}
 
         {levelAggregateRules.map((rule) => (
           <div

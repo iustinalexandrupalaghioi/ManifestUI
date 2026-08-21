@@ -92,12 +92,12 @@ export function DataTableGroupTotalsRow<TData>({
           );
         }
 
-        // The column this group level is grouped on always gets the row
-        // count for that group — same slot a user-configured rule would
-        // otherwise render into, since the two are mutually exclusive in
-        // practice (you don't aggregate the column you're grouping by).
-        const isGroupedColumn = col.id === row.groupingColumnId;
+        // The column this group level is grouped on gets the row count for
+        // that group by default — unless the user has also configured a
+        // rule for that same column, which takes priority (e.g. grouping
+        // by id but wanting avg(id) rather than just the row count).
         const rule = levelAggregateRules.find((r) => r.columnId === col.id);
+        const isGroupedColumn = !rule && col.id === row.groupingColumnId;
 
         return (
           <CustomTableCell
