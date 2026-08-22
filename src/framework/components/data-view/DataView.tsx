@@ -4,27 +4,7 @@ import { DataViewProvider } from "./core/stores/DataViewProvider";
 import { useDataView, type DataViewProps } from "./core/hooks/useDataView";
 import { DataViewLayout } from "./core/layout/DataViewLayout";
 import type { DataViewFeature } from "./core/contracts";
-
-import { viewsFeature } from "./features/views/views.feature";
-import { sortingFeature } from "./features/sorting/sorting.feature";
-import { selectionFeature } from "./features/selection/selection.feature";
-import { filteringFeature } from "./features/filtering/filtering.feature";
-import { aggregatesFeature } from "./features/aggregates/aggregates.feature";
-import { groupingFeature } from "./features/grouping/grouping.feature";
-import { editingFeature } from "./features/editing/editing.feature";
-import { listFeature } from "./data-list/DataList.feature";
-
-// Module-level constant — never inline. The registry loop calls hooks;
-const DEFAULT_FEATURES: DataViewFeature[] = [
-  viewsFeature,
-  sortingFeature,
-  selectionFeature,
-  filteringFeature,
-  aggregatesFeature,
-  groupingFeature,
-  editingFeature,
-  listFeature,
-];
+import { DEFAULT_FEATURES } from "./core/features/catalog";
 
 interface DataViewWithFeaturesProps<TData, TValue> extends DataViewProps<
   TData,

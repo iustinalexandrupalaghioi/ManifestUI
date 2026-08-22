@@ -13,6 +13,7 @@ import { flexRender, type Column, type Row } from "@tanstack/react-table";
 import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useDataViewCore } from "../../core/stores/DataViewProvider";
 
 const MAX_VISIBLE_ACTIONS = 2;
 const DROPDOWN_TRIGGER_WIDTH = 48;
@@ -72,6 +73,8 @@ export function DataListItem<TData>({
 }: DataListItemProps<TData>) {
   const t = useTranslations("DataView");
   const tc = useTranslations("Common");
+  const { featureIds } = useDataViewCore();
+  const selectionEnabled = featureIds.has("selection");
   const [pendingActions, setPendingActions] = useState<Set<number>>(new Set());
   const [deletePending, setDeletePending] = useState(false);
   const [visibleCount, setVisibleCount] = useState<number>(MAX_VISIBLE_ACTIONS);
@@ -205,7 +208,7 @@ export function DataListItem<TData>({
           onClick={(e) => onRowClick?.(e, row)}
         >
           <div className="flex items-center gap-2">
-            {!isLookup && (
+            {!isLookup && selectionEnabled && (
               <div
                 className="relative overflow-hidden"
                 onClick={(e) => e.stopPropagation()}

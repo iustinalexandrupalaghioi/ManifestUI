@@ -6,6 +6,7 @@ interface CoreTableState {
   height: number | undefined
   globalFilter: string
   isResizing: boolean
+  searchOpen: boolean
 }
 
 interface CoreTableActions {
@@ -13,6 +14,7 @@ interface CoreTableActions {
   setHeight(h: number | undefined): void
   setGlobalFilter(v: string): void
   setIsResizing(v: boolean): void
+  setSearchOpen(v: boolean): void
 }
 
 type CoreStore = CoreTableState & CoreTableActions
@@ -26,10 +28,12 @@ function createCoreStore() {
       height: undefined,
       globalFilter: "",
       isResizing: false,
+      searchOpen: false,
       setColumnSizeVars: (vars) => set({ columnSizeVars: vars }),
       setHeight: (h) => set({ height: h }),
       setGlobalFilter: (v) => set({ globalFilter: v }),
       setIsResizing: (v) => set({ isResizing: v }),
+      setSearchOpen: (v) => set({ searchOpen: v }),
     }))
   )
 }

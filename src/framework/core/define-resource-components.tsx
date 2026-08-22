@@ -240,7 +240,7 @@ export function defineResourceComponents<
     renderOverview: config.renderOverview,
     detailSlots: config.detailSlots,
     permissions,
-    editable: config.editable,
+    dataView: config.dataView,
   };
 
   const components = createResourceComponents(hooks, componentsConfig, addTabs);

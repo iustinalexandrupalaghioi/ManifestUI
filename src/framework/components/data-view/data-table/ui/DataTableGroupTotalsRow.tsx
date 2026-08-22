@@ -13,11 +13,15 @@ import {
   aggregateResultKey,
   formatAggregateLabel,
 } from "../../features/aggregates/aggregates";
-import type { GroupAggregateRow, GroupByRule } from "../../features/grouping/grouping";
+import type {
+  GroupAggregateRow,
+  GroupByRule,
+} from "../../features/grouping/grouping";
 import {
   countLeafRows,
   lookupGroupAggregate,
 } from "../../features/grouping/grouping";
+import { pinnedLeftOffset } from "../../core/pinnedOffset";
 
 interface DataTableGroupTotalsRowProps<TData> {
   row: Row<TData>;
@@ -29,9 +33,6 @@ interface DataTableGroupTotalsRowProps<TData> {
   measureRef: (node: HTMLTableRowElement | null) => void;
 }
 
-// One subtotal row per group header, styled like a mini DataTableFooter —
-// one cell per real data column, sourced from the server-side rollup query
-// rather than the loaded rows.
 export function DataTableGroupTotalsRow<TData>({
   row,
   table,
@@ -42,7 +43,6 @@ export function DataTableGroupTotalsRow<TData>({
   measureRef,
 }: DataTableGroupTotalsRowProps<TData>) {
   const t = useTranslations("Aggregates");
-  // Each level's totals are configured independently in the Group By panel.
   const levelAggregateRules = grouping[row.depth]?.aggregates ?? [];
 
   const path = useMemo(() => {
@@ -61,6 +61,7 @@ export function DataTableGroupTotalsRow<TData>({
   const aggregateRow = lookupGroupAggregate(groupAggregateLookup, path);
   const leafColumns = table.getVisibleLeafColumns();
   const lastLeafColumnId = leafColumns.at(-1)?.id;
+  const pinnedLeftIds = table.getState().columnPinning.left ?? [];
 
   return (
     <CustomTableRow
@@ -78,7 +79,9 @@ export function DataTableGroupTotalsRow<TData>({
               key={col.id}
               style={{
                 position: isPinned ? "sticky" : undefined,
-                left: isPinned ? col.getStart("left") : undefined,
+                left: isPinned
+                  ? pinnedLeftOffset(pinnedLeftIds, col.id)
+                  : undefined,
                 zIndex: isPinned ? 16 : 10,
                 transform: isPinned ? "translateZ(0)" : undefined,
                 paddingLeft: `${row.depth * 20 + 26}px`,
@@ -92,10 +95,6 @@ export function DataTableGroupTotalsRow<TData>({
           );
         }
 
-        // The column this group level is grouped on gets the row count for
-        // that group by default — unless the user has also configured a
-        // rule for that same column, which takes priority (e.g. grouping
-        // by id but wanting avg(id) rather than just the row count).
         const rule = levelAggregateRules.find((r) => r.columnId === col.id);
         const isGroupedColumn = !rule && col.id === row.groupingColumnId;
 
@@ -104,7 +103,9 @@ export function DataTableGroupTotalsRow<TData>({
             key={col.id}
             style={{
               position: isPinned ? "sticky" : undefined,
-              left: isPinned ? col.getStart("left") : undefined,
+              left: isPinned
+                ? pinnedLeftOffset(pinnedLeftIds, col.id)
+                : undefined,
               zIndex: isPinned ? 16 : 10,
               transform: isPinned ? "translateZ(0)" : undefined,
               width: isLast
@@ -123,23 +124,21 @@ export function DataTableGroupTotalsRow<TData>({
               !isLast && "border-r",
             )}
           >
-            {isGroupedColumn ? (
-              `${t("fnCount")}: ${countLeafRows(row)}`
-            ) : (
-              rule &&
-              (isGroupAggregatesFetching ? (
-                <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
-              ) : (
-                formatAggregateLabel(
-                  rule,
-                  aggregateRow?.[aggregateResultKey(rule)] as
-                    | number
-                    | null
-                    | undefined,
-                  t,
-                )
-              ))
-            )}
+            {isGroupedColumn
+              ? `${t("fnCount")}: ${countLeafRows(row)}`
+              : rule &&
+                (isGroupAggregatesFetching ? (
+                  <Loader2Icon className="size-3 animate-spin text-muted-foreground" />
+                ) : (
+                  formatAggregateLabel(
+                    rule,
+                    aggregateRow?.[aggregateResultKey(rule)] as
+                      | number
+                      | null
+                      | undefined,
+                    t,
+                  )
+                ))}
           </CustomTableCell>
         );
       })}

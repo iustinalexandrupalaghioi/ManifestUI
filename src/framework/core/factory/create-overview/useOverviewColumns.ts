@@ -13,6 +13,8 @@ export function useOverviewColumns<TItem>({
   canRead,
   canDelete,
   gridEditable,
+  selectionEnabled,
+  openEnabled,
   directFields,
   pickupFillFields,
   handleOpen,
@@ -26,6 +28,8 @@ export function useOverviewColumns<TItem>({
   canRead: boolean;
   canDelete: boolean;
   gridEditable: boolean;
+  selectionEnabled: boolean;
+  openEnabled: boolean;
   directFields: Map<string, FieldConfig<any>>;
   pickupFillFields: Map<string, PickupFillFieldMatch<any>>;
   handleOpen: (items: TItem[]) => void;
@@ -36,9 +40,13 @@ export function useOverviewColumns<TItem>({
 }) {
   return useMemo(() => {
     const cols = [
-      createSelectionColumn<TItem>(),
+      ...(selectionEnabled ? [createSelectionColumn<TItem>()] : []),
       createActionsColumn<TItem>({
-        onOpen: canRead
+        onOpen:
+          canRead && openEnabled
+            ? (rows) => handleOpen(rows.map((r) => r.original))
+            : undefined,
+        onNavigate: canRead
           ? (rows) => handleOpen(rows.map((r) => r.original))
           : undefined,
         onDelete: canDelete
@@ -106,6 +114,8 @@ export function useOverviewColumns<TItem>({
     canRead,
     canDelete,
     gridEditable,
+    selectionEnabled,
+    openEnabled,
     directFields,
     pickupFillFields,
     locale,

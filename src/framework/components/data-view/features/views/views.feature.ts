@@ -12,13 +12,17 @@ import type {
   DataViewFeature,
   DataViewFeatureContext,
 } from "../../core/contracts"
-import { ViewBar } from "./ui/ViewBar"
 
 /**
  * ViewsFeature
  *
  * Registration object for the views feature. Implements DataViewFeature so
  * it can be discovered through the shared registry contract.
+ *
+ * No Toolbar here — ViewBar is rendered unconditionally in
+ * DataViewLayout's row 1 (not looped through feature.Toolbar) so the view
+ * title stays visible even when this feature is disabled; only the
+ * hydrate/persist side effect (useFeature below) is actually gated.
  *
  * useTableViewsApi and useListViewsApi are kept as named methods so
  * ViewBar can consume them without importing store internals.
@@ -38,8 +42,6 @@ export function createViewsFeature(
     useFeature<TData>({ tableId }: DataViewFeatureContext<TData>) {
       useViews(tableId, repository)
     },
-
-    Toolbar: ViewBar,
 
     useTableViewsApi(tableId: string): TableViewsApi {
       const activeView = useActiveTableView(tableId)

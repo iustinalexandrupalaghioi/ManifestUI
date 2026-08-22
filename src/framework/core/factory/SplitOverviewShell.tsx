@@ -29,7 +29,7 @@ import type { SplitConfig } from "../../types/split-config-type";
 // viable there), so there's no mobile branch to handle here.
 export function SplitOverviewShell({
   open,
-  onOpenChange,
+  onOpenChange: _onOpenChange,
   splitConfig,
   main,
   detail,

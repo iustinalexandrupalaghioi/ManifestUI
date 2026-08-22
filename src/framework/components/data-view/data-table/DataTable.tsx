@@ -1,46 +1,50 @@
-import { CustomTable } from "@/framework/components/ui/CustomTable"
-import React from "react"
+import { CustomTable } from "@/framework/components/ui/CustomTable";
+import React from "react";
 import type {
   SortingState,
   Table as TTable,
   VisibilityState,
-} from "@tanstack/react-table"
+} from "@tanstack/react-table";
 
-import type { FilterRule } from "../features/filtering/filters"
+import { useDataViewCore } from "../core/stores/DataViewProvider";
+import type { FilterRule } from "../features/filtering/filters";
 import type {
   AggregateFunction,
   AggregateResult,
   AggregateRule,
-} from "../features/aggregates/aggregates"
-import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping"
-import { DataTableHeader } from "./ui/DataTableHeader"
-import { DataTableBody } from "./ui/DataTableBody"
-import { DataTableFooter } from "./ui/DataTableFooter"
+} from "../features/aggregates/aggregates";
+import type {
+  GroupAggregateRow,
+  GroupByRule,
+} from "../features/grouping/grouping";
+import { DataTableHeader } from "./ui/DataTableHeader";
+import { DataTableBody } from "./ui/DataTableBody";
+import { DataTableFooter } from "./ui/DataTableFooter";
 
 interface DataTableProps {
-  table: TTable<any>
-  isLoading: boolean
-  rowSelection: Record<string, boolean>
-  activeRowId?: string
-  openOnRowClick?: boolean
-  columnVisibility: VisibilityState
-  columnSizing: Record<string, number>
-  columnOrder: string[]
-  columnPinning: { left: string[] }
-  columnSizeVars: Record<string, number>
-  sorting: SortingState
+  table: TTable<any>;
+  isLoading: boolean;
+  rowSelection: Record<string, boolean>;
+  activeRowId?: string;
+  openOnRowClick?: boolean;
+  columnVisibility: VisibilityState;
+  columnSizing: Record<string, number>;
+  columnOrder: string[];
+  columnPinning: { left: string[] };
+  columnSizeVars: Record<string, number>;
+  sorting: SortingState;
   setSorting: (
-    updater: SortingState | ((old: SortingState) => SortingState)
-  ) => void
-  preFilters: FilterRule[]
-  onOpenFilter: (columnId?: string) => void
-  aggregateRules?: AggregateRule[]
-  aggregateValues?: AggregateResult
-  isAggregatesFetching?: boolean
-  onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void
-  grouping?: GroupByRule[]
-  groupAggregateLookup?: Map<string, GroupAggregateRow>
-  isGroupAggregatesFetching?: boolean
+    updater: SortingState | ((old: SortingState) => SortingState),
+  ) => void;
+  preFilters: FilterRule[];
+  onOpenFilter: (columnId?: string) => void;
+  aggregateRules?: AggregateRule[];
+  aggregateValues?: AggregateResult;
+  isAggregatesFetching?: boolean;
+  onSetAggregate?: (columnId: string, fn: AggregateFunction | null) => void;
+  grouping?: GroupByRule[];
+  groupAggregateLookup?: Map<string, GroupAggregateRow>;
+  isGroupAggregatesFetching?: boolean;
 }
 
 export function DataTable({
@@ -66,16 +70,21 @@ export function DataTable({
   groupAggregateLookup,
   isGroupAggregatesFetching,
 }: DataTableProps) {
-  const leafColumns = table.getVisibleLeafColumns()
-  const lastLeafColumnId = leafColumns.at(-1)?.id
+  const { columnSizeVarsRef } = useDataViewCore();
+  const leafColumns = table.getVisibleLeafColumns();
+  const lastLeafColumnId = leafColumns.at(-1)?.id;
+
   const fixedColumnsWidth = leafColumns
-    .slice(0, -1)
-    .reduce((sum, col) => sum + col.getSize(), 0)
+    .filter((col) => col.id !== lastLeafColumnId)
+    .map((col) => `var(--col-${col.id}-size) * 1px`)
+    .join(" + ");
 
   return (
-    <div style={columnSizeVars as React.CSSProperties}>
+    <div ref={columnSizeVarsRef} style={columnSizeVars as React.CSSProperties}>
       <CustomTable
-        style={{ minWidth: fixedColumnsWidth }}
+        style={{
+          minWidth: fixedColumnsWidth ? `calc(${fixedColumnsWidth})` : undefined,
+        }}
         className="w-full table-fixed border-separate border-spacing-0"
       >
         <colgroup>
@@ -120,5 +129,5 @@ export function DataTable({
         />
       </CustomTable>
     </div>
-  )
+  );
 }

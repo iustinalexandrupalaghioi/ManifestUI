@@ -30,7 +30,24 @@ export const attachmentsResource = defineResource<
 
   openMode: "dialog",
   addMode: "dialog",
-  editable: true,
+  dataView: {
+    features: {
+      views: true,
+      sorting: true,
+      selection: true,
+      filtering: true,
+      aggregates: true,
+      grouping: true,
+      editing: true,
+      list: true,
+      resizing: true,
+      pinning: true,
+      columnManager: true,
+      quickSearch: true,
+      viewModeToggle: true,
+      open: true,
+    },
+  },
   emptyValues: {
     todo_id: 0,
     filename: "",

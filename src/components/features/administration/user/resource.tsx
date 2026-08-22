@@ -34,6 +34,24 @@ export const usersResource = defineResource<User, UserFormValues, string>({
 
   openMode: "page",
   addMode: "page",
+  dataView: {
+    features: {
+      views: true,
+      sorting: true,
+      selection: true,
+      filtering: true,
+      aggregates: true,
+      grouping: true,
+      editing: false,
+      list: true,
+      resizing: true,
+      pinning: true,
+      columnManager: true,
+      quickSearch: true,
+      viewModeToggle: true,
+      open: true,
+    },
+  },
 
   emptyValues: {
     administrator: false,

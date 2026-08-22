@@ -3,6 +3,7 @@
 import { useBrowserNavigation } from "@/framework/components/screen/stores/useBrowserNavigationStore";
 import { type RefObject, useMemo } from "react";
 import type { DataViewFeature } from "../../core/contracts";
+import { DataViewFilterProvider } from "../../core/stores/DataViewFilterContext";
 import {
   useDataViewCore,
   useDataViewLayout,
@@ -15,6 +16,7 @@ import type { AggregateResult } from "../../features/aggregates/aggregates";
 import type { GroupAggregateRow } from "../../features/grouping/grouping";
 import { buildFilterableColumns } from "../../features/filtering/useFiltering";
 import { SelectionToolbar } from "../../features/selection";
+import { ViewBar } from "../../features/views/ui/ViewBar";
 import {
   useActiveListView,
   useActiveTableView,
@@ -119,67 +121,70 @@ export function DataViewLayout({
   );
 
   return (
-    <div id={tableId} className="w-full overflow-hidden ps-2">
-      {/* ── Row 1: ViewBar + popout | counter ── */}
-      <div className="mb-2 flex items-start justify-between  gap-2">
-        <div className="flex min-w-0 items-start gap-2">
-          {features.map((f) => f.Toolbar && <f.Toolbar key={f.id} />)}
-          <div className="flex items-center gap-1 empty:hidden">
-            {slotId && <div id={slotId} />}
+    <DataViewFilterProvider value={{ enrichedPreFilters, filterableColumns }}>
+      <div id={tableId} className="w-full overflow-hidden ps-2">
+        {/* ── Row 1: ViewBar + popout | counter ── */}
+        <div className="mb-2 flex items-start justify-between  gap-2">
+          <div className="flex min-w-0 items-start gap-2">
+            <ViewBar />
+            {features.map((f) => f.Toolbar && <f.Toolbar key={f.id} />)}
+            <div className="flex items-center gap-1 empty:hidden">
+              {slotId && <div id={slotId} />}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <SelectionToolbar tableId={tableId} totalCount={totalCount} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <SelectionToolbar tableId={tableId} totalCount={totalCount} />
-        </div>
-      </div>
 
-      {isList ? (
-        <ListViewLayout
-          tableId={tableId}
-          listViewId={listViewId}
-          table={table}
-          isLoading={isLoading}
-          activeRowId={activeRowId}
-          openOnRowClick={openOnRowClick}
-          quickSearchEnabled={quickSearchEnabled}
-          enrichedPreFilters={enrichedPreFilters}
-          filterableColumns={filterableColumns}
-          features={features}
-          loadMoreRef={loadMoreRef}
-          scrollContainerRef={scrollContainerRef}
-          handleScroll={handleScroll}
-          height={height}
-          isLookup={isLookup}
-          hasListMode={hasTable && hasList}
-          aggregateValues={aggregateValues}
-          isAggregatesFetching={isAggregatesFetching}
-          groupAggregateRows={groupAggregateRows}
-          isGroupAggregatesFetching={isGroupAggregatesFetching}
-        />
-      ) : (
-        <TableViewLayout
-          tableId={tableId}
-          tableViewId={tableViewId}
-          table={table}
-          isLoading={isLoading}
-          rowSelection={rowSelection}
-          activeRowId={activeRowId}
-          openOnRowClick={openOnRowClick}
-          quickSearchEnabled={quickSearchEnabled}
-          enrichedPreFilters={enrichedPreFilters}
-          filterableColumns={filterableColumns}
-          features={features}
-          loadMoreRef={loadMoreRef}
-          scrollContainerRef={scrollContainerRef}
-          handleScroll={handleScroll}
-          height={height}
-          hasListMode={hasTable && hasList}
-          aggregateValues={aggregateValues}
-          isAggregatesFetching={isAggregatesFetching}
-          groupAggregateRows={groupAggregateRows}
-          isGroupAggregatesFetching={isGroupAggregatesFetching}
-        />
-      )}
-    </div>
+        {isList ? (
+          <ListViewLayout
+            tableId={tableId}
+            listViewId={listViewId}
+            table={table}
+            isLoading={isLoading}
+            activeRowId={activeRowId}
+            openOnRowClick={openOnRowClick}
+            quickSearchEnabled={quickSearchEnabled}
+            enrichedPreFilters={enrichedPreFilters}
+            filterableColumns={filterableColumns}
+            features={features}
+            loadMoreRef={loadMoreRef}
+            scrollContainerRef={scrollContainerRef}
+            handleScroll={handleScroll}
+            height={height}
+            isLookup={isLookup}
+            hasListMode={hasTable && hasList}
+            aggregateValues={aggregateValues}
+            isAggregatesFetching={isAggregatesFetching}
+            groupAggregateRows={groupAggregateRows}
+            isGroupAggregatesFetching={isGroupAggregatesFetching}
+          />
+        ) : (
+          <TableViewLayout
+            tableId={tableId}
+            tableViewId={tableViewId}
+            table={table}
+            isLoading={isLoading}
+            rowSelection={rowSelection}
+            activeRowId={activeRowId}
+            openOnRowClick={openOnRowClick}
+            quickSearchEnabled={quickSearchEnabled}
+            enrichedPreFilters={enrichedPreFilters}
+            filterableColumns={filterableColumns}
+            features={features}
+            loadMoreRef={loadMoreRef}
+            scrollContainerRef={scrollContainerRef}
+            handleScroll={handleScroll}
+            height={height}
+            hasListMode={hasTable && hasList}
+            aggregateValues={aggregateValues}
+            isAggregatesFetching={isAggregatesFetching}
+            groupAggregateRows={groupAggregateRows}
+            isGroupAggregatesFetching={isGroupAggregatesFetching}
+          />
+        )}
+      </div>
+    </DataViewFilterProvider>
   );
 }

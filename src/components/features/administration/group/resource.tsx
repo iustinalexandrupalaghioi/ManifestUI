@@ -29,6 +29,24 @@ export const groupsResource = defineResource<Group, GroupFormValues>({
 
   openMode: "page",
   addMode: "dialog",
+  dataView: {
+    features: {
+      views: true,
+      sorting: true,
+      selection: true,
+      filtering: true,
+      aggregates: true,
+      grouping: true,
+      editing: false,
+      list: true,
+      resizing: true,
+      pinning: true,
+      columnManager: true,
+      quickSearch: true,
+      viewModeToggle: true,
+      open: true,
+    },
+  },
 
   emptyValues: {
     name: "",

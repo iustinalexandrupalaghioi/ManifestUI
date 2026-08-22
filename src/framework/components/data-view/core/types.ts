@@ -2,7 +2,14 @@ import type { Cell, Row, Table } from "@tanstack/react-table";
 import type { ReactNode, RefObject } from "react";
 import type { Enum } from "@/framework/types/global/Enum";
 import type { ColumnType } from "../features/filtering/filters";
-import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
+import type {
+  GroupAggregateRow,
+  GroupByRule,
+} from "../features/grouping/grouping";
+
+export interface DataTableConfig {
+  alternateRowColor?: boolean;
+}
 
 export interface RowAction<TData> {
   label: ReactNode;

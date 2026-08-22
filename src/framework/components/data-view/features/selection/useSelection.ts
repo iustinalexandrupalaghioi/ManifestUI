@@ -58,8 +58,8 @@ export function useSelection<TData>(
         t.setRowSelection({ [row.id]: true });
         const col = t
           .getAllLeafColumns()
-          .find((c) => c.columnDef.meta?.onOpen != null);
-        col?.columnDef.meta!.onOpen!([row]);
+          .find((c) => c.columnDef.meta?.onNavigate != null);
+        col?.columnDef.meta!.onNavigate!([row]);
       } else {
         // Exclusive select
         lastClickedIndexRef.current = clickedIndex;
@@ -93,7 +93,7 @@ export function useSelection<TData>(
     const t = tableRef.current;
     const col = t
       .getAllLeafColumns()
-      .find((c) => c.columnDef.meta?.onOpen != null);
+      .find((c) => c.columnDef.meta?.onNavigate != null);
     if (!col) return;
 
     const selectedRows = t.getSelectedRowModel().rows;
@@ -102,7 +102,7 @@ export function useSelection<TData>(
         ? selectedRows
         : [row];
 
-    col.columnDef.meta!.onOpen!(targets);
+    col.columnDef.meta!.onNavigate!(targets);
   }, []);
 
   return {

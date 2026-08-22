@@ -7,6 +7,7 @@ import { cn } from "@/framework/lib/utils";
 import { Loader2Icon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useDataViewCore } from "../../core/stores/DataViewProvider";
+import { pinnedLeftOffset } from "../../core/pinnedOffset";
 import type {
   AggregateResult,
   AggregateRule,
@@ -33,6 +34,7 @@ export function DataTableFooter({
 
   const leafColumns = table.getVisibleLeafColumns();
   const lastLeafColumnId = leafColumns.at(-1)?.id;
+  const pinnedLeftIds = table.getState().columnPinning.left ?? [];
 
   return (
     <CustomTableFooter className="bg-background">
@@ -48,7 +50,9 @@ export function DataTableFooter({
               style={{
                 position: "sticky",
                 bottom: 0,
-                left: isPinned ? col.getStart("left") : undefined,
+                left: isPinned
+                  ? pinnedLeftOffset(pinnedLeftIds, col.id)
+                  : undefined,
                 zIndex: isPinned ? 35 : 25,
                 transform: "translateZ(0)",
                 width: isLast

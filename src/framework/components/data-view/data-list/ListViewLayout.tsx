@@ -1,47 +1,32 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { SearchIcon, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { type RefObject, useMemo, useRef, useState } from "react";
-import type { SortingState, Table as TTable } from "@tanstack/react-table";
+import { type RefObject, useMemo, useRef } from "react";
+import type { Table as TTable } from "@tanstack/react-table";
 import { cn } from "@/framework/lib/utils";
 import type { DataViewFeature } from "../core/contracts";
 import { useAvailableHeight } from "../core/hooks/useAvailableHeight";
-import { useCoreStore } from "../core/stores/DataViewStore";
-import { ColumnManagerButton } from "../core/ui/ColumnManagerButton";
+import { ColumnManagerButton } from "../features/columnManager/ui/ColumnManagerButton";
 import { DataListModeToggle } from "./ui/DataListModeToggle";
-import { getFilteringStore } from "../features/filtering/filtering.store";
 import type {
   FilterableColumn,
   FilterRule,
 } from "../features/filtering/filters";
-import { FilterButton } from "../features/filtering/ui/FilterButton";
-import { FilterChips } from "../features/filtering/ui/FilterChips";
-import { FilterPanel } from "../features/filtering/ui/FilterPanel";
-import { getSelectionStore } from "../features/selection";
-import { getSortingStore } from "../features/sorting/sorting.store";
-import { buildSortableColumns } from "../features/sorting/useSortableColumns";
-import { SortButton } from "../features/sorting/ui/SortButton";
-import { SortPanel } from "../features/sorting/ui/SortPanel";
+import { FilterBar } from "../features/filtering/ui/FilterBar";
+import { FilterChipsBar } from "../features/filtering/ui/FilterChipsBar";
+import { SortBar } from "../features/sorting/ui/SortBar";
 import { getAggregatesStore } from "../features/aggregates/aggregates.store";
-import { buildAggregatableColumns } from "../features/aggregates/useAggregatableColumns";
-import { TotalsButton } from "../features/aggregates/ui/TotalsButton";
-import { TotalsPanel } from "../features/aggregates/ui/TotalsPanel";
+import { TotalsBar } from "../features/aggregates/ui/TotalsBar";
 import { ListSummaryBar, useSummaryPosition } from "./ui/ListSummaryBar";
 import type {
   AggregateRule,
   AggregateResult,
 } from "../features/aggregates/aggregates";
 import { getGroupingStore } from "../features/grouping/grouping.store";
-import { buildGroupableColumns } from "../features/grouping/useGroupableColumns";
-import { GroupByButton } from "../features/grouping/ui/GroupByButton";
-import { GroupByPanel } from "../features/grouping/ui/GroupByPanel";
-import { ExpandCollapseAllButton } from "../features/grouping/ui/ExpandCollapseAllButton";
+import { GroupByBar } from "../features/grouping/ui/GroupByBar";
 import { buildGroupAggregateLookup } from "../features/grouping/grouping";
-import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
-import { getViewsStore } from "../features/views/views.store";
+import type { GroupAggregateRow } from "../features/grouping/grouping";
+import { QuickSearchButton } from "../features/quickSearch/ui/QuickSearchButton";
+import { QuickSearchInput } from "../features/quickSearch/ui/QuickSearchInput";
 import { DataList } from "./DataList";
 import { useDataList } from "./useDataList";
 
@@ -77,7 +62,6 @@ export function ListViewLayout({
   openOnRowClick,
   quickSearchEnabled,
   enrichedPreFilters,
-  filterableColumns,
   features,
   loadMoreRef,
   scrollContainerRef,
@@ -90,9 +74,8 @@ export function ListViewLayout({
   groupAggregateRows,
   isGroupAggregatesFetching,
 }: ListViewLayoutProps) {
-  const t = useTranslations("DataView");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [sortPanelOpen, setSortPanelOpen] = useState(false);
+  const hasFeature = (id: string) => features.some((f) => f.id === id);
+
   const {
     position,
     setPosition,
@@ -103,75 +86,17 @@ export function ListViewLayout({
     isMobile,
   } = useSummaryPosition(`${tableId}:${listViewId}`);
 
-  const globalFilter = useCoreStore(tableId, (s) => s.globalFilter);
-  const setGlobalFilter = useCoreStore(tableId, (s) => s.setGlobalFilter);
-
   const list = useDataList(tableId, table);
-
-  const sorting = table.getState().sorting;
-  const sortableColumns = useMemo(() => buildSortableColumns(table), [table]);
-  const aggregatableColumns = useMemo(
-    () => buildAggregatableColumns(table),
-    [table],
-  );
-  const groupableColumns = useMemo(
-    () => buildGroupableColumns(table),
-    [table],
-  );
-  const setSorting = (next: SortingState) => {
-    getSortingStore(tableId, listViewId).getState().setSorting(next);
-    getViewsStore(tableId).getState().updateListDraft({ sorting: next });
-  };
-
-  const listFiltering = {
-    rules: getFilteringStore(tableId, listViewId)((s) => s.rules),
-    panelOpen: getFilteringStore(tableId, listViewId)((s) => s.panelOpen),
-    focusColumnId: getFilteringStore(
-      tableId,
-      listViewId,
-    )((s) => s.focusColumnId),
-    setRules: (rules: FilterRule[]) => {
-      getFilteringStore(tableId, listViewId).getState().setRules(rules);
-      getViewsStore(tableId).getState().updateListDraft({ filters: rules });
-      getSelectionStore(tableId).getState().setRowSelection({});
-    },
-    openPanel: (columnId?: string) =>
-      getFilteringStore(tableId, listViewId).getState().openPanel(columnId),
-    closePanel: () =>
-      getFilteringStore(tableId, listViewId).getState().closePanel(),
-  };
 
   const listAggregates = {
     rules: getAggregatesStore(tableId, listViewId)((s) => s.rules),
-    panelOpen: getAggregatesStore(tableId, listViewId)((s) => s.panelOpen),
-    focusColumnId: getAggregatesStore(
-      tableId,
-      listViewId,
-    )((s) => s.focusColumnId),
-    setRules: (rules: AggregateRule[]) => {
-      getAggregatesStore(tableId, listViewId).getState().setRules(rules);
-      getViewsStore(tableId).getState().updateListDraft({ aggregates: rules });
-    },
-    openPanel: (columnId?: string) =>
-      getAggregatesStore(tableId, listViewId).getState().openPanel(columnId),
-    closePanel: () =>
-      getAggregatesStore(tableId, listViewId).getState().closePanel(),
   };
 
-  const listGrouping = {
-    grouping: getGroupingStore(tableId, listViewId)((s) => s.grouping),
-    panelOpen: getGroupingStore(tableId, listViewId)((s) => s.panelOpen),
-    setGrouping: (grouping: GroupByRule[]) => {
-      getGroupingStore(tableId, listViewId).getState().setGrouping(grouping);
-      getViewsStore(tableId).getState().updateListDraft({ grouping });
-    },
-    openPanel: () => getGroupingStore(tableId, listViewId).getState().openPanel(),
-    closePanel: () => getGroupingStore(tableId, listViewId).getState().closePanel(),
-  };
+  const grouping = getGroupingStore(tableId, listViewId)((s) => s.grouping);
 
   const groupAggregateLookup = useMemo(
-    () => buildGroupAggregateLookup(groupAggregateRows ?? [], listGrouping.grouping),
-    [groupAggregateRows, listGrouping.grouping],
+    () => buildGroupAggregateLookup(groupAggregateRows ?? [], grouping),
+    [groupAggregateRows, grouping],
   );
 
   const hasAggregates = listAggregates.rules.length > 0 && !isLookup;
@@ -189,82 +114,25 @@ export function ListViewLayout({
       {/* ── filters + search + cols ── */}
       <div className="mb-2 flex items-start justify-between">
         <div className="flex flex-wrap items-center gap-1">
-          <FilterButton
-            viewId={listViewId}
-            tableId={tableId}
-            onOpen={listFiltering.openPanel}
-          />
-
-          <SortButton sorting={sorting} onOpen={() => setSortPanelOpen(true)} />
-          <TotalsButton
-            rules={listAggregates.rules}
-            onOpen={() => listAggregates.openPanel()}
-          />
-          <GroupByButton
-            grouping={listGrouping.grouping}
-            onOpen={() => listGrouping.openPanel()}
-          />
-          {listGrouping.grouping.length > 0 && (
-            <ExpandCollapseAllButton table={table} />
-          )}
-          <ColumnManagerButton type="list" />
-          {quickSearchEnabled && (
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              onClick={() => {
-                setSearchOpen((v) => !v);
-                if (searchOpen) setGlobalFilter("");
-              }}
-            >
-              <SearchIcon className="h-4 w-4" />
-            </Button>
+          {hasFeature("filtering") && <FilterBar />}
+          {hasFeature("sorting") && <SortBar />}
+          {hasFeature("aggregates") && <TotalsBar />}
+          {hasFeature("grouping") && <GroupByBar />}
+          {hasFeature("columnManager") && <ColumnManagerButton type="list" />}
+          {quickSearchEnabled && hasFeature("quickSearch") && (
+            <QuickSearchButton />
           )}
         </div>
-        <DataListModeToggle tableId={tableId} hasList={hasListMode} />
+        {hasFeature("viewModeToggle") && (
+          <DataListModeToggle tableId={tableId} hasList={hasListMode} />
+        )}
       </div>
 
       {/* ── filter chips ── */}
-      {listFiltering.rules.length > 0 && (
-        <div className="mb-2">
-          <FilterChips
-            filters={listFiltering.rules}
-            onRemove={(columnId) =>
-              listFiltering.setRules(
-                listFiltering.rules.filter((r) => r.columnId !== columnId),
-              )
-            }
-            onClearAll={() => listFiltering.setRules([])}
-            onOpenFilter={listFiltering.openPanel}
-          />
-        </div>
-      )}
+      {hasFeature("filtering") && <FilterChipsBar />}
 
       {/* ── quick search ── */}
-      {quickSearchEnabled && searchOpen && (
-        <div className="relative mb-2">
-          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <SearchIcon className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <Input
-            autoFocus
-            placeholder={t("quickSearch")}
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pr-8 pl-10"
-          />
-          {globalFilter && (
-            <button
-              type="button"
-              onClick={() => setGlobalFilter("")}
-              className="absolute inset-y-0 right-0 flex items-center pr-2"
-            >
-              <X className="h-4 w-4 text-muted-foreground hover:text-primary" />
-            </button>
-          )}
-        </div>
-      )}
+      {quickSearchEnabled && hasFeature("quickSearch") && <QuickSearchInput />}
 
       {/* ── Scroll container + summary bar ── */}
       <div
@@ -302,52 +170,10 @@ export function ListViewLayout({
             openOnRowClick={openOnRowClick}
             list={list}
             isLookup={isLookup}
-            grouping={listGrouping.grouping}
+            grouping={grouping}
             groupAggregateLookup={groupAggregateLookup}
             isGroupAggregatesFetching={isGroupAggregatesFetching}
             listViewId={listViewId}
-          />
-
-          <FilterPanel
-            open={listFiltering.panelOpen}
-            onOpenChange={(open) =>
-              open ? listFiltering.openPanel() : listFiltering.closePanel()
-            }
-            initialFilters={listFiltering.rules}
-            filterableColumns={filterableColumns}
-            focusColumnId={listFiltering.focusColumnId}
-            onApply={(rules) => listFiltering.setRules(rules)}
-            staticFilters={enrichedPreFilters}
-          />
-
-          <SortPanel
-            open={sortPanelOpen}
-            onOpenChange={setSortPanelOpen}
-            initialSorting={sorting}
-            sortableColumns={sortableColumns}
-            onApply={setSorting}
-          />
-
-          <TotalsPanel
-            open={listAggregates.panelOpen}
-            onOpenChange={(open) =>
-              open ? listAggregates.openPanel() : listAggregates.closePanel()
-            }
-            initialRules={listAggregates.rules}
-            aggregatableColumns={aggregatableColumns}
-            focusColumnId={listAggregates.focusColumnId}
-            onApply={(rules) => listAggregates.setRules(rules)}
-          />
-
-          <GroupByPanel
-            open={listGrouping.panelOpen}
-            onOpenChange={(open) =>
-              open ? listGrouping.openPanel() : listGrouping.closePanel()
-            }
-            initialGrouping={listGrouping.grouping}
-            groupableColumns={groupableColumns}
-            aggregatableColumns={aggregatableColumns}
-            onApply={(grouping) => listGrouping.setGrouping(grouping)}
           />
 
           {features.map((f) => f.Panel && <f.Panel key={f.id} />)}

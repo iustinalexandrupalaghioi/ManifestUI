@@ -1,7 +1,7 @@
 "use client";
 
 import type { Cell, Table } from "@tanstack/react-table";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { getEditingStore } from "./editing.store";
 import {
   isEditableCell,
@@ -27,13 +27,16 @@ export function useEditing<TData>(
 
   const canUpdate = !!table.options.meta?.updateManyAsync;
 
-  const handleCellDoubleClick = (cell: Cell<TData, unknown>): boolean => {
-    if (!editMode || !canUpdate || !isEditableCell(cell)) return false;
-    store
-      .getState()
-      .startEditing({ rowId: cell.row.id, columnId: cell.column.id });
-    return true;
-  };
+  const handleCellDoubleClick = useCallback(
+    (cell: Cell<TData, unknown>): boolean => {
+      if (!editMode || !canUpdate || !isEditableCell(cell)) return false;
+      store
+        .getState()
+        .startEditing({ rowId: cell.row.id, columnId: cell.column.id });
+      return true;
+    },
+    [editMode, canUpdate, store],
+  );
 
   useEffect(() => {
     if (!editMode || !canUpdate) return;

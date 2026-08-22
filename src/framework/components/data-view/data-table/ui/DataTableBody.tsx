@@ -1,7 +1,7 @@
 "use client"
 
 import type { Row, VisibilityState } from "@tanstack/react-table"
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { useDataViewCore } from "../../core/stores/DataViewProvider"
 import { useDataViewLayout } from "../../core/stores/DataViewProvider"
 import { useCellSelection } from "./useCellSelection"
@@ -18,6 +18,7 @@ declare module "@tanstack/react-table" {
   interface ColumnMeta<TData, TValue> {
     className?: string
     onOpen?: (rows: Row<TData>[]) => void
+    onNavigate?: (rows: Row<TData>[]) => void
     getRowUrl?: (row: Row<TData>) => string
     onDelete?: (rows: Row<TData>[]) => void
     isDeleteEligible?: (row: Row<TData>) => boolean
@@ -75,10 +76,13 @@ export function DataTableBody({
   const editingStore = getEditingStore(tableId)
   const editMode = editingStore((s) => s.editMode)
   const editingCell = editingStore((s) => s.editingCell)
-  const isCellEditing = (rowId: string, columnId: string) =>
-    editMode &&
-    editingCell?.rowId === rowId &&
-    editingCell?.columnId === columnId
+  const isCellEditing = useCallback(
+    (rowId: string, columnId: string) =>
+      editMode &&
+      editingCell?.rowId === rowId &&
+      editingCell?.columnId === columnId,
+    [editMode, editingCell],
+  )
   const editingKey =
     editMode && editingCell
       ? `${editingCell.rowId}:${editingCell.columnId}`

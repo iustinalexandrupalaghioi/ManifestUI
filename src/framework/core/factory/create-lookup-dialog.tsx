@@ -2,6 +2,7 @@ import { useActiveMode } from "@/framework/components/data-view/core/stores/View
 import { createSelectColumn } from "@/framework/components/data-view/core/ui/createActionsColumn";
 import { createBufferColumn } from "@/framework/components/data-view/core/ui/createBufferColumn";
 import DataView from "@/framework/components/data-view/DataView";
+import { resolveFeatures } from "@/framework/components/data-view/core/features/resolveFeatures";
 import {
   getFilteringStore,
   toFilterRuleFallback,
@@ -49,8 +50,14 @@ export function createLookupDialog<
     overviewKey,
     pickupColumnVisibility,
     listColumnVisibility,
+    dataView,
   } = config;
   const { labels, idField } = hooks;
+
+  const lookupFeaturesConfig = dataView?.lookup?.features ?? dataView?.features;
+  const resolvedFeatures = lookupFeaturesConfig
+    ? resolveFeatures(lookupFeaturesConfig)
+    : undefined;
 
   return memo(function LookupDialog({
     open,
@@ -166,6 +173,8 @@ export function createLookupDialog<
 
         <div className="flex min-h-0 w-full flex-1 flex-col px-4">
           <DataView
+            features={resolvedFeatures}
+            dataTableConfig={dataView?.dataTable}
             isLoading={isLoading}
             defaultViewName={resolvedPlural}
             tableId={tableId}

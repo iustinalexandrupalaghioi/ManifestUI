@@ -27,7 +27,7 @@ import { cn } from "@/framework/lib/utils";
 // Constants
 // ─────────────────────────────────────────────
 
-const SYSTEM_COLUMNS = new Set(["select", "columns", "_buffer"]);
+const SYSTEM_COLUMNS = new Set(["select", "columns", "_buffer", "group"]);
 
 const sensors = [
   PointerSensor.configure({
@@ -59,6 +59,7 @@ interface SortableColumnRowProps {
   index: number;
   onToggleVisible: (id: string) => void;
   onTogglePin: (id: string) => void;
+  pinningEnabled: boolean;
 }
 
 function SortableColumnRow({
@@ -66,6 +67,7 @@ function SortableColumnRow({
   index,
   onToggleVisible,
   onTogglePin,
+  pinningEnabled,
 }: SortableColumnRowProps) {
   const t = useTranslations("ColumnManager");
   const { ref, isDragging } = useSortable({ id: col.id, index });
@@ -96,25 +98,29 @@ function SortableColumnRow({
         {col.name}
       </label>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7 shrink-0"
-        onClick={() => onTogglePin(col.id)}
-        aria-label={
-          col.pinned
-            ? t("unpinNamed", { name: col.name })
-            : t("pinNamed", { name: col.name })
-        }
-        title={col.pinned ? t("unpinColumn") : t("pinColumnLeft")}
-      >
-        <PinIcon
-          className={cn(
-            "h-3.5 w-3.5",
-            col.pinned ? "text-primary" : "text-muted-foreground",
-          )}
-        />
-      </Button>
+      {pinningEnabled ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0"
+          onClick={() => onTogglePin(col.id)}
+          aria-label={
+            col.pinned
+              ? t("unpinNamed", { name: col.name })
+              : t("pinNamed", { name: col.name })
+          }
+          title={col.pinned ? t("unpinColumn") : t("pinColumnLeft")}
+        >
+          <PinIcon
+            className={cn(
+              "h-3.5 w-3.5",
+              col.pinned ? "text-primary" : "text-muted-foreground",
+            )}
+          />
+        </Button>
+      ) : (
+        <span className="h-7 w-7 shrink-0" />
+      )}
     </div>
   );
 }
@@ -244,6 +250,7 @@ export interface DataListColumnManagerProps<TData> {
   table: Table<TData>;
   columnOrder: string[];
   columnPinning: { left: string[] };
+  pinningEnabled?: boolean;
   onApplyTableColumns?: (
     order: string[],
     pinning: { left: string[] },
@@ -262,6 +269,7 @@ export function DataListColumnManager<TData>({
   table,
   columnOrder,
   columnPinning,
+  pinningEnabled = true,
   onApplyTableColumns,
   mode = "table",
   listColumnVisibility = {},
@@ -386,7 +394,9 @@ export function DataListColumnManager<TData>({
             </SheetTitle>
           </div>
           <SheetDescription className="hidden">
-            {isList ? t("listColumnsDescription") : t("manageColumnsDescription")}
+            {isList
+              ? t("listColumnsDescription")
+              : t("manageColumnsDescription")}
           </SheetDescription>
           <SheetClose asChild>
             <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -417,6 +427,7 @@ export function DataListColumnManager<TData>({
                     index={index}
                     onToggleVisible={handleToggleVisible}
                     onTogglePin={handleTogglePin}
+                    pinningEnabled={pinningEnabled}
                   />
                 ),
               )}

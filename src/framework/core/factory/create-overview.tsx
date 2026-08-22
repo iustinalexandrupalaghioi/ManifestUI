@@ -1,16 +1,18 @@
 "use client";
 
 import DataView from "@/framework/components/data-view/DataView";
+import { DEFAULT_FEATURES } from "@/framework/components/data-view/core/features/catalog";
+import { resolveFeatures } from "@/framework/components/data-view/core/features/resolveFeatures";
 import {
   useOverviewSelection,
   useOverviewState,
 } from "@/framework/components/data-view/core/hooks/useOverview";
 import { useActiveMode } from "@/framework/components/data-view/core/stores/ViewModeStore";
-import { getFilteringStore } from "@/framework/components/data-view/features/filtering/filtering.store";
-import { getSortingStore } from "@/framework/components/data-view/features/sorting/sorting.store";
 import { getAggregatesStore } from "@/framework/components/data-view/features/aggregates/aggregates.store";
-import { getGroupingStore } from "@/framework/components/data-view/features/grouping/grouping.store";
+import { getFilteringStore } from "@/framework/components/data-view/features/filtering/filtering.store";
 import { unionGroupAggregateRules } from "@/framework/components/data-view/features/grouping/grouping";
+import { getGroupingStore } from "@/framework/components/data-view/features/grouping/grouping.store";
+import { getSortingStore } from "@/framework/components/data-view/features/sorting/sorting.store";
 import {
   useActiveListView,
   useActiveTableView,
@@ -22,19 +24,27 @@ import {
 import { useNavigatorStore } from "@/framework/components/screen/stores/useNavigatorStore";
 import { usePendingChanges } from "@/framework/hooks/usePendingChanges";
 
+import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
+import { AccessDeniedDialog } from "@/framework/authorization/ui/AccessDeniedDialog";
+import { getEditingStore } from "@/framework/components/data-view/features/editing/editing.store";
 import {
   preFilterToFormKey,
   type FilterInput,
   type FilterRule,
 } from "@/framework/components/data-view/features/filtering";
 import { toFilterRuleFallback } from "@/framework/components/data-view/features/filtering/filters";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import type { FieldValues } from "react-hook-form";
-import { useSearchParams } from "next/navigation";
+import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFields";
+import Loader from "@/framework/components/partials/Loader";
+import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
+import { ActionResultError } from "@/framework/lib/actionResult";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
+import { resolvePermission } from "@/framework/lib/resolvePermissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-import { resolveLabel } from "@/framework/lib/resolveLabel";
-import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useMemo, useState } from "react";
+import type { FieldValues } from "react-hook-form";
 import type { OverviewSlots } from "../../types/define-resource-type";
 import type {
   OverviewRenderProps,
@@ -42,23 +52,15 @@ import type {
 } from "../../types/resource-components-types";
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
-import { getItemId } from "../resource-id";
-import { resolvePermission } from "@/framework/lib/resolvePermissions";
-import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
-import { ActionResultError } from "@/framework/lib/actionResult";
-import { AccessDeniedDialog } from "@/framework/authorization/ui/AccessDeniedDialog";
 import { useOverviewActionsBundle } from "../hooks/useOerviewActionsBundle";
+import { getItemId } from "../resource-id";
 import { OverviewActionChrome } from "./OverviewActionChrome";
-import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFields";
-import { getEditingStore } from "@/framework/components/data-view/features/editing/editing.store";
 import { SplitOverviewShell } from "./SplitOverviewShell";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { OverviewSkeleton } from "./create-overview/OverviewSkeleton";
 import { parseUrlPreFilters } from "./create-overview/parseUrlPreFilters";
 import { useAutoOpenSplitSelection } from "./create-overview/useAutoOpenSplitSelection";
 import { useOverviewColumns } from "./create-overview/useOverviewColumns";
-import { useOverviewViewsSync } from "./create-overview/useOverviewViewsSync";
 import { useOverviewNavigation } from "./create-overview/useOverviewNavigation";
+import { useOverviewViewsSync } from "./create-overview/useOverviewViewsSync";
 
 type OverviewConfig<TItem, TFormValues> = ResourceComponentsConfig<
   TItem,
@@ -99,7 +101,16 @@ export function createOverview<
     navigationColumnVisibility,
     cardNavigationColumnVisibility,
     listColumnVisibility,
+    dataView,
   } = config;
+
+  const overviewFeaturesConfig = dataView?.overview?.features ?? dataView?.features;
+  const resolvedFeatures = overviewFeaturesConfig
+    ? resolveFeatures(overviewFeaturesConfig)
+    : DEFAULT_FEATURES;
+  const editingEnabled = resolvedFeatures.some((f) => f.id === "editing");
+  const selectionEnabled = resolvedFeatures.some((f) => f.id === "selection");
+  const openEnabled = resolvedFeatures.some((f) => f.id === "open");
 
   const {
     idField,
@@ -121,7 +132,7 @@ export function createOverview<
     } = {},
   ) {
     return (
-      <Suspense fallback={<OverviewSkeleton />}>
+      <Suspense fallback={<Loader />}>
         <OverviewInner {...props} />
       </Suspense>
     );
@@ -161,7 +172,7 @@ export function createOverview<
     const canAdd = resolvePermission(config.permissions?.add);
     const canDelete = resolvePermission(config.permissions?.delete);
     const canUpdate = resolvePermission(config.permissions?.update);
-    const gridEditable = canUpdate && config.editable === true;
+    const gridEditable = canUpdate && editingEnabled;
 
     const { directFields, pickupFillFields } = useMemo(
       () =>
@@ -374,6 +385,8 @@ export function createOverview<
       canRead,
       canDelete,
       gridEditable,
+      selectionEnabled,
+      openEnabled,
       directFields,
       pickupFillFields,
       handleOpen,
@@ -452,6 +465,8 @@ export function createOverview<
 
     const tableNode = (
       <DataView
+        features={resolvedFeatures}
+        dataTableConfig={dataView?.dataTable}
         slotId={slotId}
         tableMeta={tableMeta}
         isLoading={isLoading}

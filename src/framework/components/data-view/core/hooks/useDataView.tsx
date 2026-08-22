@@ -39,6 +39,7 @@ import type {
 } from "../../features/grouping/grouping";
 import { getViewsStore } from "../../features/views/views.store";
 import type { DataViewFeature, DataViewFeatureContext } from "../contracts";
+import type { DataTableConfig } from "../types";
 import {
   deleteCoreStore,
   getCoreStore,
@@ -52,6 +53,7 @@ import { useColumnState } from "./useColumnState";
 import { useInfiniteScroll } from "./useInfiniteScroll";
 import { useScrollFreeze } from "./useScrollFreeze";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { SYSTEM_COLUMN_IDS } from "../systemColumns";
 
 function sameSelection(a: Record<string, boolean>, b: Record<string, boolean>) {
   const aKeys = Object.keys(a)
@@ -92,6 +94,7 @@ export interface DataViewProps<TData, TValue> {
   isAggregatesFetching?: boolean;
   groupAggregateRows?: GroupAggregateRow[];
   isGroupAggregatesFetching?: boolean;
+  dataTableConfig?: DataTableConfig;
 }
 
 export function useDataView<TData, TValue>(
@@ -117,12 +120,26 @@ export function useDataView<TData, TValue>(
     isAggregatesFetching,
     groupAggregateRows,
     isGroupAggregatesFetching,
+    dataTableConfig: dataTableConfigProp,
   } = props;
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<import("@tanstack/react-table").Table<TData>>(null!);
   const staticColumnIds = useRef<Set<string>>(new Set());
+  const columnSizeVarsRef = useRef<HTMLDivElement>(null);
+
+  const featureIds = useMemo(
+    () => new Set(features.map((f) => f.id)),
+    [features],
+  );
+
+  const dataTableConfig = useMemo(
+    () => ({
+      alternateRowColor: dataTableConfigProp?.alternateRowColor ?? true,
+    }),
+    [dataTableConfigProp?.alternateRowColor],
+  );
 
   // ── Initialise stores ────────────────────────────────────────────────────
   getViewsStore(
@@ -174,8 +191,8 @@ export function useDataView<TData, TValue>(
   } = useColumnState(tableId, initialColumnVisibility);
 
   const groupingIds = useMemo(
-    () => grouping.map((g) => g.columnId),
-    [grouping],
+    () => (featureIds.has("grouping") ? grouping.map((g) => g.columnId) : []),
+    [grouping, featureIds],
   );
 
   const [expanded, setExpanded] = usePersistedState<ExpandedState>(
@@ -288,9 +305,9 @@ export function useDataView<TData, TValue>(
   const table = useReactTable({
     data,
     columns: tableColumns,
-    enableColumnResizing: true,
+    enableColumnResizing: featureIds.has("resizing"),
     columnResizeMode: "onChange",
-    defaultColumn: { enableResizing: true },
+    defaultColumn: { enableResizing: featureIds.has("resizing") },
     manualPagination: true,
     groupedColumnMode: false,
     autoResetExpanded: false,
@@ -302,27 +319,22 @@ export function useDataView<TData, TValue>(
       columnVisibility: {
         ...columnVisibility,
         group: groupingIds.length > 0,
+        columns: featureIds.has("open") || featureIds.has("columnManager"),
       },
       columnSizing,
       columnPinning: {
         left: [
-          "group",
-          "select",
-          "columns",
-          ...columnPinning.left.filter(
-            (id) => !["group", "select", "columns"].includes(id),
-          ),
+          ...SYSTEM_COLUMN_IDS,
+          ...(featureIds.has("pinning")
+            ? columnPinning.left.filter((id) => !SYSTEM_COLUMN_IDS.includes(id))
+            : []),
         ],
       },
       columnOrder:
         columnOrder.length > 0
           ? [
-              "group",
-              "select",
-              "columns",
-              ...columnOrder.filter(
-                (id) => !["group", "select", "columns"].includes(id),
-              ),
+              ...SYSTEM_COLUMN_IDS,
+              ...columnOrder.filter((id) => !SYSTEM_COLUMN_IDS.includes(id)),
             ]
           : undefined,
       sorting,
@@ -377,19 +389,16 @@ export function useDataView<TData, TValue>(
       }
       getCoreStore(tableId).getState().setColumnSizeVars(colSizes);
     });
-  }, [table.getState().columnSizingInfo, table.getState().columnSizing]);
+  }, [table.getState().columnSizing]);
 
   // ── Layout ───────────────────────────────────────────────────────────────
   const autoHeight = useAvailableHeight(
     fixedHeight !== undefined ? { current: null } : scrollContainerRef,
   );
   const height = fixedHeight ?? autoHeight;
-  const isResizing = !!table.getState().columnSizingInfo.isResizingColumn;
-  const handleScroll = useScrollFreeze(scrollContainerRef, isResizing);
 
-  useEffect(() => {
-    getCoreStore(tableId).getState().setIsResizing(isResizing);
-  }, [tableId, isResizing]);
+  const isResizing = useCoreStore(tableId, (s) => s.isResizing);
+  const handleScroll = useScrollFreeze(scrollContainerRef, isResizing);
 
   // ── Feature registry loop ────────────────────────────────────────────────
   const prevFeaturesLengthRef = useRef(features.length);
@@ -443,8 +452,11 @@ export function useDataView<TData, TValue>(
       handleScroll,
       viewType: "table" as const,
       staticColumnIds,
+      featureIds,
+      columnSizeVarsRef,
+      dataTableConfig,
     }),
-    [table, tableId, handleScroll],
+    [table, tableId, handleScroll, featureIds, dataTableConfig],
   );
 
   const layoutCtx = useMemo(

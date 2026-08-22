@@ -2,12 +2,16 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Table as TTable } from "@tanstack/react-table";
+import { useDataViewCore } from "../core/stores/DataViewProvider";
 import { DataListGrid } from "./ui/DataListGrid";
-import { DataListColumnManager } from "../core/ui/ColumnManager";
+import { DataListColumnManager } from "../features/columnManager/ui/ColumnManager";
 import type { DataListFeatureApi } from "./DataList.contract";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { GroupAggregateRow, GroupByRule } from "../features/grouping/grouping";
+import type {
+  GroupAggregateRow,
+  GroupByRule,
+} from "../features/grouping/grouping";
 
 interface DataListProps {
   table: TTable<any>;
@@ -35,6 +39,8 @@ export function DataList({
   listViewId,
 }: DataListProps) {
   const t = useTranslations("DataView");
+  const { featureIds } = useDataViewCore();
+  const selectionEnabled = featureIds.has("selection");
   const [columnManagerOpen, setColumnManagerOpen] = useState(false);
   const rows = table.getRowModel().rows;
   const hasVisibleList = list.visibleListColumns.length > 0;
@@ -44,23 +50,26 @@ export function DataList({
       {/* Select-all bar — overview only */}
       {hasVisibleList && !isLookup && (
         <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-3 py-1.5">
-          <div className="relative overflow-hidden">
-            <Checkbox
-              checked={
-                table.getIsAllRowsSelected()
-                  ? true
-                  : table.getIsSomeRowsSelected()
-                    ? "indeterminate"
-                    : false
-              }
-              onCheckedChange={(checked) =>
-                table.toggleAllRowsSelected(!!checked)
-              }
-              aria-label={t("selectAll")}
-            />
-          </div>
+          {selectionEnabled && (
+            <div className="relative overflow-hidden">
+              <Checkbox
+                checked={
+                  table.getIsAllRowsSelected()
+                    ? true
+                    : table.getIsSomeRowsSelected()
+                      ? "indeterminate"
+                      : false
+                }
+                onCheckedChange={(checked) =>
+                  table.toggleAllRowsSelected(!!checked)
+                }
+                aria-label={t("selectAll")}
+              />
+            </div>
+          )}
           <span className="text-xs text-muted-foreground">
-            {table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()
+            {selectionEnabled &&
+            (table.getIsSomeRowsSelected() || table.getIsAllRowsSelected())
               ? t("selectedCount", {
                   count: Object.keys(table.getState().rowSelection).length,
                 })

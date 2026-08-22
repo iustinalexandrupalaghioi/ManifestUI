@@ -4,19 +4,20 @@ import { MenuIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { useDataViewCore } from "../stores/DataViewProvider";
-import { useActiveMode } from "../stores/ViewModeStore";
+import { useDataViewCore } from "../../../core/stores/DataViewProvider";
+import { useActiveMode } from "../../../core/stores/ViewModeStore";
 import {
   getViewsStore,
   useActiveTableView,
   useActiveListView,
   DEFAULT_LIST_VIEW_ID,
-} from "../../features/views";
+} from "../../views";
 import { DataListColumnManager } from "./ColumnManager";
 
 export function ColumnManagerButton({ type }: { type: "list" | "table" }) {
   const t = useTranslations("ColumnManager");
-  const { table, tableId } = useDataViewCore();
+  const { table, tableId, featureIds } = useDataViewCore();
+  const pinningEnabled = featureIds.has("pinning");
   const viewMode = useActiveMode(tableId);
   const viewsStore = getViewsStore(tableId);
   const [open, setOpen] = useState(false);
@@ -99,6 +100,7 @@ export function ColumnManagerButton({ type }: { type: "list" | "table" }) {
         mode={isList ? "list" : "table"}
         columnOrder={columnOrder}
         columnPinning={columnPinning}
+        pinningEnabled={pinningEnabled}
         onApplyTableColumns={handleApplyTableColumns}
         listColumnVisibility={listColumnVisibility}
         listColumnOrder={listColumnOrder}

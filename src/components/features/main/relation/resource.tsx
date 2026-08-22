@@ -17,6 +17,7 @@ import { relationSchema, type RelationFormValues } from "./config/schema";
 import { relationColumns, relationListColumns } from "./config/columns";
 import { relationsDetailSlots } from "./config/detailSlots";
 import { relationsDescriptor } from "./config/descriptor";
+import { truncate } from "fs/promises";
 
 export const relationsResource = defineResource<Relation, RelationFormValues>({
   id: relationsDescriptor.id,
@@ -29,14 +30,31 @@ export const relationsResource = defineResource<Relation, RelationFormValues>({
 
   openMode: "split",
   splitConfig: {
-    onOpen: "selectFirst",
+    onOpen: "none",
   },
-  editable: true,
   addMode: "page",
   dialog: {
     className: "sm:max-w-full",
   },
 
+  dataView: {
+    features: {
+      views: true,
+      sorting: true,
+      selection: true,
+      filtering: true,
+      aggregates: true,
+      grouping: true,
+      editing: false,
+      list: true,
+      resizing: true,
+      pinning: true,
+      columnManager: true,
+      quickSearch: false,
+      viewModeToggle: true,
+      open: false,
+    },
+  },
   emptyValues: {
     first_name: "",
     last_name: "",

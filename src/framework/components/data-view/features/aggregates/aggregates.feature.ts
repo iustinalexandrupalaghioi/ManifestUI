@@ -1,6 +1,9 @@
 import type { DataViewFeature } from "../../core/contracts"
+import { TotalsPanelSlot } from "./ui/TotalsPanelSlot"
 
-// No useFeature hook — wired directly into TableViewLayout/ListViewLayout.
+// TotalsBar is not registered as Toolbar — it lives in row 2 of each
+// layout (gated inline via features.some), not row 1 where Toolbar renders.
 export const aggregatesFeature: DataViewFeature = {
   id: "aggregates",
+  Panel: TotalsPanelSlot,
 }

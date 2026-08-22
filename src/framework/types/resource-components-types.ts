@@ -2,6 +2,8 @@ import type { TableAction } from "@/framework/components/toolbar/Toolbar";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import type { ComponentType, ReactNode } from "react";
 import type { SortRule } from "../components/data-view/core/tanstack-augmentations";
+import type { DataViewFeaturesConfig } from "../components/data-view/core/features/catalog";
+import type { DataTableConfig } from "../components/data-view/core/types";
 import type {
   FilterInput,
   FilterRule,
@@ -61,7 +63,12 @@ export interface ResourceComponentsConfig<TItem, TFormValues> {
   renderOverview?: (props: OverviewRenderProps<TItem>) => ReactNode;
   detailSlots?: DetailSlots<TItem>;
   permissions?: ResourcePermissions;
-  editable?: boolean;
+  dataView?: {
+    features?: DataViewFeaturesConfig;
+    overview?: { features?: DataViewFeaturesConfig };
+    lookup?: { features?: DataViewFeaturesConfig };
+    dataTable?: DataTableConfig;
+  };
 }
 
 export interface OverviewSlots<TItem> {

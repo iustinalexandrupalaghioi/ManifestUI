@@ -1,12 +1,16 @@
 import { create } from "zustand"
+import { subscribeWithSelector } from "zustand/middleware"
 import type { SortingState } from "@tanstack/react-table"
 
 interface SortingStoreState {
   sorting: SortingState
+  panelOpen: boolean
 }
 
 interface SortingStoreActions {
   setSorting(s: SortingState): void
+  openPanel(): void
+  closePanel(): void
 }
 
 type SortingStore = SortingStoreState & SortingStoreActions
@@ -16,10 +20,15 @@ type SortingStore = SortingStoreState & SortingStoreActions
 const stores = new Map<string, ReturnType<typeof createSortingStore>>()
 
 function createSortingStore(initial: SortingState = []) {
-  return create<SortingStore>()((set) => ({
-    sorting: initial,
-    setSorting: (sorting) => set({ sorting }),
-  }))
+  return create<SortingStore>()(
+    subscribeWithSelector((set) => ({
+      sorting: initial,
+      panelOpen: false,
+      setSorting: (sorting) => set({ sorting }),
+      openPanel: () => set({ panelOpen: true }),
+      closePanel: () => set({ panelOpen: false }),
+    })),
+  )
 }
 
 export function getSortingStore(

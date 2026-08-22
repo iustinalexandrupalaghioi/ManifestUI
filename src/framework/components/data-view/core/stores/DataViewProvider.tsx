@@ -1,12 +1,13 @@
-"use client"
+"use client";
 
 import {
   createContext,
   useContext,
   type ReactNode,
   type RefObject,
-} from "react"
-import type { Table } from "@tanstack/react-table"
+} from "react";
+import type { Table } from "@tanstack/react-table";
+import type { DataTableConfig } from "../types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Core context — stable references that almost never change.
@@ -15,25 +16,27 @@ import type { Table } from "@tanstack/react-table"
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface DataViewCoreCtx {
-  table: Table<any>
-  tableId: string
-  scrollContainerRef: RefObject<HTMLDivElement | null>
-  handleScroll: () => void
-  /** Which view type this provider instance is serving. */
-  viewType: "table" | "list"
-  staticColumnIds: RefObject<Set<string>>
+  table: Table<any>;
+  tableId: string;
+  scrollContainerRef: RefObject<HTMLDivElement | null>;
+  handleScroll: () => void;
+  viewType: "table" | "list";
+  staticColumnIds: RefObject<Set<string>>;
+  featureIds: ReadonlySet<string>;
+  columnSizeVarsRef: RefObject<HTMLDivElement | null>;
+  dataTableConfig: Required<DataTableConfig>;
 }
 
-const DataViewCoreContext = createContext<DataViewCoreCtx | null>(null)
+const DataViewCoreContext = createContext<DataViewCoreCtx | null>(null);
 
 export function useDataViewCore(): DataViewCoreCtx {
-  const ctx = useContext(DataViewCoreContext)
+  const ctx = useContext(DataViewCoreContext);
   if (!ctx) {
     throw new Error(
-      "useDataViewCore must be used within a <DataView> component."
-    )
+      "useDataViewCore must be used within a <DataView> component.",
+    );
   }
-  return ctx
+  return ctx;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,20 +46,20 @@ export function useDataViewCore(): DataViewCoreCtx {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface DataViewLayoutCtx {
-  height: number | undefined
-  isResizing: boolean
+  height: number | undefined;
+  isResizing: boolean;
 }
 
-const DataViewLayoutContext = createContext<DataViewLayoutCtx | null>(null)
+const DataViewLayoutContext = createContext<DataViewLayoutCtx | null>(null);
 
 export function useDataViewLayout(): DataViewLayoutCtx {
-  const ctx = useContext(DataViewLayoutContext)
+  const ctx = useContext(DataViewLayoutContext);
   if (!ctx) {
     throw new Error(
-      "useDataViewLayout must be used within a <DataView> component."
-    )
+      "useDataViewLayout must be used within a <DataView> component.",
+    );
   }
-  return ctx
+  return ctx;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,9 +68,9 @@ export function useDataViewLayout(): DataViewLayoutCtx {
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface DataViewProviderProps {
-  core: DataViewCoreCtx
-  layout: DataViewLayoutCtx
-  children: ReactNode
+  core: DataViewCoreCtx;
+  layout: DataViewLayoutCtx;
+  children: ReactNode;
 }
 
 export function DataViewProvider({
@@ -81,5 +84,5 @@ export function DataViewProvider({
         {children}
       </DataViewLayoutContext.Provider>
     </DataViewCoreContext.Provider>
-  )
+  );
 }

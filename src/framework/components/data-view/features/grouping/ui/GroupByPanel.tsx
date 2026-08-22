@@ -1,16 +1,20 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Sheet,
   SheetClose,
@@ -19,62 +23,70 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
   PlusIcon,
   SigmaIcon,
   XIcon,
-} from "lucide-react"
-import { useEffect, useState } from "react"
-import { useTranslations } from "next-intl"
-import type { GroupableColumn, GroupByRule } from "../grouping"
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import type { GroupableColumn, GroupByRule } from "../grouping";
 import type {
   AggregatableColumn,
   AggregateFunction,
   AggregateRule,
-} from "../../aggregates/aggregates"
-import { AGGREGATES_BY_TYPE, getAggregateLabel } from "../../aggregates/aggregates"
+} from "../../aggregates/aggregates";
+import {
+  AGGREGATES_BY_TYPE,
+  getAggregateLabel,
+} from "../../aggregates/aggregates";
 
 export interface GroupByPanelProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  initialGrouping: GroupByRule[]
-  groupableColumns: GroupableColumn[]
-  aggregatableColumns: AggregatableColumn[]
-  onApply: (grouping: GroupByRule[]) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialGrouping: GroupByRule[];
+  groupableColumns: GroupableColumn[];
+  aggregatableColumns: AggregatableColumn[];
+  onApply: (grouping: GroupByRule[]) => void;
 }
 
 interface DraftAggregateRule {
-  _key: number
-  columnId: string
-  fn: AggregateFunction
+  _key: number;
+  columnId: string;
+  fn: AggregateFunction;
 }
 
 interface DraftLevel {
-  _key: number
-  columnId: string
-  showTotals: boolean
-  aggregates: DraftAggregateRule[]
+  _key: number;
+  columnId: string;
+  showTotals: boolean;
+  aggregates: DraftAggregateRule[];
 }
 
-let keyCounter = 0
+let keyCounter = 0;
 function nextKey() {
-  return ++keyCounter
+  return ++keyCounter;
 }
 
 function makeAggregateDraft(col: AggregatableColumn): DraftAggregateRule {
-  const fn = AGGREGATES_BY_TYPE[col.type]?.[0]
-  return { _key: nextKey(), columnId: col.id, fn }
+  const fn = AGGREGATES_BY_TYPE[col.type]?.[0];
+  return { _key: nextKey(), columnId: col.id, fn };
 }
 
 function aggregateDraftFromExisting(rule: AggregateRule): DraftAggregateRule {
-  return { _key: nextKey(), columnId: rule.columnId, fn: rule.fn }
+  return { _key: nextKey(), columnId: rule.columnId, fn: rule.fn };
 }
 
 function makeDraft(col: GroupableColumn): DraftLevel {
-  return { _key: nextKey(), columnId: col.id, showTotals: true, aggregates: [] }
+  return {
+    _key: nextKey(),
+    columnId: col.id,
+    showTotals: true,
+    aggregates: [],
+  };
 }
 
 function levelFromExisting(rule: GroupByRule): DraftLevel {
@@ -83,13 +95,13 @@ function levelFromExisting(rule: GroupByRule): DraftLevel {
     columnId: rule.columnId,
     showTotals: rule.showTotals ?? true,
     aggregates: (rule.aggregates ?? []).map(aggregateDraftFromExisting),
-  }
+  };
 }
 
 interface LevelAggregatesPickerProps {
-  aggregates: DraftAggregateRule[]
-  aggregatableColumns: AggregatableColumn[]
-  onChange: (aggregates: DraftAggregateRule[]) => void
+  aggregates: DraftAggregateRule[];
+  aggregatableColumns: AggregatableColumn[];
+  onChange: (aggregates: DraftAggregateRule[]) => void;
 }
 
 // A per-level, independent picker of column+function totals — separate
@@ -100,19 +112,19 @@ function LevelAggregatesPicker({
   aggregatableColumns,
   onChange,
 }: LevelAggregatesPickerProps) {
-  const t = useTranslations("Aggregates")
-  const usedColumnIds = new Set(aggregates.map((d) => d.columnId))
+  const t = useTranslations("Aggregates");
+  const usedColumnIds = new Set(aggregates.map((d) => d.columnId));
 
   const updateRule = (key: number, updated: DraftAggregateRule) => {
-    onChange(aggregates.map((d) => (d._key === key ? updated : d)))
-  }
+    onChange(aggregates.map((d) => (d._key === key ? updated : d)));
+  };
   const removeRule = (key: number) => {
-    onChange(aggregates.filter((d) => d._key !== key))
-  }
+    onChange(aggregates.filter((d) => d._key !== key));
+  };
   const addRule = () => {
-    const col = aggregatableColumns.find((c) => !usedColumnIds.has(c.id))
-    if (col) onChange([...aggregates, makeAggregateDraft(col)])
-  }
+    const col = aggregatableColumns.find((c) => !usedColumnIds.has(c.id));
+    if (col) onChange([...aggregates, makeAggregateDraft(col)]);
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -123,17 +135,22 @@ function LevelAggregatesPicker({
       )}
 
       {aggregates.map((draft) => {
-        const col = aggregatableColumns.find((c) => c.id === draft.columnId)
-        const fns = col ? AGGREGATES_BY_TYPE[col.type] : []
+        const col = aggregatableColumns.find((c) => c.id === draft.columnId);
+        const fns = col ? AGGREGATES_BY_TYPE[col.type] : [];
         return (
-          <div key={draft._key} className="flex items-start gap-2 rounded-md border p-3">
+          <div
+            key={draft._key}
+            className="flex items-start gap-2 rounded-md border p-3"
+          >
             <div className="flex flex-1 flex-col gap-2">
               <Select
                 value={draft.columnId}
                 onValueChange={(columnId) => {
-                  const newCol = aggregatableColumns.find((c) => c.id === columnId)!
-                  const fn = AGGREGATES_BY_TYPE[newCol.type]?.[0]
-                  updateRule(draft._key, { ...draft, columnId, fn })
+                  const newCol = aggregatableColumns.find(
+                    (c) => c.id === columnId,
+                  )!;
+                  const fn = AGGREGATES_BY_TYPE[newCol.type]?.[0];
+                  updateRule(draft._key, { ...draft, columnId, fn });
                 }}
               >
                 <SelectTrigger className="h-8 w-full text-xs">
@@ -142,7 +159,8 @@ function LevelAggregatesPicker({
                 <SelectContent>
                   {aggregatableColumns
                     .filter(
-                      (c) => c.id === draft.columnId || !usedColumnIds.has(c.id),
+                      (c) =>
+                        c.id === draft.columnId || !usedColumnIds.has(c.id),
                     )
                     .map((c) => (
                       <SelectItem key={c.id} value={c.id} className="text-xs">
@@ -155,7 +173,10 @@ function LevelAggregatesPicker({
               <Select
                 value={draft.fn}
                 onValueChange={(fn) =>
-                  updateRule(draft._key, { ...draft, fn: fn as AggregateFunction })
+                  updateRule(draft._key, {
+                    ...draft,
+                    fn: fn as AggregateFunction,
+                  })
                 }
               >
                 <SelectTrigger className="h-8 w-full text-xs">
@@ -182,7 +203,7 @@ function LevelAggregatesPicker({
               <XIcon className="h-3.5 w-3.5" />
             </Button>
           </div>
-        )
+        );
       })}
 
       <Button
@@ -200,22 +221,22 @@ function LevelAggregatesPicker({
         {t("addTotal")}
       </Button>
     </div>
-  )
+  );
 }
 
 interface LevelRowProps {
-  draft: DraftLevel
-  index: number
-  count: number
-  groupableColumns: GroupableColumn[]
-  aggregatableColumns: AggregatableColumn[]
-  usedColumnIds: Set<string>
-  onChangeColumn: (columnId: string) => void
-  onToggleShowTotals: (showTotals: boolean) => void
-  onChangeAggregates: (aggregates: DraftAggregateRule[]) => void
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onRemove: () => void
+  draft: DraftLevel;
+  index: number;
+  count: number;
+  groupableColumns: GroupableColumn[];
+  aggregatableColumns: AggregatableColumn[];
+  usedColumnIds: Set<string>;
+  onChangeColumn: (columnId: string) => void;
+  onToggleShowTotals: (showTotals: boolean) => void;
+  onChangeAggregates: (aggregates: DraftAggregateRule[]) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
 }
 
 function LevelRow({
@@ -232,8 +253,8 @@ function LevelRow({
   onMoveDown,
   onRemove,
 }: LevelRowProps) {
-  const t = useTranslations("Grouping")
-  const tAgg = useTranslations("Aggregates")
+  const t = useTranslations("Grouping");
+  const tAgg = useTranslations("Aggregates");
 
   return (
     <div className="flex items-start gap-2 rounded-md border p-3">
@@ -246,7 +267,7 @@ function LevelRow({
           onClick={onMoveUp}
           aria-label={t("moveUp")}
         >
-          <ChevronUpIcon className="h-3.5 w-3.5" />
+          <ChevronUpIcon className="h-3 w-3" />
         </Button>
         <Button
           variant="ghost"
@@ -256,7 +277,7 @@ function LevelRow({
           onClick={onMoveDown}
           aria-label={t("moveDown")}
         >
-          <ChevronDownIcon className="h-3.5 w-3.5" />
+          <ChevronDownIcon className="h-3 w-3" />
         </Button>
       </div>
 
@@ -334,7 +355,7 @@ function LevelRow({
         <XIcon className="h-3.5 w-3.5" />
       </Button>
     </div>
-  )
+  );
 }
 
 export function GroupByPanel({
@@ -345,64 +366,64 @@ export function GroupByPanel({
   aggregatableColumns,
   onApply,
 }: GroupByPanelProps) {
-  const t = useTranslations("Grouping")
-  const tc = useTranslations("Common")
-  const [drafts, setDrafts] = useState<DraftLevel[]>([])
+  const t = useTranslations("Grouping");
+  const tc = useTranslations("Common");
+  const [drafts, setDrafts] = useState<DraftLevel[]>([]);
 
   useEffect(() => {
-    if (!open) return
-    setDrafts(initialGrouping.map(levelFromExisting))
-  }, [open])
+    if (!open) return;
+    setDrafts(initialGrouping.map(levelFromExisting));
+  }, [open]);
 
   const updateColumn = (key: number, columnId: string) => {
     setDrafts((prev) =>
       prev.map((d) => (d._key === key ? { ...d, columnId } : d)),
-    )
-  }
+    );
+  };
 
   const updateShowTotals = (key: number, showTotals: boolean) => {
     setDrafts((prev) =>
       prev.map((d) => (d._key === key ? { ...d, showTotals } : d)),
-    )
-  }
+    );
+  };
 
   const updateAggregates = (key: number, aggregates: DraftAggregateRule[]) => {
     setDrafts((prev) =>
       prev.map((d) => (d._key === key ? { ...d, aggregates } : d)),
-    )
-  }
+    );
+  };
 
   const removeDraft = (key: number) => {
-    setDrafts((prev) => prev.filter((d) => d._key !== key))
-  }
+    setDrafts((prev) => prev.filter((d) => d._key !== key));
+  };
 
   const moveDraft = (index: number, direction: -1 | 1) => {
     setDrafts((prev) => {
-      const target = index + direction
-      if (target < 0 || target >= prev.length) return prev
-      const next = [...prev]
-      ;[next[index], next[target]] = [next[target], next[index]]
-      return next
-    })
-  }
+      const target = index + direction;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
 
   const addLevel = () => {
     setDrafts((prev) => {
-      const usedColumnIds = new Set(prev.map((d) => d.columnId))
-      const col = groupableColumns.find((c) => !usedColumnIds.has(c.id))
-      return col ? [...prev, makeDraft(col)] : prev
-    })
-  }
+      const usedColumnIds = new Set(prev.map((d) => d.columnId));
+      const col = groupableColumns.find((c) => !usedColumnIds.has(c.id));
+      return col ? [...prev, makeDraft(col)] : prev;
+    });
+  };
 
   const handleApply = () => {
     const grouping: GroupByRule[] = drafts
       .map((d): GroupByRule | null => {
-        const col = groupableColumns.find((c) => c.id === d.columnId)
-        if (!col) return null
+        const col = groupableColumns.find((c) => c.id === d.columnId);
+        if (!col) return null;
         const aggregates: AggregateRule[] = d.aggregates
           .map((a): AggregateRule | null => {
-            const aggCol = aggregatableColumns.find((c) => c.id === a.columnId)
-            if (!aggCol) return null
+            const aggCol = aggregatableColumns.find((c) => c.id === a.columnId);
+            if (!aggCol) return null;
             return {
               columnId: aggCol.id,
               columnName: aggCol.dbName,
@@ -410,9 +431,9 @@ export function GroupByPanel({
               columnType: aggCol.type,
               ...(aggCol.origin ? { origin: aggCol.origin } : {}),
               fn: a.fn,
-            }
+            };
           })
-          .filter((r): r is AggregateRule => r !== null)
+          .filter((r): r is AggregateRule => r !== null);
         return {
           columnId: col.id,
           columnName: col.dbName,
@@ -421,17 +442,17 @@ export function GroupByPanel({
           ...(col.origin ? { origin: col.origin } : {}),
           showTotals: d.showTotals,
           ...(aggregates.length > 0 ? { aggregates } : {}),
-        }
+        };
       })
-      .filter((r): r is GroupByRule => r !== null)
-    onApply(grouping)
-    onOpenChange(false)
-  }
+      .filter((r): r is GroupByRule => r !== null);
+    onApply(grouping);
+    onOpenChange(false);
+  };
 
   const handleClearAll = () => {
-    onApply([])
-    onOpenChange(false)
-  }
+    onApply([]);
+    onOpenChange(false);
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -470,7 +491,9 @@ export function GroupByPanel({
                 groupableColumns={groupableColumns}
                 aggregatableColumns={aggregatableColumns}
                 usedColumnIds={new Set(drafts.map((d) => d.columnId))}
-                onChangeColumn={(columnId) => updateColumn(draft._key, columnId)}
+                onChangeColumn={(columnId) =>
+                  updateColumn(draft._key, columnId)
+                }
                 onToggleShowTotals={(showTotals) =>
                   updateShowTotals(draft._key, showTotals)
                 }
@@ -523,5 +546,5 @@ export function GroupByPanel({
         </SheetFooter>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
