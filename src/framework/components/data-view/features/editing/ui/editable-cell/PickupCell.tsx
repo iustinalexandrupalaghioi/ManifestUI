@@ -21,14 +21,14 @@ export function PickupCell({
   const [open, setOpen] = useState(false);
   const pickup = getPickupConfig(owningField)!;
   const entry = getResource(pickup.resource);
-  const LookupDialog = entry?.components?.LookupDialog;
+  const PickupDialog = entry?.components?.PickupDialog;
 
   const setOpenAndNotify = (next: boolean) => {
     setOpen(next);
     onOpenChange(next);
   };
 
-  if (!LookupDialog)
+  if (!PickupDialog)
     return <span className="min-w-0 truncate">{currentLabel}</span>;
 
   return (
@@ -44,7 +44,7 @@ export function PickupCell({
         <SearchIcon className="size-3.5" />
       </Button>
       {open && (
-        <LookupDialog
+        <PickupDialog
           open={open}
           setOpen={setOpenAndNotify}
           onSelect={(record: Record<string, unknown>) => {

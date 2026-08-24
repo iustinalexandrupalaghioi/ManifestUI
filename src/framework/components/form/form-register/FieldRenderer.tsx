@@ -4,7 +4,6 @@ import { useLocale } from "next-intl";
 import { resolveLabel, resolveOptions } from "@/framework/lib/resolveLabel";
 import type { FieldConfig } from "../types/types";
 import { FileFieldRenderer } from "./FileFieldRenderer";
-import { LookupFieldRenderer } from "./LookupFieldRenderer";
 
 import { FieldWithPickup } from "../form-fields/FormFieldWithPickup";
 import FormReadOnlyInput from "../form-fields/FormReadOnlyInput";
@@ -162,16 +161,6 @@ export function FieldRenderer<TFormValues extends Record<string, any>>({
   if (field.type === "file") {
     return (
       <FileFieldRenderer field={field} disabled={isDisabled || isReadOnly} />
-    );
-  }
-
-  if (field.type === "lookup") {
-    return (
-      <LookupFieldRenderer
-        field={field}
-        disabled={isDisabled}
-        activeCols={activeCols}
-      />
     );
   }
 

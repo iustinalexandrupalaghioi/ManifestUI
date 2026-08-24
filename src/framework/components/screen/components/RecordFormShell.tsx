@@ -8,6 +8,7 @@ interface RecordFormNavProps {
   firstPath?: string;
   lastPath?: string;
   positionLabel?: string;
+  onNavigate?: (path: string) => void;
 }
 
 interface RecordFormShellProps {

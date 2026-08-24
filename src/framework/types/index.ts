@@ -6,12 +6,22 @@
 
 export type {
   DefinedResourceConfig,
-  ListConfig,
-  ColumnInput,
-  CardField,
+  ResourcePresentationConfig,
+  ResourceDataConfig,
+  ResourceFormConfig,
+  ResourceDetailConfig,
+  ResourceActionsConfig,
+  ResourceDataViewConfig,
+  ResourceDataViewOverviewConfig,
+  ResourceDataViewPickupConfig,
   OverviewSlots,
   DetailSlots,
 } from "./define-resource-type";
+
+export type {
+  ResourceActionConfig,
+  ResourceActionSurfaces,
+} from "../core/resource-action-config";
 
 export type {
   ResourceConfig,

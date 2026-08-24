@@ -27,7 +27,7 @@ export interface ChildResource<TItem, TFormValues extends FieldValues> {
       open: boolean;
       setOpen: (o: boolean) => void;
     }>;
-    LookupDialog: React.ComponentType<any>;
+    PickupDialog: React.ComponentType<any>;
   };
 }
 

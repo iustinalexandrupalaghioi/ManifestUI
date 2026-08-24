@@ -11,12 +11,12 @@ interface DataViewWithFeaturesProps<TData, TValue> extends DataViewProps<
   TValue
 > {
   features?: DataViewFeature[];
-  isLookup?: boolean;
+  isPickup?: boolean;
 }
 
 function DataView<TData, TValue>({
   features = DEFAULT_FEATURES,
-  isLookup,
+  isPickup,
   ...props
 }: DataViewWithFeaturesProps<TData, TValue>) {
   const { coreCtx, layoutCtx, loadMoreRef } = useDataView(props, features);
@@ -36,7 +36,7 @@ function DataView<TData, TValue>({
         hasTable={props.initialColumnVisibility !== undefined}
         hasList={props.initialListColumnVisibility !== undefined}
         loadMoreRef={loadMoreRef}
-        isLookup={isLookup}
+        isPickup={isPickup}
         aggregateValues={props.aggregateValues}
         isAggregatesFetching={props.isAggregatesFetching}
         groupAggregateRows={props.groupAggregateRows}

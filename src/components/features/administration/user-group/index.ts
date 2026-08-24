@@ -8,5 +8,5 @@ export {
   UserGroupDetailDialog,
   UserGroupAddPage,
   UserGroupDetailPage,
-  UserGroupLookupDialog,
+  UserGroupPickupDialog,
 } from "./resource"

@@ -19,57 +19,41 @@ export const attachmentsResource = defineResource<
   TodoAttachment,
   AttachmentFormValues
 >({
-  id: attachmentsDescriptor.id,
-  noun: attachmentsDescriptor.noun,
-  queryKey: attachmentsDescriptor.queryKey,
-  schema: attachmentSchema,
+  descriptor: attachmentsDescriptor,
 
-  routes: attachmentsDescriptor.routes,
+  presentation: {
+    open: "dialog",
+    add: "dialog",
+  },
 
-  labels: attachmentsDescriptor,
-
-  openMode: "dialog",
-  addMode: "dialog",
-  dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: true,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: true,
-      viewModeToggle: true,
-      open: true,
+  data: {
+    fetchList: fetchAttachmentList,
+    fetchAggregates: fetchAttachmentAggregates,
+    fetchDetail: fetchAttachmentDetail,
+    mutations: {
+      add: addAttachment,
+      update: updateAttachment,
+      delete: deleteAttachments,
     },
   },
-  emptyValues: {
-    todo_id: 0,
-    filename: "",
-    path: "",
+
+  form: {
+    schema: attachmentSchema,
+    emptyValues: {
+      todo_id: 0,
+      filename: "",
+      path: "",
+    },
+    layout: attachmentsForm,
   },
 
-  fetchList: fetchAttachmentList,
-  fetchAggregates: fetchAttachmentAggregates,
-  fetchDetail: fetchAttachmentDetail,
-  mutationFns: {
-    add: addAttachment,
-    update: updateAttachment,
-    delete: deleteAttachments,
+  dataView: {
+    overview: {
+      dataTableColumns: attachmentColumns,
+      dataListColumns: attachmentListColumns,
+    },
+    pickup: { dataTableColumns: attachmentColumns },
   },
-  columns: attachmentColumns,
-  listColumns: attachmentListColumns,
-
-  form: attachmentsForm,
-
-  overviewKey: attachmentsDescriptor.overviewKey,
-
-  defaultViewName: attachmentsDescriptor.defaultViewName,
 });
 
 // ─── Named exports ───────────────────────────
@@ -87,7 +71,7 @@ export const {
   DetailDialog: AttachmentDetailDialog,
   AddPage: AttachmentAddPage,
   DetailPage: AttachmentDetailPage,
-  LookupDialog: AttachmentLookupDialog,
+  PickupDialog: AttachmentPickupDialog,
 } = attachmentComponents;
 
 export const attachmentsConfig = { bucket: BUCKET };

@@ -31,6 +31,7 @@ import { resolvePermission } from "@/framework/lib/resolvePermissions";
 import { hasPermission } from "@/framework/authorization/cache/permissions";
 import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 import { BulkActionResult } from "@/framework/lib/actionResult";
+import { resolveResourceAction } from "../resource-action-config";
 
 export function createDetailPage<
   TItem,
@@ -42,6 +43,10 @@ export function createDetailPage<
 ) {
   const Form = config.Form;
   if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
+
+  const editingEnabled = config.dataView?.overview?.features?.edit !== false;
+  const deleteToolbarEnabled = resolveResourceAction(config.delete).toolbarEnabled;
+  const addToolbarEnabled = resolveResourceAction(config.add).toolbarEnabled;
 
   const {
     idField,
@@ -58,7 +63,12 @@ export function createDetailPage<
   return function DetailPage({
     id: idProp,
     onClose,
-  }: { id?: string; onClose?: () => void } = {}) {
+    onNavigate,
+  }: {
+    id?: string;
+    onClose?: () => void;
+    onNavigate?: (id: string) => void;
+  } = {}) {
     const params = useParams();
     const id = idProp ?? (params.id as string);
 
@@ -67,9 +77,10 @@ export function createDetailPage<
 
     usePermissions();
 
-    const canUpdate = resolvePermission(config.permissions?.update);
-    const canDelete = resolvePermission(config.permissions?.delete);
-    const canAdd = resolvePermission(config.permissions?.add);
+    const canUpdate = resolvePermission(config.permissions?.update) && editingEnabled;
+    const canDelete =
+      resolvePermission(config.permissions?.delete) && deleteToolbarEnabled;
+    const canAdd = resolvePermission(config.permissions?.add) && addToolbarEnabled;
 
     const ids = useNavigatorStore(
       (s) => s.byKey[overviewKey] ?? EMPTY_NAVIGATOR_IDS,
@@ -162,20 +173,28 @@ export function createDetailPage<
         label: resolvedLabels.singular,
         gender: labels.gender,
         onComplete: () => {
-          if (nextId) router.replace(routes.detail(nextId));
+          if (!nextId) return;
+          if (onNavigate) onNavigate(nextId);
+          else router.replace(routes.detail(nextId));
         },
       });
 
+    // In the split view, onNavigate is provided and prevPath/nextPath/etc.
+    // carry raw ids instead of routes — see FormHeader.go.
+    const toPath = (targetId: string) =>
+      onNavigate ? targetId : routes.detail(targetId);
+
     const navProps = {
-      prevPath: prevId ? routes.detail(prevId) : undefined,
-      nextPath: nextId ? routes.detail(nextId) : undefined,
+      prevPath: prevId ? toPath(prevId) : undefined,
+      nextPath: nextId ? toPath(nextId) : undefined,
       firstPath:
-        ids.length > 0 && currentIndex > 0 ? routes.detail(ids[0]) : undefined,
+        ids.length > 0 && currentIndex > 0 ? toPath(ids[0]) : undefined,
       lastPath:
         ids.length > 0 && currentIndex < ids.length - 1
-          ? routes.detail(ids[ids.length - 1])
+          ? toPath(ids[ids.length - 1])
           : undefined,
       positionLabel,
+      onNavigate,
     };
 
     const detailPageActionForms = actionForms.filter(

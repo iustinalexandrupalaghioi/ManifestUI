@@ -117,8 +117,6 @@ export interface ResourceConfig<
   getRowUrl?: (item: TItem) => string;
   bulkActions?: () => BulkActionsHookResult<TItem>;
   fetchDetail: (id: TId) => Promise<ActionResult<TItem>>;
-  afterAdd?: (id: TId, data: TFormValues) => Promise<void>;
-  afterUpdate?: (id: TId, data: TFormValues) => Promise<void>;
   mutationFns: ResourceMutationFns<TFormValues, TId>;
   tabs?: TabConfig<TItem, TFormValues>[];
   relations?: RelationConfig<TItem, any, any>[];

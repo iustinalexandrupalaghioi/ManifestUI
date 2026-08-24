@@ -8,5 +8,5 @@ export {
   GroupDetailDialog,
   GroupAddPage,
   GroupDetailPage,
-  GroupLookupDialog,
+  GroupPickupDialog,
 } from "./resource"

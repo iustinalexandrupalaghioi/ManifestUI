@@ -6,7 +6,7 @@ export {
   TodoDetailDialog,
   todoHooks,
   todoKeys,
-  TodoLookupDialog,
+  TodoPickupDialog,
   useTodosInfinite,
   useTodo,
 } from "./resource";

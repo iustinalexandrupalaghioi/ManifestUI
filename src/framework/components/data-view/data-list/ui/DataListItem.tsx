@@ -122,8 +122,8 @@ export function DataListItem<TData>({
 
   const eligibleActions = resolvedActions.filter((a) => !a.disabled);
   const hasDelete = !!onDelete && eligibleForDelete.length > 0;
-  const isLookup = !!onSelect;
-  const hasBottomStrip = !isLookup && (eligibleActions.length > 0 || hasDelete);
+  const isPickup = !!onSelect;
+  const hasBottomStrip = !isPickup && (eligibleActions.length > 0 || hasDelete);
 
   const columnGroups = useMemo(
     () => buildColumnGroups(visibleListColumns),
@@ -176,10 +176,10 @@ export function DataListItem<TData>({
       data-state={row.getIsSelected() ? "selected" : undefined}
       className={cn(
         "flex flex-col overflow-hidden rounded-lg border bg-card text-sm transition-colors hover:bg-accent/50",
-        !isLookup && row.getIsSelected() && "border-primary bg-primary/5",
-        !isLookup && isActive && "border-primary bg-primary/5",
+        !isPickup && row.getIsSelected() && "border-primary bg-primary/5",
+        !isPickup && isActive && "border-primary bg-primary/5",
       )}
-      onDoubleClick={() => isLookup && onSelect?.([row])}
+      onDoubleClick={() => isPickup && onSelect?.([row])}
     >
       <div className="flex min-w-0 h-full">
         {onSelect && (
@@ -208,7 +208,7 @@ export function DataListItem<TData>({
           onClick={(e) => onRowClick?.(e, row)}
         >
           <div className="flex items-center gap-2">
-            {!isLookup && selectionEnabled && (
+            {!isPickup && selectionEnabled && (
               <div
                 className="relative overflow-hidden"
                 onClick={(e) => e.stopPropagation()}

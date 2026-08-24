@@ -18,55 +18,44 @@ import { groupsRelations } from "./config/relations";
 import { groupsDescriptor } from "./config/descriptor";
 
 export const groupsResource = defineResource<Group, GroupFormValues>({
-  id: groupsDescriptor.id,
-  noun: groupsDescriptor.noun,
-  queryKey: groupsDescriptor.queryKey,
-  schema: groupSchema,
+  descriptor: groupsDescriptor,
 
-  routes: groupsDescriptor.routes,
+  presentation: {
+    open: "page",
+    add: "dialog",
+  },
 
-  labels: groupsDescriptor,
+  data: {
+    fetchList: fetchGroupList,
+    fetchAggregates: fetchGroupAggregates,
+    fetchDetail: fetchGroupDetail,
+    mutations: { add: addGroup, update: updateGroup, delete: deleteGroups },
+  },
 
-  openMode: "page",
-  addMode: "dialog",
-  dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: false,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: true,
-      viewModeToggle: true,
-      open: true,
+  form: {
+    schema: groupSchema,
+    emptyValues: {
+      name: "",
+      description: "",
     },
+    layout: groupsForm,
   },
 
-  emptyValues: {
-    name: "",
-    description: "",
+  detail: {
+    tabs: groupsTabs,
+    relations: groupsRelations,
   },
 
-  fetchList: fetchGroupList,
-  fetchAggregates: fetchGroupAggregates,
-  fetchDetail: fetchGroupDetail,
-  mutationFns: { add: addGroup, update: updateGroup, delete: deleteGroups },
-
-  columns: groupColumns,
-  listColumns: groupListColumns,
-  pickupColumns: groupColumns,
-  form: groupsForm,
-  tabs: groupsTabs,
-  relations: groupsRelations,
-
-  overviewKey: groupsDescriptor.overviewKey,
-  defaultViewName: groupsDescriptor.defaultViewName,
+  dataView: {
+    overview: {
+      dataTableColumns: groupColumns,
+      dataListColumns: groupListColumns,
+      features: {
+        edit: false,
+      },
+    },
+    pickup: { dataTableColumns: groupColumns },
+  },
 });
 
 export const { hooks: groupHooks, components: groupComponents } = groupsResource;
@@ -82,5 +71,5 @@ export const {
   DetailDialog: GroupDetailDialog,
   AddPage: GroupAddPage,
   DetailPage: GroupDetailPage,
-  LookupDialog: GroupLookupDialog,
+  PickupDialog: GroupPickupDialog,
 } = groupComponents;

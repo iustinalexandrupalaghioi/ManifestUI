@@ -4,7 +4,7 @@ export {
   AttachmentDetailPage,
   AttachmentAddDialog,
   AttachmentDetailDialog,
-  AttachmentLookupDialog,
+  AttachmentPickupDialog,
   attachmentHooks,
   attachmentKeys,
   useAttachment,

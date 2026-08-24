@@ -25,6 +25,7 @@ interface ActionFormDialogProps<TItem> {
   open: boolean;
   onClose: () => void;
   onError?: (result: BulkActionResult) => void;
+  onSuccess?: () => void;
 }
 
 function resolveEmptyValues<TItem, TFormValues>(
@@ -55,6 +56,7 @@ export function ActionFormDialog<TItem>({
   open,
   onClose,
   onError,
+  onSuccess,
 }: ActionFormDialogProps<TItem>) {
   const t = useTranslations("Common");
   const tErr = useTranslations("Errors");
@@ -76,6 +78,7 @@ export function ActionFormDialog<TItem>({
     setIsSaving(true);
     try {
       await submit(items, data);
+      onSuccess?.();
     } catch (err) {
       const result: BulkActionResult =
         err instanceof BulkActionError

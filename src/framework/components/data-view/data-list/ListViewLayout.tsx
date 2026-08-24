@@ -34,6 +34,7 @@ interface ListViewLayoutProps {
   tableId: string;
   listViewId: string;
   table: TTable<any>;
+  totalCount: number;
   isLoading: boolean;
   activeRowId?: string;
   openOnRowClick?: boolean;
@@ -45,7 +46,7 @@ interface ListViewLayoutProps {
   scrollContainerRef: RefObject<HTMLDivElement | null>;
   handleScroll: () => void;
   height?: number;
-  isLookup?: boolean;
+  isPickup?: boolean;
   hasListMode: boolean;
   aggregateValues?: AggregateResult;
   isAggregatesFetching?: boolean;
@@ -57,6 +58,7 @@ export function ListViewLayout({
   tableId,
   listViewId,
   table,
+  totalCount,
   isLoading,
   activeRowId,
   openOnRowClick,
@@ -67,7 +69,7 @@ export function ListViewLayout({
   scrollContainerRef,
   handleScroll,
   height,
-  isLookup,
+  isPickup,
   hasListMode,
   aggregateValues,
   isAggregatesFetching,
@@ -99,7 +101,7 @@ export function ListViewLayout({
     [groupAggregateRows, grouping],
   );
 
-  const hasAggregates = listAggregates.rules.length > 0 && !isLookup;
+  const hasAggregates = listAggregates.rules.length > 0 && !isPickup;
 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const wrapperHeight = useAvailableHeight(wrapperRef, [
@@ -165,11 +167,12 @@ export function ListViewLayout({
         >
           <DataList
             table={table}
+            totalCount={totalCount}
             isLoading={isLoading}
             activeRowId={activeRowId}
             openOnRowClick={openOnRowClick}
             list={list}
-            isLookup={isLookup}
+            isPickup={isPickup}
             grouping={grouping}
             groupAggregateLookup={groupAggregateLookup}
             isGroupAggregatesFetching={isGroupAggregatesFetching}

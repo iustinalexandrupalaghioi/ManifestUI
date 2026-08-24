@@ -10,6 +10,7 @@ import type {
 } from "../components/data-view/features/filtering";
 import type { FormConfig, SectionConfig } from "../components/form/types/types";
 import type { TranslatableText } from "./i18n-types";
+import type { ResourceActionConfig } from "../core/resource-action-config";
 
 export interface FormProps<TItem, TFormValues> {
   item?: TItem;
@@ -58,17 +59,20 @@ export interface ResourceComponentsConfig<TItem, TFormValues> {
   navigationColumnVisibility?: VisibilityState;
   cardNavigationColumnVisibility?: VisibilityState;
   pickupColumnVisibility?: VisibilityState;
+  pickupListColumnVisibility?: VisibilityState;
   listColumnVisibility?: VisibilityState;
   overviewSlots?: OverviewSlots<TItem>;
   renderOverview?: (props: OverviewRenderProps<TItem>) => ReactNode;
   detailSlots?: DetailSlots<TItem>;
   permissions?: ResourcePermissions;
   dataView?: {
-    features?: DataViewFeaturesConfig;
     overview?: { features?: DataViewFeaturesConfig };
-    lookup?: { features?: DataViewFeaturesConfig };
+    pickup?: { features?: DataViewFeaturesConfig };
     dataTable?: DataTableConfig;
   };
+  add?: ResourceActionConfig;
+  open?: ResourceActionConfig;
+  delete?: ResourceActionConfig;
 }
 
 export interface OverviewSlots<TItem> {

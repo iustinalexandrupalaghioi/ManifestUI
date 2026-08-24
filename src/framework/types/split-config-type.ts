@@ -1,13 +1,10 @@
 export interface SplitConfig {
-  side?: "left" | "right";
-  /** Percent (0-100) of the split container's width. */
+  side?: "left" | "right" | "top" | "bottom";
   defaultWidth?: number;
-  /** Percent (0-100) of the split container's width. */
   minWidth?: number;
-  /** Percent (0-100) of the split container's width. */
   maxWidth?: number;
   collapsible?: boolean;
-  onOpen?: "selectFirst" | "selectAll" | "none";
+  onOpen?: "open-first" | "open-all" | "none";
 }
 
 export const DEFAULT_SPLIT_CONFIG: Required<SplitConfig> = {

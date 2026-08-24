@@ -6,6 +6,7 @@ import {
 import { stashNavigationState } from "@/framework/lib/navigationHandoff";
 import { getItemId } from "../../resource-id";
 import type { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
+import type { SplitConfig } from "@/framework/types/split-config-type";
 
 export function useOverviewNavigation<TItem>({
   canAdd,
@@ -17,6 +18,7 @@ export function useOverviewNavigation<TItem>({
   router,
   setAddOpen,
   isSplitDesktop,
+  splitOnOpen,
   selectedRows,
   idField,
   openMode,
@@ -35,6 +37,7 @@ export function useOverviewNavigation<TItem>({
   router: ReturnType<typeof useTransitionRouter>;
   setAddOpen: (open: boolean) => void;
   isSplitDesktop: boolean;
+  splitOnOpen: SplitConfig["onOpen"];
   selectedRows: TItem[];
   idField: string;
   openMode?: "dialog" | "page" | "split";
@@ -53,10 +56,7 @@ export function useOverviewNavigation<TItem>({
         stashNavigationState(
           addRoute,
           Object.fromEntries(
-            preFilters.map((f) => [
-              preFilterToFormKey(f, formConfig),
-              f.value,
-            ]),
+            preFilters.map((f) => [preFilterToFormKey(f, formConfig), f.value]),
           ),
         );
       }
@@ -88,7 +88,9 @@ export function useOverviewNavigation<TItem>({
       items.length === 1 &&
       !isPartOfAmbientSelection
     ) {
-      if (isSplitDesktop) clearNavigator(overviewKey);
+      if (isSplitDesktop && splitOnOpen !== "open-all") {
+        clearNavigator(overviewKey);
+      }
       setOpeningItem(item);
     } else {
       const isMultiSelection = items.length > 1 || isPartOfAmbientSelection;

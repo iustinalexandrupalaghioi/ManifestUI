@@ -23,54 +23,43 @@ import { usersDescriptor } from "./config/descriptor";
 // unreachable through the UI even though defineResource always generates
 // an AddPage component for it.
 export const usersResource = defineResource<User, UserFormValues, string>({
-  id: usersDescriptor.id,
-  noun: usersDescriptor.noun,
-  queryKey: usersDescriptor.queryKey,
-  schema: userSchema,
+  descriptor: usersDescriptor,
 
-  routes: usersDescriptor.routes,
+  presentation: {
+    open: "page",
+    add: "page",
+  },
 
-  labels: usersDescriptor,
+  data: {
+    fetchList: fetchUserList,
+    fetchAggregates: fetchUserAggregates,
+    fetchDetail: fetchUserDetail,
+    mutations: { add: addUser, update: updateUser, delete: deleteUsers },
+  },
 
-  openMode: "page",
-  addMode: "page",
-  dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: false,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: true,
-      viewModeToggle: true,
-      open: true,
+  form: {
+    schema: userSchema,
+    emptyValues: {
+      administrator: false,
     },
+    layout: usersForm,
   },
 
-  emptyValues: {
-    administrator: false,
+  detail: {
+    tabs: userTabs,
+    relations: usersRelations,
   },
 
-  fetchList: fetchUserList,
-  fetchAggregates: fetchUserAggregates,
-  fetchDetail: fetchUserDetail,
-  mutationFns: { add: addUser, update: updateUser, delete: deleteUsers },
-
-  columns: userColumns,
-  listColumns: userListColumns,
-  pickupColumns: userColumns,
-
-  form: usersForm,
-  tabs: userTabs,
-  relations: usersRelations,
-  overviewKey: usersDescriptor.overviewKey,
-  defaultViewName: usersDescriptor.defaultViewName,
+  dataView: {
+    overview: {
+      dataTableColumns: userColumns,
+      dataListColumns: userListColumns,
+      features: {
+        edit: false,
+      },
+    },
+    pickup: { dataTableColumns: userColumns },
+  },
 });
 
 export const { hooks: userHooks, components: userComponents } = usersResource;
@@ -86,5 +75,5 @@ export const {
   DetailDialog: UserDetailDialog,
   AddPage: UserAddPage,
   DetailPage: UserDetailPage,
-  LookupDialog: UserLookupDialog,
+  PickupDialog: UserPickupDialog,
 } = userComponents;

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useLocale } from "next-intl";
 
 import { CustomCombobox } from "@/framework/components/ui/CustomCombobox";
@@ -9,31 +8,13 @@ import { CustomTextarea } from "@/framework/components/ui/CustomTextarea";
 import { CustomYesNoSwitch } from "@/framework/components/ui/CustomYesNoSwitch";
 import { cn } from "@/framework/lib/utils";
 import { resolveLabel, resolveOptions } from "@/framework/lib/resolveLabel";
-import type { TranslatableText } from "@/framework/types/i18n-types";
 
 import { CustomDateInput } from "@/framework/components/ui/CustomDateInput";
 import { FormFieldBase } from "../form-fields/FormFieldBase";
-import { FormLookupInput } from "../form-fields/FormLookupInput";
-import {
-  useLookupField,
-  resolveDisplayValue,
-  type DisplayField,
-} from "../hooks/useLookupfield";
-import type { FieldCondition } from "../types/types";
+import type { DisplayField } from "../lib/pickupDisplayField";
 import { spanClass } from "./FieldRenderer";
 import { CustomDateTimeInput } from "@/framework/components/ui/CustomDateTimeInput";
 import { CustomTimeInput } from "@/framework/components/ui/CustomTimeInput";
-
-export interface LookupFieldConfig {
-  type: "lookup";
-  name: string;
-  label: TranslatableText;
-  span?: number;
-  className?: string;
-  disabled?: boolean | FieldCondition;
-  resource: string;
-  displayFields?: DisplayField[];
-}
 
 export function DisplayFieldRenderer({
   field,
@@ -150,65 +131,5 @@ export function DisplayFieldRenderer({
         readOnly
       />
     </FormFieldBase>
-  );
-}
-
-// ─────────────────────────────────────────────
-// LookupFieldRenderer
-// ─────────────────────────────────────────────
-
-export function LookupFieldRenderer({
-  field,
-  disabled,
-  activeCols,
-}: {
-  field: LookupFieldConfig;
-  disabled?: boolean | FieldCondition;
-  activeCols?: number;
-}) {
-  const [open, setOpen] = useState(false);
-  const locale = useLocale();
-  const rawDisabled = typeof disabled === "function" ? disabled() : disabled;
-  const isDisabled =
-    rawDisabled ||
-    (typeof field.disabled === "function" ? field.disabled() : field.disabled);
-
-  const {
-    displayRecord,
-    handleSelect,
-    handleClear,
-    displayFields,
-    LookupDialog,
-  } = useLookupField({
-    fieldName: field.name,
-    resourceId: field.resource,
-    displayFields: field.displayFields,
-  });
-
-  return (
-    <>
-      <FormLookupInput
-        name={field.name}
-        label={resolveLabel(field.label, locale)}
-        displayKey="id"
-        disabled={isDisabled}
-        className={cn(spanClass(field.span, activeCols), field.className)}
-        setOpen={isDisabled ? undefined : setOpen}
-        onClear={handleClear}
-      />
-
-      {displayFields.map((df) => (
-        <DisplayFieldRenderer
-          key={df.from}
-          field={df}
-          value={resolveDisplayValue(df, displayRecord)}
-          activeCols={activeCols}
-        />
-      ))}
-
-      {!isDisabled && LookupDialog && open && (
-        <LookupDialog open={open} setOpen={setOpen} onSelect={handleSelect} />
-      )}
-    </>
   );
 }

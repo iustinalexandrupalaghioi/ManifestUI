@@ -23,6 +23,7 @@ export interface FormHeaderProps {
   positionLabel?: string;
   guard?: (fn: () => void) => void;
   toolbar?: ReactNode;
+  onNavigate?: (path: string) => void;
 }
 
 export function FormHeader({
@@ -35,6 +36,7 @@ export function FormHeader({
   positionLabel,
   guard,
   toolbar,
+  onNavigate,
 }: FormHeaderProps) {
   const hasNav = prevPath !== undefined || nextPath !== undefined;
   const router = useTransitionRouter();
@@ -50,8 +52,11 @@ export function FormHeader({
   const effectiveGuard = guard ?? formPage?.guard;
 
   const go = (path: string) => {
-    if (effectiveGuard) effectiveGuard(() => router.replace(path));
-    else router.replace(path);
+    const action = onNavigate
+      ? () => onNavigate(path)
+      : () => router.replace(path);
+    if (effectiveGuard) effectiveGuard(action);
+    else action();
   };
 
   return (

@@ -21,7 +21,7 @@ export type DataViewFeatureId =
   | "filtering"
   | "aggregates"
   | "grouping"
-  | "editing"
+  | "edit"
   | "list"
   | "resizing"
   | "pinning"
@@ -41,7 +41,7 @@ export const FEATURE_CATALOG_ORDER: DataViewFeatureId[] = [
   "filtering",
   "aggregates",
   "grouping",
-  "editing",
+  "edit",
   "list",
   "resizing",
   "pinning",
@@ -58,7 +58,7 @@ export const FEATURE_CATALOG: Record<DataViewFeatureId, DataViewFeature> = {
   filtering: filteringFeature,
   aggregates: aggregatesFeature,
   grouping: groupingFeature,
-  editing: editingFeature,
+  edit: editingFeature,
   list: listFeature,
   resizing: resizingFeature,
   pinning: pinningFeature,

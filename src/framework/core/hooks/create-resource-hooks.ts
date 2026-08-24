@@ -27,8 +27,6 @@ export function createResourceHooks<
     openMode = "page",
     addMode = "page",
     splitConfig,
-    afterAdd,
-    afterUpdate,
   } = config
 
   const resolvedSplitConfig = { ...DEFAULT_SPLIT_CONFIG, ...splitConfig }
@@ -53,8 +51,6 @@ export function createResourceHooks<
     addMode,
     splitConfig: resolvedSplitConfig,
     isDeleteEligible,
-    afterAdd,
-    afterUpdate,
 
     // Hooks
     useList: createListHook(config, keys),

@@ -1,8 +1,8 @@
 "use client";
 
 import DataView from "@/framework/components/data-view/DataView";
-import { DEFAULT_FEATURES } from "@/framework/components/data-view/core/features/catalog";
 import { resolveFeatures } from "@/framework/components/data-view/core/features/resolveFeatures";
+import { resolveResourceAction } from "../resource-action-config";
 import {
   useOverviewSelection,
   useOverviewState,
@@ -52,7 +52,7 @@ import type {
 } from "../../types/resource-components-types";
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
-import { useOverviewActionsBundle } from "../hooks/useOerviewActionsBundle";
+import { useOverviewActionsBundle } from "../hooks/useOverviewActionsBundle";
 import { getItemId } from "../resource-id";
 import { OverviewActionChrome } from "./OverviewActionChrome";
 import { SplitOverviewShell } from "./SplitOverviewShell";
@@ -91,6 +91,7 @@ export function createOverview<
   DetailPage: React.ComponentType<{
     id?: string;
     onClose?: () => void;
+    onNavigate?: (id: string) => void;
   }>,
 ) {
   const {
@@ -102,15 +103,24 @@ export function createOverview<
     cardNavigationColumnVisibility,
     listColumnVisibility,
     dataView,
+    add: addConfig,
+    open: openConfig,
+    delete: deleteConfig,
   } = config;
 
-  const overviewFeaturesConfig = dataView?.overview?.features ?? dataView?.features;
-  const resolvedFeatures = overviewFeaturesConfig
-    ? resolveFeatures(overviewFeaturesConfig)
-    : DEFAULT_FEATURES;
-  const editingEnabled = resolvedFeatures.some((f) => f.id === "editing");
+  const { toolbarEnabled: addToolbarEnabled } = resolveResourceAction(addConfig);
+  const { toolbarEnabled: openToolbarEnabled, rowEnabled: openRowEnabled } =
+    resolveResourceAction(openConfig);
+  const { toolbarEnabled: deleteToolbarEnabled, rowEnabled: deleteRowEnabled } =
+    resolveResourceAction(deleteConfig);
+
+  const resolvedFeatures = resolveFeatures({
+    ...dataView?.overview?.features,
+    open: openRowEnabled,
+  });
+  const editingEnabled = resolvedFeatures.some((f) => f.id === "edit");
   const selectionEnabled = resolvedFeatures.some((f) => f.id === "selection");
-  const openEnabled = resolvedFeatures.some((f) => f.id === "open");
+  const openEnabled = openRowEnabled;
 
   const {
     idField,
@@ -169,8 +179,11 @@ export function createOverview<
     const { isSuccess: permissionsLoaded } = usePermissions();
 
     const canRead = resolvePermission(config.permissions?.read);
-    const canAdd = resolvePermission(config.permissions?.add);
-    const canDelete = resolvePermission(config.permissions?.delete);
+    const canAdd =
+      resolvePermission(config.permissions?.add) && addToolbarEnabled;
+    const canDeletePermission = resolvePermission(config.permissions?.delete);
+    const canDelete = canDeletePermission && deleteRowEnabled;
+    const canDeleteToolbar = canDeletePermission && deleteToolbarEnabled;
     const canUpdate = resolvePermission(config.permissions?.update);
     const gridEditable = canUpdate && editingEnabled;
 
@@ -329,8 +342,13 @@ export function createOverview<
       openingItem,
       idField,
       splitOnOpen: splitConfig.onOpen,
+      hasNextPage,
+      isFetchingNextPage,
+      fetchNextPage,
+      overviewKey,
+      currentPath,
       setOpeningItem,
-      setRowSelection,
+      setNavigator,
     });
 
     const { handleAdd, handleOpen } = useOverviewNavigation<TItem>({
@@ -343,6 +361,7 @@ export function createOverview<
       router,
       setAddOpen,
       isSplitDesktop,
+      splitOnOpen: splitConfig.onOpen,
       selectedRows,
       idField,
       openMode,
@@ -415,8 +434,11 @@ export function createOverview<
         selectedRows={selectedRows}
         actions={actions}
         getRowUrl={getRowUrl}
-        isDeleteEligible={canDelete ? isDeleteEligible : () => false}
-        onOpen={canRead ? (rows) => handleOpen(rows) : undefined}
+        isDeleteEligible={canDeleteToolbar ? isDeleteEligible : () => false}
+        deleteToolbarEnabled={canDeleteToolbar}
+        onOpen={
+          canRead && openToolbarEnabled ? (rows) => handleOpen(rows) : undefined
+        }
         onAdd={canAdd ? handleAdd : undefined}
         onBack={slotId ? undefined : () => router.back()}
         setRowSelection={setRowSelection}
@@ -570,6 +592,16 @@ export function createOverview<
                 key={activeRowId}
                 id={activeRowId}
                 onClose={() => setOpeningItem(null)}
+                onNavigate={(navId) => {
+                  const item = allItems.find(
+                    (i) =>
+                      getItemId(
+                        i as Record<string, unknown>,
+                        idField,
+                      ).toString() === navId,
+                  );
+                  if (item) setOpeningItem(item);
+                }}
               />
             ) : null
           }

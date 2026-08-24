@@ -435,22 +435,26 @@ export function DataListColumnManager<TData>({
           )}
         </div>
 
-        <SheetFooter className="flex shrink-0 flex-row justify-between border-t px-4 py-3">
-          <Button variant="ghost" size="sm" onClick={handleReset}>
+        <SheetFooter className="shrink-0 flex-col gap-2 border-t px-4 py-3">
+          <Button size="sm" className="w-full" onClick={handleApply}>
+            {t("apply")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={handleReset}
+          >
             {t("resetToDefault")}
           </Button>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-            >
-              {tc("cancel")}
-            </Button>
-            <Button size="sm" onClick={handleApply}>
-              {t("apply")}
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full"
+            onClick={() => onOpenChange(false)}
+          >
+            {tc("cancel")}
+          </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

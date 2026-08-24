@@ -22,7 +22,7 @@ export function DirectPickupCell({
 }) {
   const [open, setOpen] = useState(false);
   const entry = getResource(resource);
-  const LookupDialog = entry?.components?.LookupDialog;
+  const PickupDialog = entry?.components?.PickupDialog;
 
   const setOpenAndNotify = (next: boolean) => {
     setOpen(next);
@@ -36,7 +36,7 @@ export function DirectPickupCell({
       <div className="min-w-0 flex-1">
         <FieldRenderer field={bareField} item={item} activeCols={1} />
       </div>
-      {LookupDialog && (
+      {PickupDialog && (
         <Button
           type="button"
           variant="ghost"
@@ -47,8 +47,8 @@ export function DirectPickupCell({
           <SearchIcon className="size-3.5" />
         </Button>
       )}
-      {open && LookupDialog && (
-        <LookupDialog
+      {open && PickupDialog && (
+        <PickupDialog
           open={open}
           setOpen={setOpenAndNotify}
           onSelect={(record: Record<string, unknown>) => {

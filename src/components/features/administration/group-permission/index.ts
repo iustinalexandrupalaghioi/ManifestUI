@@ -8,5 +8,5 @@ export {
   GroupPermissionDetailDialog,
   GroupPermissionAddPage,
   GroupPermissionDetailPage,
-  GroupPermissionLookupDialog,
+  GroupPermissionPickupDialog,
 } from "./resource"

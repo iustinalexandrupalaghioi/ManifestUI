@@ -10,7 +10,7 @@ export function resolveFeatures(
   map?: DataViewFeaturesConfig,
 ): DataViewFeature[] {
   if (!map) return DEFAULT_FEATURES;
-  return FEATURE_CATALOG_ORDER.filter((id) => map[id] === true).map(
+  return FEATURE_CATALOG_ORDER.filter((id) => map[id] !== false).map(
     (id) => FEATURE_CATALOG[id],
   );
 }

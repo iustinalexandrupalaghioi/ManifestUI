@@ -8,5 +8,5 @@ export {
   UserDetailDialog,
   UserAddPage,
   UserDetailPage,
-  UserLookupDialog,
+  UserPickupDialog,
 } from "./resource"

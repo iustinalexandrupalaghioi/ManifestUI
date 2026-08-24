@@ -5,7 +5,7 @@ import type { FieldTabConfig } from "../../types/tab-config-type"
 import { createAddPage } from "./create-add-page"
 import { createDetailDialog } from "./create-detail-dialog"
 import { createDetailPage } from "./create-detail-page"
-import { createLookupDialog } from "./create-lookup-dialog"
+import { createPickupDialog } from "./create-pickup-dialog"
 import { createOverview } from "./create-overview"
 import type { ResourceHooks } from "../hooks/create-resource-hooks"
 import { createAddDialog } from "./create-add-dialog"
@@ -23,7 +23,7 @@ export function createResourceComponents<
   const DetailDialog = createDetailDialog(hooks, config)
   const AddPage = createAddPage(hooks, config, addTabs)
   const DetailPage = createDetailPage(hooks, config)
-  const LookupDialog = createLookupDialog(hooks, config)
+  const PickupDialog = createPickupDialog(hooks, config)
   const Overview = createOverview(hooks, config, AddDialog, DetailDialog, DetailPage)
 
   return {
@@ -32,6 +32,6 @@ export function createResourceComponents<
     DetailDialog,
     AddPage,
     DetailPage,
-    LookupDialog,
+    PickupDialog,
   }
 }

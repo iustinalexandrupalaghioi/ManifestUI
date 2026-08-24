@@ -9,7 +9,7 @@ export interface ResourceComponents {
   AddDialog?: ComponentType<any>
   DetailPage?: ComponentType
   DetailDialog?: ComponentType<any>
-  LookupDialog: ComponentType<any>
+  PickupDialog: ComponentType<any>
 }
 
 export interface ResourceEntry<
@@ -18,7 +18,7 @@ export interface ResourceEntry<
   TId extends ResourceId = number,
 > {
   hooks: ResourceHooks<TItem, TFormValues, TId>
-  LookupDialog: (props: {
+  PickupDialog: (props: {
     open: boolean
     setOpen: Dispatch<SetStateAction<boolean>>
     onSelect?: (item: TItem) => void

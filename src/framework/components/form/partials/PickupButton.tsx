@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { getResource } from "@/framework/registry/ResourceRegistry";
 import type { PickupFillField } from "../types/types";
-import { DisplayFieldRenderer } from "../form-register/LookupFieldRenderer";
+import { DisplayFieldRenderer } from "../form-register/DisplayFieldRenderer";
 
 interface PickupButtonProps {
   resource: string;
@@ -30,7 +30,7 @@ export function PickupButton({
   const { setValue, watch } = useFormContext();
 
   const entry = getResource(resource);
-  const LookupDialog = entry?.components?.LookupDialog;
+  const PickupDialog = entry?.components?.PickupDialog;
 
   const targetValue = watch(targetField);
   const hasTarget = !!targetValue && targetValue !== 0 && targetValue !== "";
@@ -79,7 +79,7 @@ export function PickupButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item, detailResult?.data, detailResult?.isLoading, fillFields]);
 
-  if (!LookupDialog) return null;
+  if (!PickupDialog) return null;
 
   const handleSelect = (record: Record<string, unknown>) => {
     // Fill main target field
@@ -127,7 +127,7 @@ export function PickupButton({
         <SearchIcon className="h-4 w-4" />
       </Button>
       {open && (
-        <LookupDialog
+        <PickupDialog
           open={open}
           setOpen={setOpen}
           onSelect={handleSelect as any}

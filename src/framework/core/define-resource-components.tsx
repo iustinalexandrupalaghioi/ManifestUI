@@ -26,11 +26,11 @@ export function defineResourceComponents<
   hooks: ResourceHooks<TItem, TFormValues, TId>,
   config: DefinedResourceConfig<TItem, TFormValues, TId>,
 ) {
-  const detailFormConfig = config.form;
-  const addFormConfig = config.addForm ?? config.form;
+  const detailFormConfig = config.form.layout;
+  const addFormConfig = config.form.addLayout ?? config.form.layout;
 
   const Form =
-    config.Form ??
+    config.form.component ??
     (detailFormConfig
       ? ({
           item,
@@ -57,7 +57,7 @@ export function defineResourceComponents<
       : undefined);
 
   const AddForm =
-    config.Form ??
+    config.form.component ??
     (addFormConfig
       ? ({
           item,
@@ -83,14 +83,16 @@ export function defineResourceComponents<
         )
       : undefined);
 
-  // ── Columns — support ColumnConfig[] or legacy function/array ────────────
+  // ── Columns ────────────────────────────────────────────────────────────
   const isColumnConfig = (cols: any): cols is ColumnConfig[] =>
     Array.isArray(cols) && cols.length > 0 && "field" in cols[0];
 
-  const rawColumns = config.list?.columns ?? config.columns;
-  const rawListColumns = config.listColumns;
+  const rawColumns = config.dataView.overview.dataTableColumns;
+  const rawListColumns = config.dataView.overview.dataListColumns;
+  const rawPickupColumns = config.dataView.pickup?.dataTableColumns;
+  const rawPickupListColumns = config.dataView.pickup?.dataListColumns;
 
-  const buildColumnsFn = (raw: typeof rawColumns) =>
+  const buildColumnsFn = (raw: ColumnConfig[] | undefined) =>
     raw
       ? typeof raw === "function"
         ? raw
@@ -100,44 +102,55 @@ export function defineResourceComponents<
           : () => raw as any
       : undefined;
 
+  const mergeByColumnId = <T extends ColumnDef<TItem>>(
+    tableCols: T[],
+    listCols: T[],
+  ) => {
+    const listById = new Map(listCols.map((c) => [c.id, c]));
+    const merged = tableCols.map((c) => {
+      const listCol = c.id ? listById.get(c.id) : undefined;
+      if (!listCol) return c;
+      listById.delete(c.id!);
+      return { ...c, meta: { ...c.meta, ...listCol.meta } };
+    });
+    return [...merged, ...listById.values()];
+  };
+
   const createTableColumnsFn = buildColumnsFn(rawColumns);
   const createListColumnsFn = buildColumnsFn(rawListColumns);
 
   const createColumns =
     createTableColumnsFn || createListColumnsFn
-      ? (locale: string) => {
-          const tableCols: ColumnDef<TItem>[] =
-            createTableColumnsFn?.(locale) ?? [];
-          const listCols: ColumnDef<TItem>[] =
-            createListColumnsFn?.(locale) ?? [];
-          const listById = new Map(listCols.map((c) => [c.id, c]));
-          const merged = tableCols.map((c) => {
-            const listCol = c.id ? listById.get(c.id) : undefined;
-            if (!listCol) return c;
-            listById.delete(c.id!);
-            return { ...c, meta: { ...c.meta, ...listCol.meta } };
-          });
-          return [...merged, ...listById.values()];
-        }
+      ? (locale: string) =>
+          mergeByColumnId(
+            createTableColumnsFn?.(locale) ?? [],
+            createListColumnsFn?.(locale) ?? [],
+          )
       : undefined;
 
-  // ── Pickup columns ────────────────────────────────────────────────────────
-  const rawPickupColumns = config.list?.pickupColumns ?? config.pickupColumns;
+  const buildPickupColumnsFn = (raw: ColumnConfig[] | undefined) =>
+    raw
+      ? typeof raw === "function"
+        ? raw
+        : isColumnConfig(raw)
+          ? (_onSelect: (item: TItem) => void, locale: string) =>
+              createColumnsFromConfig<TItem>(raw as ColumnConfig[], locale)
+          : (onSelect: (item: TItem) => void) => (raw as any)(onSelect)
+      : undefined;
 
-  const createPickupColumns = rawPickupColumns
-    ? typeof rawPickupColumns === "function"
-      ? rawPickupColumns
-      : isColumnConfig(rawPickupColumns)
-        ? (_onSelect: (item: TItem) => void, locale: string) =>
-            createColumnsFromConfig<TItem>(
-              rawPickupColumns as ColumnConfig[],
-              locale,
-            )
-        : (onSelect: (item: TItem) => void) =>
-            (rawPickupColumns as any)(onSelect)
-    : undefined;
+  const createPickupTableColumnsFn = buildPickupColumnsFn(rawPickupColumns);
+  const createPickupListColumnsFn = buildPickupColumnsFn(rawPickupListColumns);
 
-  // ── Visibility — auto-generate from ColumnConfig or use manual ───────────
+  const createPickupColumns =
+    createPickupTableColumnsFn || createPickupListColumnsFn
+      ? (onSelect: (item: TItem) => void, locale: string) =>
+          mergeByColumnId(
+            createPickupTableColumnsFn?.(onSelect, locale) ?? [],
+            createPickupListColumnsFn?.(onSelect, locale) ?? [],
+          )
+      : undefined;
+
+  // ── Visibility — always auto-derived from ColumnConfig ────────────────────
   const tableColumnConfigs = isColumnConfig(rawColumns)
     ? (rawColumns as ColumnConfig[])
     : null;
@@ -147,11 +160,14 @@ export function defineResourceComponents<
   const pickupColumnConfigs = isColumnConfig(rawPickupColumns)
     ? (rawPickupColumns as ColumnConfig[])
     : null;
+  const pickupListColumnConfigs = isColumnConfig(rawPickupListColumns)
+    ? (rawPickupListColumns as ColumnConfig[])
+    : null;
 
   const computeVisibility = (
     own: ColumnConfig[] | null,
     other: ColumnConfig[] | null,
-    mode: "default" | "navigation",
+    mode: "default" | "navigation" | "pickup",
   ) => {
     if (!own) return undefined;
     const visibility = createVisibilityFromConfig(own, mode);
@@ -161,29 +177,38 @@ export function defineResourceComponents<
     return visibility;
   };
 
-  const columnVisibility =
-    config.list?.defaultVisibility ??
-    computeVisibility(tableColumnConfigs, listColumnConfigs, "default");
+  const columnVisibility = computeVisibility(
+    tableColumnConfigs,
+    listColumnConfigs,
+    "default",
+  );
+  const navigationColumnVisibility = computeVisibility(
+    tableColumnConfigs,
+    listColumnConfigs,
+    "navigation",
+  );
+  const listColumnVisibility = computeVisibility(
+    listColumnConfigs,
+    tableColumnConfigs,
+    "default",
+  );
+  const cardNavigationColumnVisibility = computeVisibility(
+    listColumnConfigs,
+    tableColumnConfigs,
+    "navigation",
+  );
+  const pickupColumnVisibility = computeVisibility(
+    pickupColumnConfigs,
+    pickupListColumnConfigs,
+    "pickup",
+  );
+  const pickupListColumnVisibility = computeVisibility(
+    pickupListColumnConfigs,
+    pickupColumnConfigs,
+    "pickup",
+  );
 
-  const navigationColumnVisibility =
-    config.list?.navigationColumnVisibility ??
-    computeVisibility(tableColumnConfigs, listColumnConfigs, "navigation");
-
-  const listColumnVisibility =
-    config.list?.listColumnVisibility ??
-    computeVisibility(listColumnConfigs, tableColumnConfigs, "default");
-
-  const cardNavigationColumnVisibility =
-    config.list?.cardNavigationColumnVisibility ??
-    computeVisibility(listColumnConfigs, tableColumnConfigs, "navigation");
-
-  const pickupColumnVisibility =
-    config.list?.pickupColumnVisibility ??
-    (pickupColumnConfigs
-      ? createVisibilityFromConfig(pickupColumnConfigs, "pickup")
-      : undefined);
-
-  const addTabs = config.addTabs ?? [];
+  const addTabs = config.form.addTabs ?? [];
 
   const dialogWidths = {
     1: "sm:max-w-lg",
@@ -210,51 +235,62 @@ export function defineResourceComponents<
     );
   }
 
+  const resourceId = config.descriptor.id;
+
   const permissions: ResourcePermissions = {
-    read: () => hasPermission(`${config.id}:read`),
-    add: () => hasPermission(`${config.id}:add`),
-    update: () => hasPermission(`${config.id}:update`),
-    delete: () => hasPermission(`${config.id}:delete`),
+    read: () => hasPermission(`${resourceId}:read`),
+    add: () => hasPermission(`${resourceId}:add`),
+    update: () => hasPermission(`${resourceId}:update`),
+    delete: () => hasPermission(`${resourceId}:delete`),
   };
 
   const componentsConfig: ResourceComponentsConfig<TItem, TFormValues> = {
-    id: config.id,
+    id: resourceId,
     Form,
     AddForm,
     createColumns,
     createPickupColumns,
     formConfig: addFormConfig,
-    overviewKey: config.overviewKey,
-    defaultViewName: config.defaultViewName,
-    getOverviewTitle: config.getOverviewTitle,
+    overviewKey: config.descriptor.overviewKey,
+    defaultViewName: config.descriptor.defaultViewName,
+    getOverviewTitle: config.dataView.overview.title,
     dialog: {
       className:
-        config.dialog?.className ?? getDefaultDialogClassName(detailFormConfig),
+        config.presentation?.dialog?.className ??
+        getDefaultDialogClassName(detailFormConfig),
     },
     columnVisibility,
     pickupColumnVisibility,
+    pickupListColumnVisibility,
     navigationColumnVisibility,
     cardNavigationColumnVisibility,
     listColumnVisibility,
-    overviewSlots: config.overviewSlots,
-    renderOverview: config.renderOverview,
-    detailSlots: config.detailSlots,
+    overviewSlots: config.dataView.overview.slots,
+    renderOverview: config.dataView.overview.render,
+    detailSlots: config.detail?.slots,
     permissions,
-    dataView: config.dataView,
+    dataView: {
+      overview: { features: config.dataView.overview.features },
+      pickup: { features: config.dataView.pickup?.features },
+      dataTable: config.dataView.dataTable,
+    },
+    add: config.add,
+    open: config.open,
+    delete: config.delete,
   };
 
   const components = createResourceComponents(hooks, componentsConfig, addTabs);
 
-  registerResource(config.id, {
+  registerResource(resourceId, {
     hooks,
-    LookupDialog: components.LookupDialog,
+    PickupDialog: components.PickupDialog,
     components: {
       Overview: components.Overview,
       AddPage: components.AddPage,
       AddDialog: components.AddDialog,
       DetailPage: components.DetailPage,
       DetailDialog: components.DetailDialog,
-      LookupDialog: components.LookupDialog,
+      PickupDialog: components.PickupDialog,
     },
   });
 

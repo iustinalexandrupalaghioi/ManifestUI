@@ -389,7 +389,7 @@ export function useDataView<TData, TValue>(
       }
       getCoreStore(tableId).getState().setColumnSizeVars(colSizes);
     });
-  }, [table.getState().columnSizing]);
+  }, [table.getState().columnSizing, table.getState().columnVisibility]);
 
   // ── Layout ───────────────────────────────────────────────────────────────
   const autoHeight = useAvailableHeight(

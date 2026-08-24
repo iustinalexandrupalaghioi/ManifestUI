@@ -16,7 +16,6 @@ import {
 } from "./config/api";
 import { todosForm } from "./config/form";
 import { todoSchema, type TodoFormValues } from "./config/schema";
-import { todosTabs } from "./config/tabs";
 import { todosRelations } from "./config/relations";
 import {
   todoColumns,
@@ -31,72 +30,53 @@ import { todosDescriptor } from "./config/descriptor";
 // ─────────────────────────────────────────────
 
 export const todosResource = defineResource<Todo, TodoFormValues>({
-  id: todosDescriptor.id,
-  noun: todosDescriptor.noun,
-  queryKey: todosDescriptor.queryKey,
-  schema: todoSchema,
+  descriptor: todosDescriptor,
 
-  routes: todosDescriptor.routes,
+  presentation: {
+    open: "page",
+    add: "page",
+    split: { onOpen: "open-first" },
+  },
 
-  labels: todosDescriptor,
+  data: {
+    fetchList: fetchTodoList,
+    fetchAggregates: fetchTodoAggregates,
+    fetchGroupAggregates: fetchTodoGroupAggregates,
+    fetchDetail: fetchTodoDetail,
+    mutations: { add: addTodo, update: updateTodo, delete: deleteTodos },
+  },
 
-  openMode: "page",
-  addMode: "page",
+  form: {
+    schema: todoSchema,
+    emptyValues: {
+      title: "",
+      completed: false,
+      user_id: 0,
+    },
+    layout: todosForm,
+  },
 
-  splitConfig: {
-    onOpen: "selectFirst",
+  detail: {
+    // tabs: todosTabs,
+    relations: todosRelations,
+    slots: todosDetailSlots,
+    defaultTab: "attachments",
+    defaultFormOpen: true,
+  },
+
+  actions: {
+    forms: [completeWithNotes],
+    bulk: useTodoBulkActions,
+    isDeleteEligible: (todo) => !!todo.completed,
   },
 
   dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: true,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: true,
-      viewModeToggle: true,
-      open: true,
+    overview: {
+      dataTableColumns: todoColumns,
+      dataListColumns: todoListColumns,
     },
+    pickup: { dataTableColumns: todoPickupColumns },
   },
-
-  emptyValues: {
-    title: "",
-    completed: false,
-    user_id: 0,
-  },
-
-  fetchList: fetchTodoList,
-  fetchAggregates: fetchTodoAggregates,
-  fetchGroupAggregates: fetchTodoGroupAggregates,
-  fetchDetail: fetchTodoDetail,
-  mutationFns: { add: addTodo, update: updateTodo, delete: deleteTodos },
-
-  isDeleteEligible: (todo) => !!todo.completed,
-  bulkActions: useTodoBulkActions,
-
-  columns: todoColumns,
-  listColumns: todoListColumns,
-  pickupColumns: todoPickupColumns,
-
-  form: todosForm,
-
-  // tabs: todosTabs,
-  relations: todosRelations,
-  detailSlots: todosDetailSlots,
-  actionForms: [completeWithNotes],
-
-  defaultTab: "attachments",
-  defaultFormOpen: true,
-
-  overviewKey: todosDescriptor.overviewKey,
-  defaultViewName: todosDescriptor.defaultViewName,
 });
 
 export const { hooks: todoHooks, components: todoComponents } = todosResource;
@@ -112,5 +92,5 @@ export const {
   DetailDialog: TodoDetailDialog,
   AddPage: TodoAddPage,
   DetailPage: TodoDetailPage,
-  LookupDialog: TodoLookupDialog,
+  PickupDialog: TodoPickupDialog,
 } = todoComponents;

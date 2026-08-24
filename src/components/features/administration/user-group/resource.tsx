@@ -20,58 +20,43 @@ export const userGroupsResource = defineResource<
   UserGroupFormValues,
   string
 >({
-  id: userGroupsDescriptor.id,
-  noun: userGroupsDescriptor.noun,
-  queryKey: userGroupsDescriptor.queryKey,
-  schema: userGroupSchema,
+  descriptor: userGroupsDescriptor,
 
-  routes: userGroupsDescriptor.routes,
+  presentation: {
+    open: "dialog",
+    add: "dialog",
+  },
 
-  labels: userGroupsDescriptor,
-
-  openMode: "dialog",
-  addMode: "dialog",
-  dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: false,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: true,
-      viewModeToggle: true,
-      open: true,
+  data: {
+    fetchList: fetchUserGroupList,
+    fetchAggregates: fetchUserGroupAggregates,
+    fetchDetail: fetchUserGroupDetail,
+    mutations: {
+      add: addUserGroup,
+      update: updateUserGroup,
+      delete: deleteUserGroups,
     },
   },
 
-  emptyValues: {
-    user_id: "",
-    group_id: 0,
+  form: {
+    schema: userGroupSchema,
+    emptyValues: {
+      user_id: "",
+      group_id: 0,
+    },
+    layout: userGroupsForm,
   },
 
-  fetchList: fetchUserGroupList,
-  fetchAggregates: fetchUserGroupAggregates,
-  fetchDetail: fetchUserGroupDetail,
-  mutationFns: {
-    add: addUserGroup,
-    update: updateUserGroup,
-    delete: deleteUserGroups,
+  dataView: {
+    overview: {
+      dataTableColumns: userGroupColumns,
+      dataListColumns: userGroupListColumns,
+      features: {
+        edit: false,
+      },
+    },
+    pickup: { dataTableColumns: userGroupColumns },
   },
-
-  columns: userGroupColumns,
-  listColumns: userGroupListColumns,
-  pickupColumns: userGroupColumns,
-
-  form: userGroupsForm,
-
-  overviewKey: userGroupsDescriptor.overviewKey,
-  defaultViewName: userGroupsDescriptor.defaultViewName,
 });
 
 export const { hooks: userGroupHooks, components: userGroupComponents } =
@@ -88,5 +73,5 @@ export const {
   DetailDialog: UserGroupDetailDialog,
   AddPage: UserGroupAddPage,
   DetailPage: UserGroupDetailPage,
-  LookupDialog: UserGroupLookupDialog,
+  PickupDialog: UserGroupPickupDialog,
 } = userGroupComponents;

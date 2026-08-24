@@ -15,87 +15,76 @@ import { relationsTabs } from "./config/tabs";
 import { relationsRelations } from "./config/relations";
 import { relationSchema, type RelationFormValues } from "./config/schema";
 import { relationColumns, relationListColumns } from "./config/columns";
-import { relationsDetailSlots } from "./config/detailSlots";
 import { relationsDescriptor } from "./config/descriptor";
-import { truncate } from "fs/promises";
 
 export const relationsResource = defineResource<Relation, RelationFormValues>({
-  id: relationsDescriptor.id,
-  noun: relationsDescriptor.noun,
-  queryKey: relationsDescriptor.queryKey,
-  schema: relationSchema,
-  routes: relationsDescriptor.routes,
+  descriptor: relationsDescriptor,
 
-  labels: relationsDescriptor,
-
-  openMode: "split",
-  splitConfig: {
-    onOpen: "none",
+  presentation: {
+    open: "split",
+    split: { onOpen: "open-all" },
+    add: "page",
+    dialog: { className: "sm:max-w-full" },
   },
-  addMode: "page",
-  dialog: {
-    className: "sm:max-w-full",
+
+  data: {
+    fetchList: fetchRelationList,
+    fetchAggregates: fetchRelationAggregates,
+    fetchDetail: fetchRelationDetail,
+    mutations: {
+      add: addRelation,
+      update: updateRelation,
+      delete: deleteRelations,
+    },
+  },
+
+  form: {
+    schema: relationSchema,
+    emptyValues: {
+      first_name: "",
+      last_name: "",
+      maiden_name: "",
+      age: 0,
+      gender: "male",
+      email: "",
+      phone: "",
+      username: "",
+      birth_date: "",
+      image: "",
+      blood_group: "",
+      height: 0,
+      weight: 0,
+      eye_color: "",
+      hair_color: "",
+      hair_type: "",
+    },
+    layout: relationsForm,
+    addTabs: relationsAddTabs,
+  },
+
+  detail: {
+    tabs: relationsTabs,
+    relations: relationsRelations,
+    // slots: relationsDetailSlots,
+    defaultTab: "todos",
+    defaultFormOpen: true,
   },
 
   dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: false,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: false,
-      viewModeToggle: true,
-      open: false,
+    overview: {
+      dataTableColumns: relationColumns,
+      dataListColumns: relationListColumns,
+      features: {
+        edit: false,
+        quickSearch: false,
+        selection: false,
+      },
     },
-  },
-  emptyValues: {
-    first_name: "",
-    last_name: "",
-    maiden_name: "",
-    age: 0,
-    gender: "male",
-    email: "",
-    phone: "",
-    username: "",
-    birth_date: "",
-    image: "",
-    blood_group: "",
-    height: 0,
-    weight: 0,
-    eye_color: "",
-    hair_color: "",
-    hair_type: "",
+    pickup: { dataTableColumns: relationColumns },
   },
 
-  fetchList: fetchRelationList,
-  fetchAggregates: fetchRelationAggregates,
-  fetchDetail: fetchRelationDetail,
-  mutationFns: {
-    add: addRelation,
-    update: updateRelation,
-    delete: deleteRelations,
-  },
-  columns: relationColumns,
-  listColumns: relationListColumns,
-  pickupColumns: relationColumns,
-
-  form: relationsForm,
-  tabs: relationsTabs,
-  relations: relationsRelations,
-  // detailSlots: relationsDetailSlots,
-  addTabs: relationsAddTabs,
-  defaultTab: "todos",
-  defaultFormOpen: true,
-
-  overviewKey: relationsDescriptor.overviewKey,
-  defaultViewName: relationsDescriptor.defaultViewName,
+  open: false,
+  delete: { toolbar: false },
 });
 
 export const { hooks: relationHooks, components: relationComponents } =
@@ -112,5 +101,5 @@ export const {
   DetailDialog: RelationDetailDialog,
   AddPage: RelationAddPage,
   DetailPage: RelationDetailPage,
-  LookupDialog: RelationLookupDialog,
+  PickupDialog: RelationPickupDialog,
 } = relationComponents;

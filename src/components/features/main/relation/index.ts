@@ -8,5 +8,5 @@ export {
   RelationDetailDialog,
   RelationAddPage,
   RelationDetailPage,
-  RelationLookupDialog,
+  RelationPickupDialog,
 } from "./resource"

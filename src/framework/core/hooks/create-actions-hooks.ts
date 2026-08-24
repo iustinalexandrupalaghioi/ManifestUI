@@ -23,9 +23,6 @@ export function createActionsHook<
     routes,
   } = config;
 
-  // Falls back to the resource's own detail route — only needed when a
-  // resource wants a copy-link that points somewhere other than its normal
-  // detail page (e.g. a custom public-facing URL).
   const defaultGetRowUrl = (item: TItem) =>
     `${process.env.NEXT_PUBLIC_BASE_URL}${routes.detail(
       getItemId(item as Record<string, unknown>, idField).toString(),
@@ -44,7 +41,16 @@ export function createActionsHook<
   }): ResourceActions<TItem> {
     const bulkActionsResult = (bulkActions ?? useNoBulkActions)();
 
-    const combinedActions = [...bulkActionsResult.actions, ...extraActions];
+    const combinedActions = [
+      ...bulkActionsResult.actions.map((action) => ({
+        ...action,
+        onSelect: async (items: TItem[]) => {
+          await action.onSelect(items);
+          setRowSelection({});
+        },
+      })),
+      ...extraActions,
+    ];
 
     return {
       actions: combinedActions.map((action) => ({
@@ -52,10 +58,6 @@ export function createActionsHook<
         isEligible: (row: TItem) =>
           hasPermission(`${id}:${action.key}`) &&
           (action.isEligible ? action.isEligible(row) : true),
-        onSelect: async (items: TItem[]) => {
-          await action.onSelect(items);
-          setRowSelection({});
-        },
       })),
       getRowUrl: getRowUrlOverride ?? getRowUrl ?? defaultGetRowUrl,
       onOpen,

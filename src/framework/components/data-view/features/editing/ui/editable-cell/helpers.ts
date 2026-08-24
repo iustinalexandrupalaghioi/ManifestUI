@@ -1,5 +1,5 @@
 import { getPickupConfig } from "@/framework/components/form/lib/flattenFormFields";
-import { resolveDisplayValue } from "@/framework/components/form/hooks/useLookupfield";
+import { resolveDisplayValue } from "@/framework/components/form/lib/pickupDisplayField";
 import { cn } from "@/framework/lib/utils";
 
 export const SELECTABLE_INPUT_TYPES = new Set([

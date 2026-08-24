@@ -33,11 +33,8 @@ export interface FormHeaderCollapsibleProps {
   firstPath?: string;
   lastPath?: string;
   isAddScreen?: boolean;
-  /** Rendered as its own row inside this same sticky container, above the
-   *  title — e.g. an inline split-view FormPage.Toolbar. Kept inside the
-   *  *same* sticky element (rather than a separate sticky sibling) so the
-   *  two never need to coordinate offsets — they just move as one unit. */
   toolbar?: ReactNode;
+  onNavigate?: (path: string) => void;
 }
 
 export function FormHeaderCollapsible({
@@ -55,6 +52,7 @@ export function FormHeaderCollapsible({
   lastPath,
   isAddScreen,
   toolbar,
+  onNavigate,
 }: FormHeaderCollapsibleProps) {
   const hasNav = prevPath !== undefined || nextPath !== undefined;
   const router = useTransitionRouter();
@@ -73,8 +71,11 @@ export function FormHeaderCollapsible({
   // Always replace — keeps the history stack at a single detail-page
   // entry no matter how many times Prev/Next/First/Last are clicked.
   const go = (path: string) => {
-    if (effectiveGuard) effectiveGuard(() => router.replace(path));
-    else router.replace(path);
+    const action = onNavigate
+      ? () => onNavigate(path)
+      : () => router.replace(path);
+    if (effectiveGuard) effectiveGuard(action);
+    else action();
   };
 
   return (
@@ -91,70 +92,70 @@ export function FormHeaderCollapsible({
             triggerClassName,
           )}
         >
-        <CollapsibleTrigger className="flex cursor-pointer items-center gap-2">
-          <span className="font-semibold text-primary">{title}</span>
-          {isAddScreen && (
-            <span className="text-muted">{tr("newItemBadge")}</span>
+          <CollapsibleTrigger className="flex cursor-pointer items-center gap-2">
+            <span className="font-semibold text-primary">{title}</span>
+            {isAddScreen && (
+              <span className="text-muted">{tr("newItemBadge")}</span>
+            )}
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                isOpen && "rotate-180",
+              )}
+            />
+          </CollapsibleTrigger>
+
+          <div className="flex-1" />
+
+          {hasNav && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!firstPath || router.isPending}
+                title={t("first")}
+                type="button"
+                onClick={() => firstPath && go(firstPath)}
+              >
+                <ChevronsLeftIcon className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!prevPath || router.isPending}
+                title={t("previous")}
+                type="button"
+                onClick={() => prevPath && go(prevPath)}
+              >
+                <ChevronLeftIcon className="size-4" />
+              </Button>
+              {positionLabel && (
+                <span className="flex min-w-12 items-center justify-center text-center text-xs text-muted-foreground tabular-nums">
+                  {positionLabel}
+                </span>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!nextPath || router.isPending}
+                title={t("next")}
+                type="button"
+                onClick={() => nextPath && go(nextPath)}
+              >
+                <ChevronRightIcon className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                disabled={!lastPath || router.isPending}
+                title={t("last")}
+                type="button"
+                onClick={() => lastPath && go(lastPath)}
+              >
+                <ChevronsRightIcon className="size-4" />
+              </Button>
+            </div>
           )}
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isOpen && "rotate-180",
-            )}
-          />
-        </CollapsibleTrigger>
-
-        <div className="flex-1" />
-
-        {hasNav && (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={!firstPath || router.isPending}
-              title={t("first")}
-              type="button"
-              onClick={() => firstPath && go(firstPath)}
-            >
-              <ChevronsLeftIcon className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={!prevPath || router.isPending}
-              title={t("previous")}
-              type="button"
-              onClick={() => prevPath && go(prevPath)}
-            >
-              <ChevronLeftIcon className="size-4" />
-            </Button>
-            {positionLabel && (
-              <span className="flex min-w-12 items-center justify-center text-center text-xs text-muted-foreground tabular-nums">
-                {positionLabel}
-              </span>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={!nextPath || router.isPending}
-              title={t("next")}
-              type="button"
-              onClick={() => nextPath && go(nextPath)}
-            >
-              <ChevronRightIcon className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={!lastPath || router.isPending}
-              title={t("last")}
-              type="button"
-              onClick={() => lastPath && go(lastPath)}
-            >
-              <ChevronsRightIcon className="size-4" />
-            </Button>
-          </div>
-        )}
         </div>
       </div>
 

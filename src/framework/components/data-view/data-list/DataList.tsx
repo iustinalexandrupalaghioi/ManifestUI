@@ -15,11 +15,12 @@ import type {
 
 interface DataListProps {
   table: TTable<any>;
+  totalCount: number;
   isLoading: boolean;
   activeRowId?: string;
   openOnRowClick?: boolean;
   list: DataListFeatureApi;
-  isLookup?: boolean;
+  isPickup?: boolean;
   grouping?: GroupByRule[];
   groupAggregateLookup?: Map<string, GroupAggregateRow>;
   isGroupAggregatesFetching?: boolean;
@@ -28,11 +29,12 @@ interface DataListProps {
 
 export function DataList({
   table,
+  totalCount,
   isLoading,
   activeRowId,
   openOnRowClick,
   list,
-  isLookup,
+  isPickup,
   grouping = [],
   groupAggregateLookup = new Map(),
   isGroupAggregatesFetching,
@@ -48,7 +50,7 @@ export function DataList({
   return (
     <>
       {/* Select-all bar — overview only */}
-      {hasVisibleList && !isLookup && (
+      {hasVisibleList && !isPickup && (
         <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background px-3 py-1.5">
           {selectionEnabled && (
             <div className="relative overflow-hidden">
@@ -73,7 +75,7 @@ export function DataList({
               ? t("selectedCount", {
                   count: Object.keys(table.getState().rowSelection).length,
                 })
-              : t("itemsCount", { count: rows.length })}
+              : t("itemsCount", { count: totalCount })}
           </span>
         </div>
       )}
@@ -92,7 +94,7 @@ export function DataList({
       />
 
       {/* List column manager panel — overview only */}
-      {!isLookup && (
+      {!isPickup && (
         <DataListColumnManager
           open={columnManagerOpen}
           onOpenChange={setColumnManagerOpen}

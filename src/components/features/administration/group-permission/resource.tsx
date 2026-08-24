@@ -25,66 +25,46 @@ export const groupPermissionsResource = defineResource<
   GroupPermission,
   GroupPermissionFormValues
 >({
-  id: groupPermissionsDescriptor.id,
-  noun: groupPermissionsDescriptor.noun,
-  queryKey: groupPermissionsDescriptor.queryKey,
-  schema: groupPermissionSchema,
+  descriptor: groupPermissionsDescriptor,
 
-  routes: groupPermissionsDescriptor.routes,
-
-  labels: groupPermissionsDescriptor,
-
-  openMode: "split",
-  splitConfig: {
-    onOpen: "selectFirst",
-    defaultWidth: 50,
+  presentation: {
+    open: "split",
+    split: { onOpen: "open-first", defaultWidth: 50 },
+    add: "dialog",
   },
 
-  addMode: "dialog",
-  dataView: {
-    features: {
-      views: true,
-      sorting: true,
-      selection: true,
-      filtering: true,
-      aggregates: true,
-      grouping: true,
-      editing: true,
-      list: true,
-      resizing: true,
-      pinning: true,
-      columnManager: true,
-      quickSearch: true,
-      viewModeToggle: true,
-      open: true,
+  data: {
+    fetchList: fetchGroupPermissionList,
+    fetchAggregates: fetchGroupPermissionAggregates,
+    fetchDetail: fetchGroupPermissionDetail,
+    mutations: {
+      add: addGroupPermission,
+      update: updateGroupPermission,
+      delete: deleteGroupPermissions,
     },
   },
-  emptyValues: {
-    group_id: 0,
-    resource_id: "",
-    can_read: false,
-    can_add: false,
-    can_update: false,
-    can_delete: false,
-    allowed: false,
+
+  form: {
+    schema: groupPermissionSchema,
+    emptyValues: {
+      group_id: 0,
+      resource_id: "",
+      can_read: false,
+      can_add: false,
+      can_update: false,
+      can_delete: false,
+      allowed: false,
+    },
+    layout: groupPermissionsForm,
   },
 
-  fetchList: fetchGroupPermissionList,
-  fetchAggregates: fetchGroupPermissionAggregates,
-  fetchDetail: fetchGroupPermissionDetail,
-  mutationFns: {
-    add: addGroupPermission,
-    update: updateGroupPermission,
-    delete: deleteGroupPermissions,
+  dataView: {
+    overview: {
+      dataTableColumns: groupPermissionColumns,
+      dataListColumns: groupPermissionListColumns,
+    },
+    pickup: { dataTableColumns: groupPermissionColumns },
   },
-
-  columns: groupPermissionColumns,
-  listColumns: groupPermissionListColumns,
-  pickupColumns: groupPermissionColumns,
-  form: groupPermissionsForm,
-
-  overviewKey: groupPermissionsDescriptor.overviewKey,
-  defaultViewName: groupPermissionsDescriptor.defaultViewName,
 });
 
 export const {
@@ -103,5 +83,5 @@ export const {
   DetailDialog: GroupPermissionDetailDialog,
   AddPage: GroupPermissionAddPage,
   DetailPage: GroupPermissionDetailPage,
-  LookupDialog: GroupPermissionLookupDialog,
+  PickupDialog: GroupPermissionPickupDialog,
 } = groupPermissionComponents;

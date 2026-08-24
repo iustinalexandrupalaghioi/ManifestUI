@@ -39,7 +39,7 @@ interface DataViewLayoutProps {
   preFilters: FilterInput[];
   hasTable: boolean;
   hasList: boolean;
-  isLookup?: boolean;
+  isPickup?: boolean;
   aggregateValues?: AggregateResult;
   isAggregatesFetching?: boolean;
   groupAggregateRows?: GroupAggregateRow[];
@@ -59,7 +59,7 @@ export function DataViewLayout({
   hasTable,
   hasList,
   loadMoreRef,
-  isLookup,
+  isPickup,
   aggregateValues,
   isAggregatesFetching,
   groupAggregateRows,
@@ -142,6 +142,7 @@ export function DataViewLayout({
             tableId={tableId}
             listViewId={listViewId}
             table={table}
+            totalCount={totalCount}
             isLoading={isLoading}
             activeRowId={activeRowId}
             openOnRowClick={openOnRowClick}
@@ -153,7 +154,7 @@ export function DataViewLayout({
             scrollContainerRef={scrollContainerRef}
             handleScroll={handleScroll}
             height={height}
-            isLookup={isLookup}
+            isPickup={isPickup}
             hasListMode={hasTable && hasList}
             aggregateValues={aggregateValues}
             isAggregatesFetching={isAggregatesFetching}

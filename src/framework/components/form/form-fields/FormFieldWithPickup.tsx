@@ -6,8 +6,8 @@ import { cn } from "@/framework/lib/utils";
 import { getResource } from "@/framework/registry/ResourceRegistry";
 
 import type { BaseField, FieldConfig, PickupFillField } from "../types/types";
-import { DisplayFieldRenderer } from "../form-register/LookupFieldRenderer";
-import { resolveDisplayValue } from "../hooks/useLookupfield";
+import { DisplayFieldRenderer } from "../form-register/DisplayFieldRenderer";
+import { resolveDisplayValue } from "../lib/pickupDisplayField";
 import {
   isBasicFieldConfig,
   renderFieldInput,
@@ -119,7 +119,7 @@ export function FieldWithPickup<TFormValues>({
     item,
   );
 
-  const LookupDialog = entry?.components?.LookupDialog;
+  const PickupDialog = entry?.components?.PickupDialog;
   const readonlyFields =
     pickup.fillFields?.filter(
       (f): f is Extract<PickupFillField, { readonly: true }> => !!f.readonly,
@@ -209,7 +209,7 @@ export function FieldWithPickup<TFormValues>({
         <div className="flex-1">
           {renderPickupField(field, disabled, readOnly, className, locale)}
         </div>
-        {LookupDialog && !disabled && !readOnly && (
+        {PickupDialog && !disabled && !readOnly && (
           <Button
             type="button"
             variant="ghost"
@@ -231,8 +231,8 @@ export function FieldWithPickup<TFormValues>({
         />
       ))}
 
-      {LookupDialog && open && (
-        <LookupDialog
+      {PickupDialog && open && (
+        <PickupDialog
           open={open}
           setOpen={setOpen}
           onSelect={handleSelect as any}

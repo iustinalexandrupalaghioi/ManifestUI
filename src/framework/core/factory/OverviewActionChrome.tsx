@@ -28,6 +28,7 @@ interface OverviewActionChromeProps<TItem> {
   actions: TableAction<TItem>[];
   getRowUrl?: (item: TItem) => string;
   isDeleteEligible: (item: TItem) => boolean;
+  deleteToolbarEnabled?: boolean;
   onOpen?: (rows: TItem[]) => void;
   onAdd?: () => void;
   onBack?: () => void;
@@ -71,6 +72,7 @@ export function OverviewActionChrome<TItem>({
   actions,
   getRowUrl,
   isDeleteEligible,
+  deleteToolbarEnabled = true,
   onOpen,
   onAdd,
   onBack,
@@ -118,7 +120,7 @@ export function OverviewActionChrome<TItem>({
         selectedRows={selectedRows}
         selectedCount={selectedRows.length}
         actions={actions}
-        onDelete={openDeleteDialog}
+        onDelete={deleteToolbarEnabled ? openDeleteDialog : undefined}
         isDeleteEligible={isDeleteEligible}
         onOpen={onOpen}
         onAdd={onAdd}
@@ -169,6 +171,7 @@ export function OverviewActionChrome<TItem>({
           open={!!activeActionKey}
           onClose={closeActionForm}
           onError={setActionFormError}
+          onSuccess={() => setRowSelection({})}
         />
       )}
 

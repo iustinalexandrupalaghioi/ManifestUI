@@ -34,6 +34,8 @@ export function createDetailDialog<
 
   const { idField, noun, labels, tabs, relations } = hooks;
 
+  const editingEnabled = config.dataView?.overview?.features?.edit !== false;
+
   return function DetailDialog({
     item,
     open,
@@ -53,7 +55,7 @@ export function createDetailDialog<
       gender: labels.gender,
     };
 
-    const canUpdate = resolvePermission(config.permissions?.update);
+    const canUpdate = resolvePermission(config.permissions?.update) && editingEnabled;
 
     const { updateAsync, isUpdating, error, clearError, resetMutation } =
       hooks.useMutations();

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { DisplayField } from "../hooks/useLookupfield";
+import type { DisplayField } from "../lib/pickupDisplayField";
 import type { FileFieldConfig } from "../hooks/useFileField";
 import type { FilterInput } from "@/framework/components/data-view/features/filtering";
 import type { TranslatableText } from "@/framework/types/i18n-types";
@@ -19,7 +19,6 @@ export type FieldConfig<TFormValues> =
   | TimeFieldConfig<TFormValues>
   | DateTimeFieldConfig<TFormValues>
   | ReadonlyFieldConfig<TFormValues>
-  | LookupFieldConfig<TFormValues>
   | JsonFieldConfig<TFormValues>
   | FileFieldConfig
   | CustomFieldConfig<TFormValues>;
@@ -126,12 +125,6 @@ export interface ReadonlyFieldConfig<
   dataType?: ReadonlyDataType;
   maxRows?: number;
   options?: EnumOptions;
-}
-
-export interface LookupFieldConfig<TFormValues> extends BaseField<TFormValues> {
-  type: "lookup";
-  resource: string;
-  displayFields?: DisplayField[];
 }
 
 export interface CustomFieldConfig<TFormValues> extends Omit<

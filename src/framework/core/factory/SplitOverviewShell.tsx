@@ -2,10 +2,14 @@
 
 import { cn } from "@/framework/lib/utils";
 import {
+  PanelBottomClose,
+  PanelBottomOpen,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
+  PanelTopClose,
+  PanelTopOpen,
 } from "lucide-react";
 import {
   useCallback,
@@ -16,6 +20,13 @@ import {
 } from "react";
 import { useAvailableHeight } from "../../components/data-view/core/hooks/useAvailableHeight";
 import type { SplitConfig } from "../../types/split-config-type";
+
+const PANEL_ICONS = {
+  left: [PanelLeftClose, PanelLeftOpen],
+  right: [PanelRightClose, PanelRightOpen],
+  top: [PanelTopClose, PanelTopOpen],
+  bottom: [PanelBottomClose, PanelBottomOpen],
+} as const;
 
 // Deliberately NOT built on shadcn's Sidebar: that component renders its
 // desktop panel as `position: fixed` positioned relative to the viewport —
@@ -42,7 +53,12 @@ export function SplitOverviewShell({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [width, setWidth] = useState(splitConfig.defaultWidth);
+  const isVertical =
+    splitConfig.side === "top" || splitConfig.side === "bottom";
+
+  // Percentage of the split axis (width for left/right, height for
+  // top/bottom) the detail pane occupies.
+  const [size, setSize] = useState(splitConfig.defaultWidth);
   const paneRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const [mainCollapsed, setMainCollapsed] = useState(false);
@@ -58,20 +74,24 @@ export function SplitOverviewShell({
       if (mainCollapsed) return;
       e.preventDefault();
       draggingRef.current = true;
-      document.body.style.cursor = "col-resize";
+      document.body.style.cursor = isVertical ? "row-resize" : "col-resize";
       document.body.style.userSelect = "none";
     },
-    [mainCollapsed],
+    [mainCollapsed, isVertical],
   );
 
   useEffect(() => {
-    function computePercent(clientX: number) {
+    function computePercent(clientX: number, clientY: number) {
       const rect = containerRef.current!.getBoundingClientRect();
-      const rawPx =
-        splitConfig.side === "right"
+      const rawPx = isVertical
+        ? splitConfig.side === "bottom"
+          ? rect.bottom - clientY
+          : clientY - rect.top
+        : splitConfig.side === "right"
           ? rect.right - clientX
           : clientX - rect.left;
-      const rawPercent = (rawPx / rect.width) * 100;
+      const rawPercent =
+        (rawPx / (isVertical ? rect.height : rect.width)) * 100;
       return Math.min(
         splitConfig.maxWidth,
         Math.max(splitConfig.minWidth, rawPercent),
@@ -80,14 +100,16 @@ export function SplitOverviewShell({
     function onPointerMove(e: PointerEvent) {
       if (!draggingRef.current || !containerRef.current || !paneRef.current)
         return;
-      paneRef.current.style.width = `${computePercent(e.clientX)}%`;
+      const percent = computePercent(e.clientX, e.clientY);
+      if (isVertical) paneRef.current.style.height = `${percent}%`;
+      else paneRef.current.style.width = `${percent}%`;
     }
     function onPointerUp(e: PointerEvent) {
       if (!draggingRef.current) return;
       draggingRef.current = false;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
-      if (containerRef.current) setWidth(computePercent(e.clientX));
+      if (containerRef.current) setSize(computePercent(e.clientX, e.clientY));
     }
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
@@ -95,25 +117,42 @@ export function SplitOverviewShell({
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
     };
-  }, [splitConfig.minWidth, splitConfig.maxWidth, splitConfig.side]);
+  }, [splitConfig.minWidth, splitConfig.maxWidth, splitConfig.side, isVertical]);
 
   const paneVisible = open || !splitConfig.collapsible;
 
-  const mainSide = splitConfig.side === "right" ? "left" : "right";
-  const CollapseIcon = mainSide === "left" ? PanelLeftClose : PanelRightClose;
-  const ExpandIcon = mainSide === "left" ? PanelLeftOpen : PanelRightOpen;
+  const mainSide = isVertical
+    ? splitConfig.side === "top"
+      ? "bottom"
+      : "top"
+    : splitConfig.side === "right"
+      ? "left"
+      : "right";
+  const [CollapseIcon, ExpandIcon] = PANEL_ICONS[mainSide];
 
   const resizeHandle = (
     <div
       role="separator"
-      aria-orientation="vertical"
+      aria-orientation={isVertical ? "horizontal" : "vertical"}
       onPointerDown={handlePointerDown}
       className={cn(
-        "group relative w-2.5 shrink-0 touch-none select-none",
-        mainCollapsed ? "cursor-default" : "cursor-col-resize",
+        "group relative shrink-0 touch-none select-none",
+        isVertical ? "h-2.5 w-full" : "w-2.5",
+        mainCollapsed
+          ? "cursor-default"
+          : isVertical
+            ? "cursor-row-resize"
+            : "cursor-col-resize",
       )}
     >
-      <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-border transition-colors group-hover:bg-primary group-active:bg-primary" />
+      <div
+        className={cn(
+          "absolute bg-border transition-colors group-hover:bg-primary group-active:bg-primary",
+          isVertical
+            ? "inset-x-0 top-1/2 h-px -translate-y-1/2"
+            : "inset-y-0 left-1/2 w-px -translate-x-1/2",
+        )}
+      />
       <button
         type="button"
         onClick={() => setMainCollapsed((c) => !c)}
@@ -132,9 +171,16 @@ export function SplitOverviewShell({
   const pane = (
     <div
       ref={paneRef}
-      style={{ width: mainCollapsed ? undefined : `${width}%` }}
+      style={
+        mainCollapsed
+          ? undefined
+          : isVertical
+            ? { height: `${size}%` }
+            : { width: `${size}%` }
+      }
       className={cn(
-        "h-full min-w-0 overflow-hidden bg-background",
+        "overflow-hidden bg-background",
+        isVertical ? "w-full min-h-0" : "h-full min-w-0",
         mainCollapsed ? "flex-1" : "shrink-0",
       )}
     >
@@ -146,30 +192,40 @@ export function SplitOverviewShell({
     <div
       ref={containerRef}
       style={{ height: availableHeight || undefined }}
-      className="flex w-full overflow-hidden"
+      className={cn("flex w-full overflow-hidden", isVertical && "flex-col")}
     >
-      {splitConfig.side === "left" && paneVisible && (
-        <>
-          {pane}
-          {resizeHandle}
-        </>
-      )}
+      {(splitConfig.side === "left" || splitConfig.side === "top") &&
+        paneVisible && (
+          <>
+            {pane}
+            {resizeHandle}
+          </>
+        )}
 
       <div
         className={cn(
-          "h-full overflow-hidden transition-[flex-basis]",
-          mainCollapsed ? "w-0 min-w-0 flex-none" : "min-w-0 flex-1",
+          "overflow-hidden transition-[flex-basis]",
+          isVertical
+            ? cn(
+                "w-full",
+                mainCollapsed ? "h-0 min-h-0 flex-none" : "min-h-0 flex-1",
+              )
+            : cn(
+                "h-full",
+                mainCollapsed ? "w-0 min-w-0 flex-none" : "min-w-0 flex-1",
+              ),
         )}
       >
         {main}
       </div>
 
-      {splitConfig.side === "right" && paneVisible && (
-        <>
-          {resizeHandle}
-          {pane}
-        </>
-      )}
+      {(splitConfig.side === "right" || splitConfig.side === "bottom") &&
+        paneVisible && (
+          <>
+            {resizeHandle}
+            {pane}
+          </>
+        )}
     </div>
   );
 }

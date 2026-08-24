@@ -84,7 +84,7 @@ function makeDraft(col: GroupableColumn): DraftLevel {
   return {
     _key: nextKey(),
     columnId: col.id,
-    showTotals: true,
+    showTotals: false,
     aggregates: [],
   };
 }
@@ -93,7 +93,7 @@ function levelFromExisting(rule: GroupByRule): DraftLevel {
   return {
     _key: nextKey(),
     columnId: rule.columnId,
-    showTotals: rule.showTotals ?? true,
+    showTotals: rule.showTotals ?? false,
     aggregates: (rule.aggregates ?? []).map(aggregateDraftFromExisting),
   };
 }

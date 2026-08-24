@@ -12,8 +12,8 @@ import { resolveLabel, resolveOptions } from "@/framework/lib/resolveLabel";
 /**
  * The subset of FieldConfig variants that are "plain inputs" — they render a
  * single RHF-connected control and are eligible to be wrapped by
- * FieldWithPickup (see BaseField.pickup). Everything else (readonly, lookup,
- * json, file, custom) has rendering needs specific enough that it stays
+ * FieldWithPickup (see BaseField.pickup). Everything else (readonly, json,
+ * file, custom) has rendering needs specific enough that it stays
  * handled directly in FieldRenderer instead of going through here.
  */
 export type BasicFieldConfig<TFormValues> = Extract<

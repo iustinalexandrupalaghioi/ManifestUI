@@ -191,10 +191,8 @@ export function DataTableHeaderDropdown({
                       )
                     }
                   >
-                    {activeAggregateFn === fn ? (
-                      <CheckIcon className="mr-2 h-3.5 w-3.5" />
-                    ) : (
-                      <span className="mr-2 w-3.5" />
+                    {activeAggregateFn === fn && (
+                      <CheckIcon className="h-3.5 w-3.5" />
                     )}
                     {getAggregateLabel(fn, ta)}
                   </DropdownMenuItem>

@@ -10,6 +10,6 @@ import { EditControls } from "./ui/EditControls"
  * here, matching how selection/filtering are registered.
  */
 export const editingFeature: DataViewFeature = {
-  id: "editing",
+  id: "edit",
   Toolbar: EditControls,
 }
