@@ -17,11 +17,6 @@ import { userTabs } from "./config/tabs";
 import { usersRelations } from "./config/relations";
 import { usersDescriptor } from "./config/descriptor";
 
-// Mirrors Supabase auth.users, kept in sync via
-// src/app/api/webhooks/auth-users/route.ts. No add/page.tsx route exists —
-// rows are only ever created by that webhook, never manually — so `add` is
-// unreachable through the UI even though defineResource always generates
-// an AddPage component for it.
 export const usersResource = defineResource<User, UserFormValues, string>({
   descriptor: usersDescriptor,
 
@@ -55,7 +50,7 @@ export const usersResource = defineResource<User, UserFormValues, string>({
       dataTableColumns: userColumns,
       dataListColumns: userListColumns,
       features: {
-        edit: false,
+        edit: true,
       },
     },
     pickup: { dataTableColumns: userColumns },

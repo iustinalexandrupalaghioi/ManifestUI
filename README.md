@@ -132,6 +132,13 @@ works."
 
 ## Running the app
 
+**Test credentials** (demo admin account):
+
+```
+Email:    admin@admin.com
+Password: Adminadmin12!
+```
+
 ```bash
 pnpm dev          # dev server, http://localhost:3000
 pnpm build        # production build
