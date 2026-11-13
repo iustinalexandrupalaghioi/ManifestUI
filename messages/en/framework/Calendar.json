@@ -1,0 +1,22 @@
+{
+  "dayLabels": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+  ],
+  "hour": "Hour",
+  "minute": "Minute",
+  "second": "Second",
+  "monthView": "Month view",
+  "weekView": "Week view",
+  "dayView": "Day view",
+  "today": "Today",
+  "noEventsScheduled": "No events scheduled.",
+  "untitled": "Untitled",
+  "moreCount": "{count} more",
+  "selectTime": "Select time"
+}

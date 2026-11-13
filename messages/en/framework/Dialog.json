@@ -1,0 +1,5 @@
+{
+  "deleteTitle": "Delete {label}",
+  "deleteConfirmSingle": "Are you sure you want to delete this {label}?",
+  "deleteConfirmMulti": "Are you sure you want to delete {count} {label}?"
+}

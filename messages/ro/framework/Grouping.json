@@ -1,0 +1,18 @@
+{
+  "group": "Grup",
+  "groupBy": "Grupează după",
+  "addGroupLevels": "Adaugă niveluri de grupare",
+  "noGroupingApplied": "Nicio grupare aplicată",
+  "showGroupTotals": "Afișează totalurile grupului",
+  "addLevel": "Adaugă nivel",
+  "apply": "Aplică",
+  "clearAll": "Șterge tot",
+  "removeLevel": "Elimină nivelul",
+  "moveUp": "Mută în sus",
+  "moveDown": "Mută în jos",
+  "level": "Nivelul {index}",
+  "columnPlaceholder": "Coloană...",
+  "emptyGroupValue": "(gol)",
+  "expandAll": "Extinde tot",
+  "collapseAll": "Restrânge tot"
+}

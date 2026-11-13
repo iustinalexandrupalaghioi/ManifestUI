@@ -1,0 +1,16 @@
+{
+  "cancel": "Anulează",
+  "close": "Închide",
+  "save": "Salvează",
+  "delete": "Șterge",
+  "goBack": "Înapoi",
+  "saving": "Se salvează...",
+  "ok": "Ok",
+  "openFullScreen": "Deschide pe tot ecranul",
+  "yes": "Da",
+  "no": "Nu",
+  "pendingChangesTitle": "Modificări nesalvate",
+  "pendingChangesDescription": "Aveți modificări care nu au fost salvate. Doriți să renunțați la ele?",
+  "keepEditing": "Continuă editarea",
+  "discardChanges": "Renunță la modificări"
+}

@@ -1,0 +1,10 @@
+{
+  "title": "ManifestUI",
+  "description": "Full-stack app built with ManifestUI.",
+  "adminPanel": "Administration",
+  "backToSite": "Back to site",
+  "profile": "Profile",
+  "preferences": "Preferences",
+  "language": "Language",
+  "theme": "Theme"
+}

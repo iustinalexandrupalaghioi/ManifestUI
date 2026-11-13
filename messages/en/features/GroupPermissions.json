@@ -1,0 +1,8 @@
+{
+  "permissions": "Permissions",
+  "read": "Read",
+  "add": "Add",
+  "modify": "Modify",
+  "delete": "Delete",
+  "allowed": "Allowed"
+}
