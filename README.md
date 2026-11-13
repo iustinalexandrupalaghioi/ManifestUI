@@ -463,25 +463,3 @@ there if you introduce one.
 than UI copy. The same `{ en, ro }` pattern is how error/toast messages pick the
 grammatically correct Romanian noun form and gender (see `ResourceDescriptor.gender` /
 `singularDefinite` and `src/framework/lib/mapPgError.ts` / `describeActionFailure.ts`).
-
-## Known issues to be aware of
-
-- **`DIRECT_DATABASE_URL`** is documented and expected in `.env`, but nothing in `src/`
-  currently reads it — `DATABASE_URL` (the pooled connection) is used everywhere, including
-  by `drizzle-kit`.
-- **No bootstrap/seed script** for the first administrator — the only way in is the manual
-  `update "user" set administrator = true` flip described in setup step 5. There's also no
-  UI for un-setting `administrator` on yourself, so be careful who you grant it to.
-- **`grantableActions` is a small, hand-maintained list** (`src/app/[locale]/cms/grantablePermissions.ts`)
-  of custom, non-CRUD permission strings — it is *not* derived from resources'
-  `actionForms`/`bulkActions` automatically. Adding a new custom action and forgetting to add
-  its entry there means it'll work for administrators but can never be granted to a
-  group-based user.
-- **Only one migration exists so far** (`drizzle/0000_sparkling_living_tribunal.sql`) —
-  everything before it was applied via `pnpm db:push`, with no recorded history. Always
-  review generated SQL closely before running `db:migrate`; drizzle-kit's diff can turn a
-  rename into a destructive drop+create if it misreads the change (see the comment at the
-  top of that migration for a concrete example).
-- **RLS policies in `src/db/schema/*.ts` don't do anything** through the app's own DB
-  client — see the callout in [Authorization](#authorization-rbac). Don't add a new
-  `pgPolicy` expecting it to enforce anything by itself.
