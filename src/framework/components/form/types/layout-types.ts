@@ -9,8 +9,8 @@ import type { BlockExtensionRef } from "@/framework/extensions/registry";
  *
  * Everything on the form — fields, buttons, headings, containers — is a
  * `LayoutNode`. Every node accepts the same placement props (`Placement`),
- * and containers nest to any depth. See `docs/form-layout.md` for the full
- * guide with examples.
+ * and containers nest to any depth. See the README's "Forms" section for an
+ * overview.
  */
 
 // ─────────────────────────────────────────────

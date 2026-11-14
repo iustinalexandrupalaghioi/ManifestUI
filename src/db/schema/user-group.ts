@@ -14,10 +14,7 @@ import { user } from "./user";
 export const userGroup = pgTable(
   "user_group",
   {
-    // References Supabase auth.users(id) — not this project's demo `user` table.
-    // The FK constraint itself is added via a hand-written custom migration
-    // (see drizzle/ migration adding user_group_user_id_fkey) rather than a
-    // Drizzle-level relation, so drizzle-kit never tries to manage auth.users.
+    // The app user's id (`user.id`, the same uuid as Supabase's auth.users.id).
     userId: uuid().notNull(),
     groupId: bigint({ mode: "number" }).notNull(),
     createdAt: timestamp({
