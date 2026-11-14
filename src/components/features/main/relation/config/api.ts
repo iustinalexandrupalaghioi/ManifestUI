@@ -21,7 +21,6 @@ import type { AggregateRule } from "@/framework/components/data-view/features/ag
 import { buildGroupingSortRules } from "@/framework/components/data-view/features/grouping/grouping";
 import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
 import type { Cursor } from "@/framework/types/pagination";
-import type { Relation } from "@/app/types/main/Relation";
 import { relationSchema, type RelationFormValues } from "./schema";
 import { relationsDescriptor } from "./descriptor";
 
@@ -75,6 +74,15 @@ function toRelationRow(data: RelationFormValues) {
     weight: String(data.weight),
   };
 }
+
+/**
+ * A relation as the queries return it: the inferred row, with the `numeric`
+ * height and weight read as numbers (`::float8`; written back as strings).
+ */
+export type Relation = Omit<typeof relation.$inferSelect, "height" | "weight"> & {
+  height: number;
+  weight: number;
+};
 
 const resourceAction = createResourceActions(relationsDescriptor.id);
 

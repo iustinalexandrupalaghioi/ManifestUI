@@ -1,6 +1,6 @@
 import type { FormConfig } from "@/framework/components/form/types/types";
 import type { FieldTabConfig } from "@/framework/types/tab-config-type";
-import { Gender } from "@/app/types/main/Relation";
+import { Gender } from "@/components/features/main/relation/config/gender";
 import type { RelationFormValues } from "./schema";
 
 // ─── Main form (core fields only) ────────────────────────────────────────────

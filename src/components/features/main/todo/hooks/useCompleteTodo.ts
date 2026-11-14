@@ -15,7 +15,7 @@ import {
   toastLoadingUpdate,
   toastUpdate,
 } from "@/framework/lib/toast";
-import type { Todo } from "@/app/types/main/Todo";
+import type { Todo } from "@/components/features/main/todo/config/api";
 
 export function useCompleteTodos<
   TData extends Record<string, unknown> = Record<string, never>,

@@ -4,7 +4,7 @@ import { PaperclipIcon } from "lucide-react";
 import { z } from "zod";
 import { defineDetailComponent } from "@/framework/extensions";
 import { RelationList } from "@/framework/components/relations/RelationList";
-import type { Todo } from "@/app/types/main/Todo";
+import type { Todo } from "@/components/features/main/todo/config/api";
 import { todosRelations } from "./relations";
 
 const todoAttachments = todosRelations.find((relation) => relation.key === "attachments")!;

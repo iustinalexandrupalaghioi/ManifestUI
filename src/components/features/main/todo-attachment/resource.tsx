@@ -1,7 +1,7 @@
 "use client";
 import { BUCKET } from "./config/constants";
 import { defineResource } from "@/framework/core/define-resource";
-import type { TodoAttachment } from "@/app/types/main/Attachment";
+import type { TodoAttachment } from "@/components/features/main/todo-attachment/config/api";
 import { attachmentSchema, type AttachmentFormValues } from "./config/schema";
 import {
   fetchAttachmentList,

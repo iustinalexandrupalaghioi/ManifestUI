@@ -1,5 +1,5 @@
 import type { ColumnConfig } from "@/framework/components/data-view/core/ui/createColumnsFromConfig";
-import { Gender } from "@/app/types/main/Relation";
+import { Gender } from "@/components/features/main/relation/config/gender";
 
 export const relationColumns: ColumnConfig[] = [
   // ── Identity ─────────────────────────────────

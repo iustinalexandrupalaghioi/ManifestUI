@@ -22,7 +22,6 @@ import type { AggregateRule } from "@/framework/components/data-view/features/ag
 import { buildGroupingSortRules } from "@/framework/components/data-view/features/grouping/grouping";
 import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
 import type { Cursor } from "@/framework/types/pagination";
-import type { Todo } from "@/app/types/main/Todo";
 import { completeTodoSchema, todoSchema, type TodoFormValues } from "./schema";
 import { todosDescriptor } from "./descriptor";
 
@@ -50,6 +49,7 @@ const selection = {
   created_at: todo.created_at,
   user_id: todo.user_id,
   notes: todo.notes,
+  due_date: todo.due_date,
   relation: {
     id: relation.id,
     username: relation.username,
@@ -59,6 +59,14 @@ const selection = {
     gender: relation.gender,
     age: relation.age,
   },
+};
+
+/** A todo with the relation (person) it belongs to, as the list and detail queries return it. */
+export type Todo = typeof todo.$inferSelect & {
+  relation: Pick<
+    typeof relation.$inferSelect,
+    "id" | "username" | "first_name" | "last_name" | "email" | "gender" | "age"
+  > | null;
 };
 
 const resourceAction = createResourceActions(todosDescriptor.id);
