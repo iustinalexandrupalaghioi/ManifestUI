@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { Todo } from "@/app/types/main/Todo";
+import type { Todo } from "@/components/features/main/todo/config/api";
 import { CheckIcon } from "lucide-react";
 import { useCompleteTodos } from "../../hooks/useCompleteTodo";
 import {

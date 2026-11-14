@@ -1,0 +1,58 @@
+# Checks every push, including the branches ManifestUI Studio saves to, so a
+# change that breaks the project shows up on its commit / pull request.
+name: ManifestUI checks
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manifestui-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck, schema and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # The checks never connect to a database or Supabase, so placeholders are
+      # enough. Add repository secrets with the same names to use real values.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder' }}
+      NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder
+      AUTH_WEBHOOK_SECRET: ci-placeholder
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      DIRECT_DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Next.js route types
+        run: pnpm exec next typegen
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Check the Drizzle schema
+        # Turns the schema into SQL without a database: fails on broken table definitions.
+        run: pnpm exec drizzle-kit export --sql > /dev/null
+
+      - name: Build
+        run: pnpm build

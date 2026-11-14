@@ -1,7 +1,7 @@
 "use client";
 
 import { defineResource } from "@/framework/core/define-resource";
-import { type Relation } from "@/app/types/main/Relation";
+import type { Relation } from "@/components/features/main/relation/config/api";
 import {
   fetchRelationDetail,
   fetchRelationList,

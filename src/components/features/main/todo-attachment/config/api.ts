@@ -21,7 +21,6 @@ import type { AggregateRule } from "@/framework/components/data-view/features/ag
 import { buildGroupingSortRules } from "@/framework/components/data-view/features/grouping/grouping";
 import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
 import type { Cursor } from "@/framework/types/pagination";
-import type { TodoAttachment } from "@/app/types/main/Attachment";
 import { attachmentSchema, type AttachmentFormValues } from "./schema";
 import { attachmentsDescriptor } from "./descriptor";
 
@@ -44,6 +43,11 @@ const selection = {
   todo_id: todo_attachment.todo_id,
   filename: todo_attachment.filename,
   todos: { id: todo.id, title: todo.title, completed: todo.completed },
+};
+
+/** An attachment with the todo it belongs to, as the list and detail queries return it. */
+export type TodoAttachment = typeof todo_attachment.$inferSelect & {
+  todos: Pick<typeof todo.$inferSelect, "id" | "title" | "completed"> | null;
 };
 
 const resourceAction = createResourceActions(attachmentsDescriptor.id);

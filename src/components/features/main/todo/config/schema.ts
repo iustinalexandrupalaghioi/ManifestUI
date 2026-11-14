@@ -1,4 +1,4 @@
-import type { Todo } from "@/app/types/main/Todo";
+import type { todo } from "@/db/schema";
 import { z } from "zod";
 
 export const todoSchema = z.object({
@@ -6,7 +6,7 @@ export const todoSchema = z.object({
   completed: z.boolean(),
   user_id: z.coerce.number().min(1, "User is required"),
   notes: z.string().trim().optional(),
-}) satisfies z.ZodType<Pick<Todo, "title" | "completed" | "user_id">>;
+}) satisfies z.ZodType<Pick<typeof todo.$inferInsert, "title" | "completed" | "user_id">>;
 
 export type TodoFormValues = z.infer<typeof todoSchema>;
 

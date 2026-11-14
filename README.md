@@ -250,9 +250,9 @@ Steps to add a new one, say `projects`:
 
 1. **DB table** — add `src/db/schema/projects.ts`, export it from `schema/index.ts`, run
    `db:push` (or `db:generate` + `db:migrate`).
-2. **Type** — add the row type under `src/app/types/main/` (mirrors the DB row shape; see
-   `Todo.ts` for the pattern). Use `src/app/types/administration/` instead if the resource
-   is an RBAC-management resource like the existing `groups`/`group-permissions`/`user-groups`.
+2. **Type** — don't write one: infer the row type from the table (`typeof projects.$inferSelect`).
+   Only when a query returns joined or computed fields, export a type next to that query in
+   `config/api.ts` that extends the inferred row (see `Todo` or `UserGroup`).
 3. **`config/descriptor.ts`** — `id`, `table`, i18n `singular`/`plural`/`new` labels (plus
    `singularDefinite` and `gender` if you want grammatically correct Romanian error/toast
    messages — see the existing descriptors for the pattern), `routes` (list/add/detail),

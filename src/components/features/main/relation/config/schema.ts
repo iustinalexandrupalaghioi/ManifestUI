@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { Relation } from "@/app/types/main/Relation";
-import { Gender } from "@/app/types/main/Relation";
+import type { Relation } from "@/components/features/main/relation/config/api";
+import { Gender } from "@/components/features/main/relation/config/gender";
 
 export const relationSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required"),

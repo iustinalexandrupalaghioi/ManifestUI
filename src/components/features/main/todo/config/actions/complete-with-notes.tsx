@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import type { ActionFormConfig } from "@/framework/types/resource-hook-types";
-import type { Todo } from "@/app/types/main/Todo";
+import type { Todo } from "@/components/features/main/todo/config/api";
 import { BookmarkCheck } from "lucide-react";
 import { useCompleteTodos } from "../../hooks/useCompleteTodo";
 import {

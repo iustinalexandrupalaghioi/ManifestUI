@@ -1,7 +1,7 @@
 "use client";
 
 import { defineResource } from "@/framework/core/define-resource";
-import type { Todo } from "@/app/types/main/Todo";
+import type { Todo } from "@/components/features/main/todo/config/api";
 
 import { useTodoBulkActions } from "./config/actions/complete";
 import { completeWithNotes } from "./config/actions/complete-with-notes";

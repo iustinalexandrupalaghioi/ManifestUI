@@ -1,6 +1,6 @@
 import { RelationList } from "@/framework/components/relations/RelationList";
 import type { DetailSlots } from "@/framework/types/define-resource-type";
-import type { Relation } from "@/app/types/main/Relation";
+import type { Relation } from "@/components/features/main/relation/config/api";
 import { relationsRelations } from "./relations";
 
 const completedTodosRelation = relationsRelations.find(

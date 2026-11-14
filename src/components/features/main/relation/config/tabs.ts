@@ -1,5 +1,5 @@
 import type { TabConfig } from "@/framework/types/tab-config-type";
-import type { Relation } from "@/app/types/main/Relation";
+import type { Relation } from "@/components/features/main/relation/config/api";
 import { relationsFieldTabs } from "./form";
 import type { RelationFormValues } from "./schema";
 
