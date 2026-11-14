@@ -26,8 +26,13 @@ works."
 - [Project structure](#project-structure)
 - [Database & migrations](#database--migrations)
 - [Adding a new resource](#adding-a-new-resource)
+- [Data views](#data-views)
+- [Forms](#forms)
+- [Relations & detail pages](#relations--detail-pages)
+- [File uploads](#file-uploads)
 - [Server actions & `ActionResult`](#server-actions--actionresult)
-- [Custom actions: `actionForms` vs `bulkActions`](#custom-actions-actionforms-vs-bulkactions)
+- [Custom actions: action forms and bulk actions](#custom-actions-action-forms-and-bulk-actions)
+- [Extensions: custom components](#extensions-custom-components)
 - [Authorization: RBAC](#authorization-rbac)
 - [Auth flows](#auth-flows)
 - [i18n](#i18n)
@@ -67,9 +72,9 @@ works."
    entries. Leave `groups`/`group-permissions`/`user-groups`/`users`
    (`src/components/features/administration/`) alone — that's the RBAC system itself, not
    demo data.
-4. **Point it at your own Supabase project and apply the schema** — follow
-   [First-time setup](#first-time-setup) below (env vars, `db:push`, the auth webhook, and
-   bootstrapping your own first administrator).
+4. **Point it at your own Supabase project and apply the schema** — run `pnpm manifest setup`
+   (see [First-time setup](#first-time-setup)): it writes `.env`, pushes the schema, installs the
+   auth user sync and creates your first administrator.
 5. **Configure locales**, if you don't need `en`/`ro` — edit `src/i18n/routing.ts` and add
    or remove the matching `messages/<locale>/` folders (see [i18n](#i18n)).
 6. **Start building** — once you're signed in as an administrator, follow
@@ -79,65 +84,74 @@ works."
 
 ## First-time setup
 
-1. **Install dependencies**
+You need Node.js, pnpm and a Supabase project (the free tier is fine).
 
-   ```bash
-   pnpm install
-   ```
+```bash
+pnpm install
+pnpm manifest setup
+```
 
-2. **Create your env file.** There's no committed `.env.example` in this repo today —
-   create a `.env` (or `.env.local`) in the project root yourself with:
+`pnpm manifest setup` walks through every step below and is safe to run again. Each step is
+also its own command:
 
-   | Variable                                                                                                                           | Where it comes from                                                                                                                                                                  |
-   | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-   | `NEXT_PUBLIC_SUPABASE_URL`                                                                                                         | Supabase → Project Settings → API                                                                                                                                                    |
-   | `NEXT_PUBLIC_SUPABASE_ANON_KEY`                                                                                                    | Supabase → Project Settings → API                                                                                                                                                    |
-   | `SUPABASE_SERVICE_ROLE_KEY`                                                                                                        | Supabase → Project Settings → API (server-only, never expose client-side)                                                                                                            |
-   | `DATABASE_URL`                                                                                                                     | Supabase → Project Settings → Database → Connection string, **Transaction pooler** (port 6543) — used both at runtime (`src/db/index.ts`) and by `drizzle-kit` (`drizzle.config.ts`) |
-   | `DIRECT_DATABASE_URL`                                                                                                              | Same page, the **direct/session** connection (port 5432) — kept for reference but not currently read by any code                                                                     |
-   | `AUTH_WEBHOOK_SECRET`                                                                                                              | Any string you choose — shared secret for the auth webhook, see step 4                                                                                                               |
-   | `NEXT_PUBLIC_BASE_URL`                                                                                                             | e.g. `http://localhost:3000` in dev                                                                                                                                                  |
-   | `NEXT_PUBLIC_APP_TIMEZONE`, `NEXT_PUBLIC_ENABLE_NUMBERED_TABS`, `NEXT_PUBLIC_NUMBER_LIST_COLUMNS`, `NEXT_PUBLIC_DEFAULT_VIEW_MODE` | App/display config                                                                                                                                                                    |
+| Command | What it does |
+| --- | --- |
+| `pnpm manifest env` | Creates or completes `.env`: asks for the Supabase values, generates `AUTH_WEBHOOK_SECRET`, defaults `NEXT_PUBLIC_BASE_URL` to `http://localhost:3000`. Existing values are kept. |
+| `pnpm manifest db` | Runs `pnpm db:push` to create the tables from `src/db/schema/*.ts`. |
+| `pnpm manifest auth-sync` | Installs a trigger that keeps the app's `user` table in sync with Supabase Auth, and backfills existing accounts. |
+| `pnpm manifest admin [email]` | Makes a user administrator. If the account doesn't exist, it creates it and prints a temporary password once. |
+| `pnpm manifest doctor` | Checks env vars, both database connections, the app tables, the sync trigger, that an administrator exists, and that Supabase Auth answers. |
 
-3. **Create the schema in your Supabase Postgres**
+(It's `pnpm manifest setup` rather than `pnpm setup` because `pnpm setup` is a built-in pnpm
+command.) The CLI lives in `scripts/manifest.mjs` and uses only the project's own dependencies.
 
-   ```bash
-   pnpm db:push
-   ```
+### Environment variables
 
-   This pushes `src/db/schema/*.ts` straight to the DB (no migration files) — good for a
-   fresh project. See [Database & migrations](#database--migrations) for the
-   migration-file-based alternative.
+`.env.example` lists every variable the code reads:
 
-4. **Wire up the auth → users sync webhook.** This app's own `user` table (holding
-   `administrator`, `full_name`, etc.) is _not_ Supabase's `auth.users` — it's kept in sync
-   by a webhook. In the Supabase dashboard, add a **Database Webhook** on `auth.users` for
-   `INSERT`/`UPDATE`/`DELETE`, pointed at `${NEXT_PUBLIC_BASE_URL}/api/webhooks/auth-users`,
-   with a custom header `x-webhook-secret` set to the same value as `AUTH_WEBHOOK_SECRET`.
-   Without this, signing up won't create a row in `user`, and nothing in the app will know
-   who you are.
+| Variable | Where it comes from |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never expose it to the browser. |
+| `DATABASE_URL` | Supabase → Project Settings → Database → Connection string, **Transaction pooler** (port 6543). Used by the app at runtime (`src/db/index.ts`). |
+| `DIRECT_DATABASE_URL` | Same page, the **direct/session** connection (port 5432). Required by `drizzle-kit` (`drizzle.config.ts`) and by `pnpm manifest`. |
+| `NEXT_PUBLIC_BASE_URL` | The app's URL, e.g. `http://localhost:3000` in development. |
+| `AUTH_WEBHOOK_SECRET` | Any string. Only needed if you use the webhook instead of the sync trigger (below). |
+| `NEXT_PUBLIC_APP_TIMEZONE` | Optional. Time zone used to show and enter dates and times (default `Europe/Bucharest`). |
+| `NEXT_PUBLIC_DEFAULT_VIEW_MODE` | Optional. Initial overview mode, `list` (cards, default) or `table` (grid). |
+| `NEXT_PUBLIC_ENABLE_NUMBERED_TABS` | Optional. `true` shows a number before each detail tab label. |
 
-5. **Sign up and grant yourself admin.** Run the app (next section), sign up through
-   `/auth/signup`, then in your DB flip your row:
+### Keeping users in sync
 
-   ```sql
-   update "user" set administrator = true where email = 'you@example.com';
-   ```
+The app's own `user` table (holding `administrator`, `full_name`, etc.) is _not_ Supabase's
+`auth.users`. `pnpm manifest auth-sync` runs `src/db/sql/auth-user-sync.sql`, which adds a
+trigger on `auth.users` that mirrors every insert, update and delete into `user` inside the
+database. It works for local development and production alike, with no public URL. You can also
+paste the file into the Supabase SQL editor. It is plain SQL rather than part of the Drizzle
+schema because Drizzle can't define functions or triggers, and `db:push` doesn't run custom SQL. Deleting an auth user also removes their group
+memberships, since `user_group` references `user` with `ON DELETE RESTRICT`.
 
-   There's no seed script or bootstrap admin today — this manual flip is the only way in.
-   `administrator = true` is a full bypass of the groups/permissions system (see
-   [Authorization](#authorization-rbac)): every route and every server action requires
-   authentication plus the matching permission, and an administrator is granted all of them
-   automatically, with no group assignment needed.
+**Alternative: webhook.** `/api/webhooks/auth-users` does the same sync over HTTP. To use it
+instead, add a Supabase **Database Webhook** on `auth.users` for `INSERT`/`UPDATE`/`DELETE`,
+pointed at `${NEXT_PUBLIC_BASE_URL}/api/webhooks/auth-users`, with an `x-webhook-secret` header
+equal to `AUTH_WEBHOOK_SECRET`. Supabase must be able to reach that URL, so this doesn't work
+against `localhost`.
+
+### Your first administrator
+
+`pnpm manifest admin you@example.com` sets `administrator = true` on that user (creating the
+account first if needed). By hand, sign up through `/auth/signup`, then run:
+
+```sql
+update "user" set administrator = true where email = 'you@example.com';
+```
+
+`administrator = true` is a full bypass of the groups/permissions system (see
+[Authorization](#authorization-rbac)): every route and every server action requires
+authentication plus the matching permission, and an administrator is granted all of them
+automatically, with no group assignment needed.
 
 ## Running the app
-
-**Test credentials** (demo admin account):
-
-```
-Email:    admin@admin.com
-Password: Adminadmin12!
-```
 
 ```bash
 pnpm dev          # dev server, http://localhost:3000
@@ -183,8 +197,11 @@ src/
 ├── framework/                    the reusable CRUD framework (defineResource, forms,
 │   │                             data-view, dialogs, files) — not covered in depth by
 │   │                             this doc
-│   └── authorization/            RBAC: permissions.ts, ResourceGuard, usePermissions,
-│                                 AccessDeniedDialog — see Authorization
+│   ├── authorization/            RBAC: permissions.ts, ResourceGuard, usePermissions,
+│   │                             AccessDeniedDialog — see Authorization
+│   └── extensions/               the extension API — see Extensions
+├── extensions/                   your registered extensions (index.ts)
+├── lib/storage/                  the default (Supabase Storage) file upload handler
 ├── db/
 │   ├── index.ts                  Drizzle client (see the RLS caveat in Authorization)
 │   └── schema/                   Drizzle table definitions — the source of truth for
@@ -199,19 +216,18 @@ src/
 Schema source of truth is `src/db/schema/*.ts` (Drizzle, `casing: "snake_case"` per
 `drizzle.config.ts`). Two ways to apply changes:
 
+All `drizzle-kit` commands connect through `DIRECT_DATABASE_URL` (see `drizzle.config.ts`).
+
 - **`pnpm db:push`** — pushes the current schema files straight to the DB, no migration
   file generated. Fast for local iteration; don't use it against a shared/prod DB since
-  there's no history to review or roll back. This project used `db:push` exclusively until
-  its first hand-written migration (`drizzle/0000_sparkling_living_tribunal.sql`, the
-  role→group rename + table singularization) — prefer `db:generate` + `db:migrate` from
-  here on so schema history stays reviewable.
+  there's no history to review or roll back.
 - **`pnpm db:generate`** then **`pnpm db:migrate`** — `generate` diffs your schema files
-  against the last-known DB state (recorded in `drizzle/meta/`) and writes a new SQL file
-  under `drizzle/`; `migrate` applies pending migration files. This is the reviewable,
+  against the last-known state (recorded in `drizzle/meta/`) and writes a new SQL file under
+  `drizzle/`; `migrate` applies pending migration files. This is the reviewable,
   shared-DB-safe path. **Always review the generated SQL before running `db:migrate`** —
   drizzle-kit's diff heuristics can mistake a rename for a drop+create, which silently loses
-  data; the existing `0000_sparkling_living_tribunal.sql` had to be hand-edited for exactly
-  this reason (see the comment at the top of that file).
+  data. Note that `drizzle` is listed in `.gitignore`: remove that line if you want migration
+  history committed.
 - **`pnpm db:studio`** — opens Drizzle Studio against your DB.
 
 To change the schema:
@@ -259,19 +275,23 @@ Steps to add a new one, say `projects`:
    `queryKey`, `overviewKey`.
 4. **`config/schema.ts`** — a Zod object for the editable fields; export the inferred
    `ProjectFormValues` type.
-5. **`config/api.ts`** — `"use server"`; build server actions via
-   `createResourceActions(descriptor.id)` (from `@/app/[locale]/cms/createResourceActions`, a
-   project-level wrapper — don't import `defineResourceActions`/the base
-   `createResourceActions` from `@/framework/...` directly, that wrapper is what threads
-   this app's whole `resourceDescriptors` list through so failure messages can resolve any
-   resource's label). Every action this produces is permission-gated per verb — see
+5. **`config/api.ts`** — `"use server"`; export every action from one
+   `defineResourceActions(descriptor.id, { ... })` call
+   (`@/framework/authorization/lib/defineResourceActions`). Reads are `[verb, fn]` pairs
+   (`fetchTodoList: ["read", async (...) => ...]`); writes come from
+   `createResourceActions(descriptor.id)` (`@/app/[locale]/cms/createResourceActions`, a
+   project-level wrapper that threads the app's whole `resourceDescriptors` list through so
+   failure messages can resolve any resource's label): `.add(fn)`, `.update(fn)`,
+   `.delete(fn)` and `.action(verb, fn)` for custom verbs, each run in a transaction. Every
+   action is permission-gated per verb — see
    [Server actions & ActionResult](#server-actions--actionresult) and
-   [Authorization](#authorization-rbac).
+   [Authorization](#authorization-rbac). `todo/config/api.ts` shows the full pattern, including
+   keyset pagination, grouping and totals.
 6. **`config/columns.ts`** — a `ColumnConfig[]` for the table/card views.
-7. **`config/form.ts`** — a `FormConfig` (stack or grid layout) for add/edit.
+7. **`config/form.ts`** — a `FormConfig` (stack, grid or free layout, see [Forms](#forms)) for add/edit.
 8. **`resource.tsx`** — call `defineResource({...})` wiring all of the above together, then
    re-export the generated `hooks`/`components` you need (`Overview`, `AddPage`,
-   `DetailPage`, `LookupDialog`, the query hooks). Copy `todo/resource.tsx` as a template.
+   `DetailPage`, `PickupDialog`, the query hooks). Copy `todo/resource.tsx` as a template.
 9. **`index.ts`** — re-export resource.tsx's public names.
 10. **Register it in three places** (all under `src/app/[locale]/cms/`):
     - `resourceDescriptors.ts` — add `projectsDescriptor` to the array (this is what backs
@@ -295,6 +315,98 @@ Steps to add a new one, say `projects`:
     some group is given permissions on it: sign in as an admin and add rows via the
     `group-permissions` resource (or assign an existing group that already grants `"*"`-style
     broad access, if you have one).
+
+## Data views
+
+`config/columns.ts` defines the resource's columns as `ColumnConfig[]`. Each column has a
+`field`, a `label` (`{ en, ro }`), a `type` (`text`, `number`, `boolean`, `date`, `time`,
+`datetime`, `select`, `file`, `json`) and optional behaviour: `sortable`, `filterable`,
+`groupable`, `aggregatable` (with `defaultAggregate`), `selectOptions` for enums, `size`,
+`prefix`/`suffix`, and visibility flags `hidden`, `navigationHidden`, `pickupHidden`.
+
+`resource.tsx` → `dataView` places them:
+
+- **`overview`** — the resource's list page. `dataTableColumns` for the grid and
+  `dataListColumns` for the card list (keep column IDs aligned between the two; they're merged
+  by ID). `features` switches tools on or off (sorting, filtering, quickSearch, grouping,
+  aggregates, saved views, the grid/cards toggle, card list, resizing, pinning, the column
+  manager, selection, inline editing). `slots` adds components around the grid.
+- **`pickup`** — the dialog that opens from a relationship field to pick a record; its own
+  columns, features and default view.
+- **Default views** are config, not code: `overview.defaultView`, `overview.navigationView`
+  (when the overview is embedded as a filtered list, e.g. in a relation tab or split view) and
+  `pickup.defaultView` set the initial sorting, filters, column order, widths and pinning, per
+  mode:
+
+  ```ts
+  defaultView: {
+    table: { sorting: [{ column: "created_at", desc: true }], pinned: ["title"] },
+    list: { sorting: [{ column: "created_at", desc: true }] },
+  },
+  ```
+
+  Views users save keep their own state.
+
+Grouping and totals need server support: `data.fetchGroupAggregates` / `data.fetchAggregates`
+(see `todo/config/api.ts`).
+
+## Forms
+
+`config/form.ts` exports a `FormConfig` with one of three layouts:
+
+- **`stack`** — sections one under another; each section has `cols` and `fields`.
+- **`grid`** — named `areas` with sections placed into columns.
+- **`free`** — a tree of nodes under `root`: containers (`grid`, `row`, `column`, `card`,
+  `tabs`), fields, `list` (related records), `heading`, `text`, `divider`, `spacer`, `slot`,
+  `button`/`buttons` and `pickupvalue`. ManifestUI Studio's Form Designer produces this layout.
+
+Field types: `input` (`inputType` text/number/email/tel/password), `textarea`, `switch`,
+`select`, `combobox`, `date`, `time`, `datetime`, `readonly`, `json`, `file`, `custom`, plus
+registered [extension](#extensions-custom-components) fields. Every field takes `name`, `label`,
+`disabled`/`readonly` (a boolean or a function of the form values), and placement props.
+
+In `free` layouts placement is responsive to the width of the **parent container**: `span`,
+`col`, `row`, `hideOn`, `order` and a grid's `cols` accept a plain value or
+`{ base, sm, md, lg, xl }`, mobile-first. `hidden` hides a node (also by condition); `hideOn`
+hides it at chosen sizes while keeping it mounted.
+
+**Relationship fields** use `pickup`: `resource` (the related resource), `mapField` (the
+column taken from the picked record), `targetField` (the form value it fills), optional
+`embeddedField` (the related record already loaded on detail forms), `fillFields` (show or copy
+other related values; `pickupvalue` nodes place them anywhere in a `free` layout) and
+`preFilters`. See the user field in `todo/config/form.ts`.
+
+Validation is the Zod schema in `config/schema.ts`; errors show as soon as a field is invalid.
+`FormInput` turns non-empty number inputs into numbers and cleared ones into empty strings, so
+normalise empty numeric input in the schema before number validation (avoid
+`z.coerce.number()` where empty must not become zero). Money fields that are Postgres
+`numeric` should parse to strings.
+
+## Relations & detail pages
+
+- **Relations** (`config/relations.ts`) list child resources whose rows point at this one:
+  `key`, `childResource`, and `filter(item)` returning the filter that scopes the child list
+  (see `todo/config/relations.ts`). `invalidateOn: ["add" | "update" | "delete"]` refetches the
+  child lists after those mutations of the parent.
+- **Detail tabs** (`detail.tabs`): `type: "relation"` shows a relation's list,
+  `type: "fields"` a group of form fields, `type: "extension"` a registered detail component,
+  and the default `type: "list"` your own `render(item)`. `detail.defaultTab` picks the
+  tab that opens first; `detail.defaultFormOpen` (default `true`) decides whether the detail
+  form starts expanded.
+- **Detail slots** (`detail.slots`): `beforeForm`, `afterForm`, `afterTabs`, `left`,
+  `right` — a render function or an extension reference.
+- **Presentation** (`presentation`): `open` as `page`, `dialog` or `split` (the detail beside
+  the overview, configured by `split`), and `add` as `page` or `dialog`.
+- **Toolbar actions**: the top-level `add`, `open` and `delete` accept `true`/`false` or
+  `{ toolbar, row }` to choose where each action appears.
+
+## File uploads
+
+`file` fields upload through a storage handler: `setStorageHandler()` from
+`@/framework/components/files`. The app registers a Supabase Storage handler in
+`src/lib/storage/registerDefaultStorageHandler.ts` (imported by the CMS providers and the
+profile form); swap it to store files elsewhere. The upload components show progress and
+previews.
 
 ## Server actions & `ActionResult`
 
@@ -326,20 +438,24 @@ error, so components mostly don't deal with `ActionResult` directly.
 
 The `add`/`update`/`delete` helpers from `createResourceActions(...).add/update/delete`
 each run inside a DB transaction; `delete` runs **per id**, so a bulk delete can partially
-succeed (`{ succeededIds, failures }`, surfaced in the UI as a `BulkResultDialog`).
+succeed (`{ succeededIds, failures }`, surfaced in the UI by `ResultDialog`).
 
-## Custom actions: `actionForms` vs `bulkActions`
+## Custom actions: action forms and bulk actions
 
 Beyond plain add/edit/delete, a resource can expose custom actions. `todos` has one
 example of each (`src/components/features/main/todo/config/actions/`):
 
-- **`actionForms`** (`complete-with-notes.tsx`) — an `ActionFormConfig`: a labeled action
+- **Action forms** (`complete-with-notes.tsx`) — an `ActionFormConfig`: a labeled action
   that opens a small dialog with its own form (its own Zod schema, its own submit), usable
-  from the table toolbar or a detail page. Wire it into `resource.tsx` via `actionForms: [...]`.
-- **`bulkActions`** (`complete.tsx`) — a hook (`() => BulkActionsHookResult`) contributing
+  from the table toolbar or a detail page. Wire it into `resource.tsx` via
+  `actions: { forms: [...] }`.
+- **Bulk actions** (`complete.tsx`) — a hook (`() => BulkActionsHookResult`) contributing
   extra row/bulk actions to the table/detail toolbar that _don't_ need their own form (here,
   "mark complete" just calls the mutation directly on the selected rows). Wire it into
-  `resource.tsx` via `bulkActions: useYourBulkActionsHook`.
+  `resource.tsx` via `actions: { bulk: useYourBulkActionsHook }`.
+
+`actions` also takes `isDeleteEligible(item)` (hide delete for rows that can't be deleted) and
+`getRowUrl(item)`.
 
 Both ultimately call a server action defined the same way as `add`/`update`/`delete` — see
 `completeTodos` in `todos/config/api.ts` for the `createResourceActions(...).action(verb, ...)`
@@ -353,6 +469,121 @@ up as something a group can be granted — see the `"todos:complete"` /
 `"todos:complete-with-note"` entries there for the pattern. The `id` you give it there must
 match the `verb` string exactly, since that's what `hasPermission(`${resourceId}:${verb}`)`
 checks against on the client and `requirePermission` checks server-side.
+
+## Extensions: custom components
+
+When a resource needs something the built-in fields and layouts don't offer, add your own React
+component as an **extension**. The API lives in `@/framework/extensions` and has four kinds, one
+per place a component can render:
+
+| Helper                    | Renders                                                                                       | Component receives                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `defineFieldComponent`    | As a form field bound to **one form value**, like a built-in field type                      | `id`, `name`, `label`, `value`, `onChange`, `onBlur`, `error`, `disabled`, `readOnly`, `props`, `item` |
+| `defineBlockComponent`    | As a form **section**, with access to the whole form                                          | `props`, `values` (live form values merged over the record), `form` (React Hook Form), `item`, `disabled`, `readOnly` |
+| `defineDetailComponent`   | In a detail page/dialog slot (`beforeForm`, `afterForm`, `afterTabs`, `left`, `right`) or as a detail tab | `item`, `props`, `tab` (set when rendered as a tab)                                    |
+| `defineOverviewComponent` | In an overview slot (`beforeToolbar`, `afterToolbar`, `toolbarExtra`, `afterTable`)           | `items`, `total`, `selectedRows`, `props`                                              |
+
+Every definition takes:
+
+- **`type`**: a unique id. It can't reuse a built-in node type (`input`, `select`, `grid`, `card`,
+  `tabs`, `list`, `button`, `relation`, `extension`, …); those registrations are ignored with a
+  dev-mode warning, as are duplicates.
+- **`label`** (`{ en, ro }`), and optionally **`description`** and **`icon`**.
+- **`props`** (optional): a Zod object. It validates the props each config passes, applies
+  `.default()` values before the component renders, and describes the controls a visual editor
+  shows (string, number, boolean and enum fields; `.describe()` becomes the hint). Invalid props
+  render an inline error instead of the component.
+- **`component`**: the React component.
+- Field components only: **`bare: true`** skips the standard label/error frame so the component
+  draws its own.
+
+### 1. Define the component
+
+`src/extensions/RatingField.tsx`, a star rating bound to a numeric form value:
+
+```tsx
+"use client";
+
+import { StarIcon } from "lucide-react";
+import { z } from "zod";
+import { defineFieldComponent } from "@/framework/extensions";
+
+export const ratingField = defineFieldComponent({
+  type: "rating",
+  label: { en: "Rating", ro: "Evaluare" },
+  icon: StarIcon,
+  props: z.object({
+    max: z.number().int().min(1).max(10).default(5).describe("Number of stars"),
+  }),
+  component: ({ id, value, onChange, onBlur, disabled, readOnly, props }) => (
+    <div id={id} role="radiogroup" onBlur={onBlur}>
+      {Array.from({ length: props.max }, (_, index) => (
+        <button
+          key={index}
+          type="button"
+          disabled={disabled || readOnly}
+          onClick={() => onChange(index + 1)}
+        >
+          <StarIcon className={index < (value ?? 0) ? "fill-amber-400" : undefined} />
+        </button>
+      ))}
+    </div>
+  ),
+});
+```
+
+### 2. Register it
+
+Add it to `src/extensions/index.ts`. The module augmentation makes every `type` and `props` you
+write in config type-checked against the registered components:
+
+```ts
+import { registerExtensions } from "@/framework/extensions";
+import { ratingField } from "./RatingField";
+import { recordInfoBlock } from "./RecordInfoBlock";
+
+export const extensions = registerExtensions([ratingField, recordInfoBlock]);
+
+declare module "@/framework/extensions/registry" {
+  interface Register {
+    extensions: typeof extensions;
+  }
+}
+```
+
+`src/extensions/index.ts` is imported once on the client by the CMS providers
+(`src/app/[locale]/cms/providers.tsx`), so registered components are available on every CMS
+page.
+
+### 3. Reference it from config
+
+Configs refer to an extension as `{ type, props }`. Block, detail and overview components also
+get a typed `.with(props)` helper that builds the same reference.
+
+```ts
+// A field, inside a FormConfig: name/label/span like any other field.
+{ type: "rating", name: "score", label: { en: "Score", ro: "Scor" }, props: { max: 5 } }
+
+// A block, as a form section.
+{ type: "recordInfo", props: { title: "Record", fields: "id,created_at" } }
+
+// A detail component in a detail slot (resource.tsx → detail.slots).
+detail: { slots: { afterForm: todoAttachmentsPanel.with({ height: 300 }) } }
+
+// A detail component as a detail tab (config/tabs.ts).
+{ type: "extension", value: "attachments", label: { en: "Attachments", ro: "Atașamente" },
+  component: todoAttachmentsPanel.with({ height: 300 }) }
+
+// An overview component in an overview slot (resource.tsx → dataView.overview.slots).
+dataView: { overview: { slots: { afterTable: myTotals.with() } } }
+```
+
+Slots also accept a plain render function (for example `afterForm: (item) => <MyPanel item={item} />`)
+when a component only makes sense for one resource and doesn't need to be reusable or configurable.
+
+The template ships three examples: `ratingField` and `recordInfoBlock` in `src/extensions/`, and
+`todoAttachmentsPanel` (a detail component) in
+`src/components/features/main/todo/config/attachmentsPanel.tsx`.
 
 ## Authorization: RBAC
 
@@ -397,7 +628,7 @@ signed in as an administrator.
 - `ResourceGuard` (`src/framework/authorization/ui/ResourceGuard.tsx`) — the server component
   that gates a whole route the same way: redirects to `/auth/login` if not signed in,
   renders `AccessDeniedDialog` if signed in but missing the permission. Every route under
-  `src/app/<resource>/` wraps its page in one, e.g.
+  `src/app/[locale]/cms/` wraps its page in one, e.g.
   `<ResourceGuard resourceId="todos" action="read">`.
 - `assertHasAllPermissions(userId, permissions, context)` — a **confused-deputy guard** for
   permission-granting endpoints (assigning a group to a user, editing a group's resource
@@ -433,7 +664,8 @@ non-bypassing Postgres role with the caller's JWT claims set per request.
 ## Auth flows
 
 `src/framework/authentication/` wraps Supabase Auth (email/password + Google OAuth) behind
-server actions (`login`, `signup`, `forgotPassword`, `updatePassword`, `logout`) and
+server actions (`login`, `signup`, `forgotPassword`, `updatePassword`, `logout`, plus the
+Google sign-in action) and
 matching form components, already wired into `/auth/*` routes. `updatePassword` is
 additionally gated on a short-lived recovery cookie so a hijacked ordinary session can't
 silently change the account password — see the code comments in
@@ -463,3 +695,20 @@ there if you introduce one.
 than UI copy. The same `{ en, ro }` pattern is how error/toast messages pick the
 grammatically correct Romanian noun form and gender (see `ResourceDescriptor.gender` /
 `singularDefinite` and `src/framework/lib/mapPgError.ts` / `describeActionFailure.ts`).
+
+## Known issues to be aware of
+
+- **No UI for the `administrator` flag** — set it with `pnpm manifest admin` or SQL (see
+  [Your first administrator](#your-first-administrator)). There's also no UI for un-setting it
+  on yourself, so be careful who you grant it to.
+- **`grantableActions` is a small, hand-maintained list** (`src/app/[locale]/cms/grantablePermissions.ts`)
+  of custom, non-CRUD permission strings — it is *not* derived from resources'
+  `actions.forms`/`actions.bulk` automatically. Adding a new custom action and forgetting to add
+  its entry there means it'll work for administrators but can never be granted to a
+  group-based user.
+- **Migrations aren't committed** — `drizzle` is in `.gitignore`, so generated migration files
+  stay local unless you remove that line. Always review generated SQL closely before running
+  `db:migrate`; drizzle-kit's diff can turn a rename into a destructive drop+create.
+- **RLS policies in `src/db/schema/*.ts` don't do anything** through the app's own DB
+  client — see the callout in [Authorization](#authorization-rbac). Don't add a new
+  `pgPolicy` expecting it to enforce anything by itself.

@@ -233,7 +233,7 @@ export type FormLayoutConfig<TFormValues> =
     }
   /**
    * Free-form layout: a tree of containers, fields, buttons and content
-   * nodes. See `docs/form-layout.md`.
+   * nodes. See the README's "Forms" section.
    */
   | { mode: "free"; root: LayoutNode<TFormValues> };
 
