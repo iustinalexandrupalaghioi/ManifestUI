@@ -8,3 +8,4 @@ export * from "./group-permission";
 export * from "./relations";
 export * from "./site-page";
 export * from "./site-settings";
+export * from "./service";

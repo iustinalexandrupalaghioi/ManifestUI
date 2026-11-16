@@ -1,0 +1,26 @@
+[
+  {
+    "slug": "admin-apps",
+    "title": "Aplicații de administrare",
+    "summary": "Back-office-uri pentru datele tale: tabele, formulare, permisiuni și istoric.",
+    "position": 1,
+    "body": "",
+    "published": true
+  },
+  {
+    "slug": "websites",
+    "title": "Site-uri web",
+    "summary": "Site-uri rapide, statice, pe care echipa ta le editează direct pe pagină, cu conținutul în propria bază de date.",
+    "position": 2,
+    "body": "",
+    "published": true
+  },
+  {
+    "slug": "integrations",
+    "title": "Integrări",
+    "summary": "Conectează plăți, email, stocare și sistemele existente prin acțiuni de server tipizate.",
+    "position": 3,
+    "body": "",
+    "published": true
+  }
+]

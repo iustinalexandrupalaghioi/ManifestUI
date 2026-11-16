@@ -1,0 +1,26 @@
+[
+  {
+    "slug": "admin-apps",
+    "title": "Admin apps",
+    "summary": "Back-offices for your data: grids, forms, permissions and audit.",
+    "position": 1,
+    "body": "",
+    "published": true
+  },
+  {
+    "slug": "websites",
+    "title": "Websites",
+    "summary": "Fast, static websites your team edits on the page, with content in your own database.",
+    "position": 2,
+    "body": "",
+    "published": true
+  },
+  {
+    "slug": "integrations",
+    "title": "Integrations",
+    "summary": "Connect payments, email, storage and your existing systems through typed server actions.",
+    "position": 3,
+    "body": "",
+    "published": true
+  }
+]

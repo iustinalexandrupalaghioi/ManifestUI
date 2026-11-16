@@ -8,6 +8,7 @@ import { userGroupsDescriptor } from "@/components/features/administration/user-
 import { usersDescriptor } from "@/components/features/administration/user/config/descriptor";
 import { sitePagesDescriptor } from "@/components/features/content/site-page/config/descriptor";
 import { siteSettingsDescriptor } from "@/components/features/content/site-settings/config/descriptor";
+import { servicesDescriptor } from "@/components/features/content/service/config/descriptor";
 
 // Whole-app resource registry — fed to the framework's generic
 // createResourceActions() (via ./createResourceActions) so failure messages
@@ -23,4 +24,5 @@ export const resourceDescriptors: ResourceDescriptor[] = [
   usersDescriptor,
   sitePagesDescriptor,
   siteSettingsDescriptor,
+  servicesDescriptor,
 ];

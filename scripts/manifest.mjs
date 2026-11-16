@@ -31,7 +31,12 @@ const TRIGGER = "manifestui_sync_auth_user";
 const SECTIONS_DIR = resolve(ROOT, "src/extensions/sections");
 const SECTIONS_INDEX = resolve(SECTIONS_DIR, "index.ts");
 // The learning path's lessons table only exists in projects that have it.
-const SITE_TABLES = ["site_page", "site_settings", ...(existsSync(resolve(ROOT, "src/db/schema/learn-lesson.ts")) ? ["learn_lesson"] : [])];
+const SITE_TABLES = [
+  "site_page",
+  "site_settings",
+  ...(existsSync(resolve(ROOT, "src/db/schema/learn-lesson.ts")) ? ["learn_lesson"] : []),
+  ...(existsSync(resolve(ROOT, "src/db/schema/service.ts")) ? ["service"] : []),
+];
 
 // ── Output ──────────────────────────────────────────────────────────────────
 

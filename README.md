@@ -904,9 +904,56 @@ tell the editor how to behave.
 | `list(item)` | An array of `item` | `label`, `itemLabel` (used in error paths: "Quote 2"), `fixed` (no adding or removing) |
 | `group({...})` | A nested object (a card, a button) | `label` |
 | `media()` | `{ src, width, height }`, uploaded to the `site-media` bucket | `label`, `accept`: `"image"`, `"video"` or `"captions"` |
+| `choice(options)` | One of the option values (a string) | `label`, `default`. Options are `{ value, label }`, or a function that returns them. Shown under the section's **Settings** button. |
 
 Plain zod values work too, but they don't get editor behaviour. Link addresses are a `text` for
-now, shown in the editor with `<EditNote>`; a `link()` field comes in Phase 2.
+now, shown in the editor with `<EditNote>`. There's no `link()` field with a page picker yet.
+
+**Section settings.** A `choice()` at the top level of the schema becomes a setting. Editors change
+it from the **Settings** button on the section's toolbar, and the component renders accordingly:
+
+```tsx
+schema: z.object({
+  cardStyle: choice(
+    [
+      { value: "image", label: L("With image", "Cu imagine") },
+      { value: "icon", label: L("With icon", "Cu pictogramă") },
+      { value: "text", label: L("Text only", "Doar text") },
+    ],
+    { label: L("Cards show", "Cardurile arată"), default: "image" },
+  ),
+  items: list(/* … */),
+}),
+component: ({ content }) => (
+  // …
+  {content.cardStyle === "image" && <img src={item.image.src} alt="" />}
+),
+```
+
+Use it for variants such as columns, a layout, or showing the images. For an on/off option, use a
+`choice()` with two values. The collection sections use it to pick the collection and how many items
+to show (`src/extensions/sections/collectionFields.tsx`).
+
+### What editors can and can't change
+
+Editors can:
+
+- edit every text rendered with `<Text>`, in place;
+- hide a text by leaving it empty, when it's rendered with `<Text optional>`;
+- replace or remove images (`<MediaEdit>`);
+- add, remove and reorder list items, such as cards, and add, move, hide and remove whole sections;
+- change section settings (`choice()` fields).
+
+Editors can't, yet:
+
+- **change settings on a single card.** A `choice()` inside a list item is stored, but the editor
+  only shows settings for the whole section. Use one setting for all the cards, or a separate
+  section type.
+- **add elements a card doesn't define**, such as a button on one card and a badge on another. A
+  card shows exactly what its schema holds, so add the field to the schema and leave it empty where
+  it's not needed.
+- **edit text printed directly** (`{content.title}`): it shows on the page but can't be edited there.
+- **edit collection records on the page.** They're edited in their CMS form (see below).
 
 ### The markup: primitives
 
@@ -952,7 +999,17 @@ content. Editors manage the records in the CMS as usual. The generic **Collectio
 **Collection carousel** sections show them on any page. In the editor, each section's **Settings**
 button (on the section toolbar) picks which collection to show and how many items.
 
-Adding one takes three steps. Services (`src/extensions/collections`) is the working example:
+This project includes a working example, **Services**: the `service` table
+(`src/db/schema/service.ts`), its CMS resource (**Website › Services**), three starter services per
+language in `src/db/seed/services/`, and the collection in `src/extensions/collections`.
+`pnpm manifest site` creates the table and adds the starter services. Then give editors permission
+for Services, add a **Collection carousel** to a page, and pick **Services** in its Settings. To
+drop the example, delete the Services resource, its CMS routes, the table and its seed, remove
+`servicesDescriptor`, the menu link and the `service` schema export, and remove the services
+collection from `src/extensions/collections/index.ts` and `data.ts`. Keep the two collection
+sections for your own collections.
+
+Adding another collection takes three steps:
 
 1. **Name it** in `src/extensions/collections/index.ts`:
    ```ts

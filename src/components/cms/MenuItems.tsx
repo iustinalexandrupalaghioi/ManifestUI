@@ -11,6 +11,7 @@ import {
   ShieldCheckIcon,
   FileTextIcon,
   PanelsTopLeftIcon,
+  BriefcaseIcon,
 } from "lucide-react";
 
 export function useMenuItems(): MenuSection[] {
@@ -59,6 +60,13 @@ export function useMenuItems(): MenuSection[] {
           path: `${BASE_ROUTE}/site-settings`,
           title: t("siteSettingsDescription"),
           icon: PanelsTopLeftIcon,
+        },
+        {
+          type: "link",
+          name: t("services"),
+          path: `${BASE_ROUTE}/services`,
+          title: t("servicesDescription"),
+          icon: BriefcaseIcon,
         },
       ],
     },
