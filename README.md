@@ -33,6 +33,7 @@ works."
 - [Server actions & `ActionResult`](#server-actions--actionresult)
 - [Custom actions: action forms and bulk actions](#custom-actions-action-forms-and-bulk-actions)
 - [Extensions: custom components](#extensions-custom-components)
+- [Building the website](#building-the-website)
 - [Authorization: RBAC](#authorization-rbac)
 - [Auth flows](#auth-flows)
 - [i18n](#i18n)
@@ -100,6 +101,8 @@ also its own command:
 | `pnpm manifest db` | Runs `pnpm db:push` to create the tables from `src/db/schema/*.ts`. |
 | `pnpm manifest auth-sync` | Installs a trigger that keeps the app's `user` table in sync with Supabase Auth, and backfills existing accounts. |
 | `pnpm manifest admin [email]` | Makes a user administrator. If the account doesn't exist, it creates it and prints a temporary password once. |
+| `pnpm manifest site` | Sets up the website: website tables, the seed content in `src/db/seed/`, section and database checks. See [Building the website](#building-the-website). |
+| `pnpm manifest section <name>` | Scaffolds a page section in `src/extensions/sections/` and registers it. |
 | `pnpm manifest doctor` | Checks env vars, both database connections, the app tables, the sync trigger, that an administrator exists, and that Supabase Auth answers. |
 
 (It's `pnpm manifest setup` rather than `pnpm setup` because `pnpm setup` is a built-in pnpm
@@ -168,8 +171,9 @@ src/
 │   ├── [locale]/
 │   │   ├── layout.tsx            outer shell (html/body, generateStaticParams) — no CSS
 │   │   │                         import, so (site) and cms below can each ship their own
-│   │   ├── (site)/               public site route group (no URL segment) — home page,
-│   │   │                         its own layout/Navbar, and auth/ (login/signup/
+│   │   ├── (site)/               public site route group (no URL segment) — the CMS-built
+│   │   │                         home page and [slug] pages, site-preview/ (the page
+│   │   │                         editor's frame), its own layout, and auth/ (login/signup/
 │   │   │                         forgot-password/update-password/signup-success pages)
 │   │   └── cms/                  the admin app, gated by ResourceGuard on every route
 │   │       ├── <resource>/       one folder per resource route: todos/, relations/,
@@ -187,7 +191,8 @@ src/
 │   └── api/webhooks/             route handlers, e.g. the auth-users sync webhook — outside
 │                                 [locale] since API routes aren't locale-scoped
 ├── components/
-│   ├── site/                     (site)-only UI: Navbar, UserMenu
+│   ├── site/                     (site)-only UI: Navbar, page reads and caching, the
+│   │                             page editor's preview — see Building the website
 │   ├── cms/                      cms-only UI: AppNavbar, MenuItems, BASE_ROUTE ("/cms")
 │   ├── features/
 │   │   ├── main/                 todo/, relation/, todo-attachment/
@@ -200,7 +205,9 @@ src/
 │   ├── authorization/            RBAC: permissions.ts, ResourceGuard, usePermissions,
 │   │                             AccessDeniedDialog — see Authorization
 │   └── extensions/               the extension API — see Extensions
-├── extensions/                   your registered extensions (index.ts)
+├── extensions/                   your registered extensions (index.ts), page sections
+│                                 (sections/) and the header and footer (site/)
+├── modules/site/                 the website builder: defineSection, primitives, rendering
 ├── lib/storage/                  the default (Supabase Storage) file upload handler
 ├── db/
 │   ├── index.ts                  Drizzle client (see the RLS caveat in Authorization)
@@ -584,6 +591,428 @@ when a component only makes sense for one resource and doesn't need to be reusab
 The template ships three examples: `ratingField` and `recordInfoBlock` in `src/extensions/`, and
 `todoAttachmentsPanel` (a detail component) in
 `src/components/features/main/todo/config/attachmentsPanel.tsx`.
+
+## Building the website
+
+The public site is built from **sections**. You define each section type in code: what content
+it holds, and how it looks. Editors then build pages from those sections in the CMS
+(**Website › Site pages**) by editing directly on the page. They can add, move, hide and remove
+sections, edit texts in place, replace images, and add or remove list items. The header and
+footer are edited the same way in **Website › Site settings**, one record per language.
+
+A section is one file. You never write editor code: the editing comes from the schema and the
+primitives you render with. The markup inside a section is yours, so blocks from shadcn/ui or any
+other component library work (see [Bringing blocks from a component library](#bringing-blocks-from-a-component-library)).
+
+There is no starter site: the template has an empty section list and no pages. You add section types
+in code, create the tables, and then create pages, either in the CMS or with a seed.
+
+### How the parts link
+
+```
+site_page                       one row per page and language
+  slug "home", locale "en", kind "sections", published true
+  sections: [ { "id": "hero-1", "type": "hero", "content": { "title": "…" } }, … ]
+                    │
+                    │  "type" picks the section definition
+                    ▼
+src/extensions/sections/index.ts         registerSections([heroSection, …])
+                    │
+                    ▼
+src/extensions/sections/HeroSection.tsx  defineSection({ type: "hero", schema, defaults, component })
+   schema     reads "content": missing or broken fields become empty, unknown keys are ignored
+   component  renders it with <Text path="title" />, <List>, <MediaEdit>…
+                    │
+        ┌───────────┴─────────────────────────┐
+        ▼                                     ▼
+public site: plain HTML, static        CMS editor: the same component in the
+/[locale] shows slug "home",           /[locale]/site-preview frame, where the
+/[locale]/[slug] the other pages       primitives become editing controls
+```
+
+The header and footer take the same path from `site_settings`: one row per language, with
+`content` shaped as `{ "header": {…}, "footer": {…} }`, rendered by `siteHeader` and `siteFooter` in
+`src/extensions/site/`.
+
+| Part | Where | What it does |
+| --- | --- | --- |
+| Page content | `site_page.sections` (jsonb) | What editors saved: an ordered list of `{ id, type, hidden?, content }`. `content` follows the section's schema. |
+| Section definition | `src/extensions/sections/<Name>Section.tsx` | The schema (what content the section holds) and the component (how it looks). |
+| Registry | `src/extensions/sections/index.ts` | Which types exist, in "Add section" order. A stored type that isn't registered is skipped on the site and refused on save. |
+| Server data | `src/extensions/sections/data.ts` | Data a section needs beyond its own content, such as database records. |
+| Primitives and field helpers | `@/modules/site` | Plain output on the site, editing controls in the editor. |
+| Layout helpers (optional) | `src/components/site/sections/blocks.tsx` | `Band`, `Container`, `SectionHeading`, button and title classes. |
+| Header and footer | `src/extensions/site/` | Defined like sections, stored in `site_settings`. |
+| Reads and caching | `src/components/site/` | `getSitePage`, `getSiteSettings`, and the cache tags that a CMS save refreshes. |
+| The site module | `src/modules/site/` | `defineSection`, registry, validation, rendering. You don't normally edit it. |
+
+### Setting up the tables
+
+```bash
+pnpm manifest site
+```
+
+It creates the website tables if they're missing, from the Drizzle schemas
+`src/db/schema/site-page.ts` and `site-settings.ts`. It does this through `pnpm manifest db`, which
+pushes the schema and then restores the read policies that `drizzle-kit push` leaves without their
+condition. It then seeds the files in `src/db/seed/` that aren't in the database yet, loads every
+registered section (which proves they compile), and checks that each language has a header and
+footer. `pnpm manifest doctor` runs the same checks.
+
+To create the tables yourself, for example in the Supabase SQL editor, this is the same schema:
+
+```sql
+create table if not exists site_page (
+  id bigint generated by default as identity primary key,
+  slug text not null,
+  locale text not null,
+  title text not null,
+  description text not null default '',
+  kind text not null default 'text',          -- 'sections' (built from sections) or 'text' (Markdown body)
+  body text not null default '',
+  sections jsonb not null default '[]'::jsonb,
+  published boolean not null default false,
+  updated_at timestamptz not null default now(),
+  constraint site_page_slug_locale_key unique (slug, locale),
+  constraint site_page_locale_check check (locale = any (array['en', 'ro'])),
+  constraint site_page_kind_check check (kind = any (array['text', 'sections'])),
+  constraint site_page_slug_check check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$')
+);
+alter table site_page enable row level security;
+create policy "Published site pages are readable by everyone" on site_page
+  for select to anon, authenticated using (published);
+
+create table if not exists site_settings (
+  id bigint generated by default as identity primary key,
+  locale text not null,
+  content jsonb not null default '{}'::jsonb,  -- { "header": {…}, "footer": {…} }
+  updated_at timestamptz not null default now(),
+  constraint site_settings_locale_key unique (locale),
+  constraint site_settings_locale_check check (locale = any (array['en', 'ro']))
+);
+alter table site_settings enable row level security;
+create policy "Site settings are readable by everyone" on site_settings
+  for select to anon, authenticated using (locale is not null);
+```
+
+- **Languages.** The locale checks list the languages in `src/i18n/routing.ts`. Change them in the
+  SQL and in the schema files together.
+- **The schema files are the source of truth.** If you change a table in SQL, make the same change
+  in `src/db/schema/`. Otherwise the next `drizzle-kit push` undoes it.
+- **Policies.** The app reads through its server connection. The policies only govern Supabase's
+  public API, where published pages and the header and footer are public anyway.
+
+
+### Seeding content with SQL
+
+Section content is JSON, so a seed is an ordinary insert. Each `type` must be a registered section,
+and the keys inside `content` are the field names of that section's schema:
+
+```sql
+insert into site_settings (locale, content) values
+  ('en', '{
+    "header": { "brand": "Acme", "links": [{ "label": "Services", "href": "/#services" }],
+                "cta": { "label": "Contact us", "href": "/contact" }, "ctaShort": "Contact" },
+    "footer": { "brand": "Acme", "tagline": "", "columns": [], "copyright": "© {year} Acme" }
+  }')
+on conflict (locale) do nothing;
+
+insert into site_page (slug, locale, title, description, kind, sections, published) values
+  ('home', 'en', 'Home', 'What Acme does, in one sentence.', 'sections', '[
+    { "id": "hero-1", "type": "hero", "content": { "title": "We build things", "body": "…" } },
+    { "id": "features-1", "type": "features", "content": { "title": "Why us", "items": [
+      { "title": "Fast", "text": "…" }, { "title": "Secure", "text": "…" } ] } }
+  ]', true)
+on conflict (slug, locale) do nothing;
+```
+
+- `id` is any string that's unique on the page. The editor uses it to keep track of sections.
+  `"hidden": true` keeps a section off the public page.
+- The home page is the page with the address `home`. Other pages are served at `/<locale>/<slug>`.
+- A text page, such as a legal page, uses `kind = 'text'` and Markdown in `body` instead of
+  `sections`.
+- **SQL skips the checks the CMS runs on save.** Reading is lenient: a key with a typo is ignored and
+  the field reads as empty, so a mistake shows up as a blank text, not an error. Open the page in
+  **Website › Site pages** and save it once; the save lists anything that doesn't match the schemas.
+- **To get the exact shape**, add the section to a page in the CMS, save, and copy the JSON:
+  `select sections from site_page where slug = 'home' and locale = 'en';`.
+- **Public pages are cached.** Rows written outside the CMS appear within an hour, or right away
+  after the next save in the CMS or a new deployment.
+
+If you'd rather have the seed checked before it's written, put the same content in JSON files and
+run `pnpm db:seed:content`. Use `src/db/seed/site-pages/<locale>/<slug>.json` with
+`{ "title", "description", "sections" }` for pages, `<slug>.md` for text pages, and
+`src/db/seed/site-settings/<locale>.json` for the header and footer. It validates everything against
+the section schemas, exactly like a CMS save, and writes nothing if any of it is invalid. It inserts
+only what's missing; `--force` overwrites existing rows, which loses CMS edits.
+
+
+### Adding a section
+
+```bash
+pnpm manifest section testimonials
+```
+
+This creates `src/extensions/sections/TestimonialsSection.tsx`, a heading plus a list of cards,
+and registers it. Run `pnpm dev`, open a sections page in **Website › Site pages**, and pick
+**Add section › Testimonials**. Then reshape the schema and the markup; the editor follows. Doing
+it by hand is the same two steps: write the file, then add it to the list in
+`src/extensions/sections/index.ts`.
+
+A section file looks like this:
+
+```tsx
+export const testimonialsSection = defineSection({
+  type: "testimonials",                          // stored in site_page.sections[].type; never rename it
+  label: L("Testimonials", "Testimoniale"),      // shown in "Add section"
+  schema: z.object({
+    eyebrow: eyebrowField(),
+    title: titleField(),
+    quotes: list(
+      z.object({
+        quote: text({ label: L("Quote", "Citat"), multiline: true, required: true }),
+        name: text({ label: L("Name", "Nume") }),
+        photo: media({ label: L("Photo", "Fotografie"), accept: "image" }),
+      }),
+      { label: L("Quotes", "Citate"), itemLabel: L("Quote", "Citat") },
+    ),
+  }),
+  defaults: { en: { title: "What people say" }, ro: { title: "Ce spun oamenii" } },
+  component: ({ id, content, edit }) => (
+    <Band labelledBy={`${id}-title`}>
+      <SectionHeading titleId={`${id}-title`} />
+      <ul className="grid gap-6 md:grid-cols-3">
+        <List path="quotes" items={content.quotes}>
+          {(item) => (
+            <li className="relative rounded-2xl border p-6">
+              {item.photo.src && <img src={item.photo.src} alt="" className="size-12 rounded-full" />}
+              <MediaEdit path="photo" label={L("Replace photo", "Înlocuiește fotografia")} removable />
+              <Text path="quote" as="p" multiline />
+              <Text path="name" as="strong" />
+              <RemoveItem />
+            </li>
+          )}
+        </List>
+      </ul>
+      <AddItem path="quotes" label={L("Add quote", "Adaugă un citat")} />
+    </Band>
+  ),
+});
+```
+
+### Bringing blocks from a component library
+
+A block from shadcn/ui (`pnpm dlx shadcn@latest add <block>`), or from any other library, becomes a
+section in four moves. Take this pasted features block:
+
+```tsx
+export function Features() {
+  return (
+    <section className="py-24">
+      <div className="container mx-auto px-4">
+        <h2 className="text-3xl font-bold">Everything you need</h2>
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          {[{ title: "Fast", text: "…" }, { title: "Secure", text: "…" }].map((feature) => (
+            <Card key={feature.title}>
+              <CardHeader><CardTitle>{feature.title}</CardTitle></CardHeader>
+              <CardContent>{feature.text}</CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+```
+
+1. **Each hard-coded text becomes a field.** Add a `text()` to the schema and replace the literal with
+   `<Text path="…" />`.
+2. **Each repeated array becomes a `list()`.** Render it with `<List path items>`, and paths inside are
+   relative to the item. Add `<RemoveItem />` inside the item, which needs `relative` positioning, and
+   `<AddItem>` after the list.
+3. **Each image becomes a `media()`.** Render `content.image.src` with `<img>` or `next/image`, and put
+   `<MediaEdit path="image" />` in a `relative` box around it. For a link, make the label a `<Text>`
+   and the address a `text()` that editors change with `<EditNote>`.
+4. **Wrap it in `defineSection`** and add it to `registerSections` in `src/extensions/sections/index.ts`.
+
+```tsx
+import { z } from "zod";
+import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/modules/site";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { L } from "./fields";
+
+export const featuresSection = defineSection({
+  type: "features", // stored in site_page.sections[].type; never rename it
+  label: L("Features", "Avantaje"),
+  schema: z.object({
+    title: text({ label: L("Title", "Titlu"), required: true }),
+    items: list(
+      z.object({
+        title: text({ label: L("Title", "Titlu") }),
+        text: text({ label: L("Text", "Text"), multiline: true }),
+      }),
+      { label: L("Features", "Avantaje"), itemLabel: L("Feature", "Avantaj") },
+    ),
+  }),
+  // What a new section starts with when an editor adds it.
+  defaults: {
+    en: { title: "Everything you need", items: [{ title: "Fast", text: "…" }, { title: "Secure", text: "…" }] },
+    ro: { title: "Tot ce ai nevoie", items: [{ title: "Rapid", text: "…" }, { title: "Sigur", text: "…" }] },
+  },
+  component: ({ id, content }) => (
+    <section aria-labelledby={`${id}-title`} className="py-24">
+      <div className="container mx-auto px-4">
+        <Text path="title" as="h2" id={`${id}-title`} className="text-3xl font-bold" />
+        <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <List path="items" items={content.items}>
+            {() => (
+              <Card className="relative">
+                <CardHeader><CardTitle><Text path="title" /></CardTitle></CardHeader>
+                <CardContent><Text path="text" as="p" multiline /></CardContent>
+                <RemoveItem />
+              </Card>
+            )}
+          </List>
+        </div>
+        <AddItem path="items" label={L("Add feature", "Adaugă un avantaj")} />
+      </div>
+    </section>
+  ),
+});
+```
+
+The stored content is then exactly what the SQL seed above inserts for `features`:
+`{ "title": "…", "items": [{ "title": "…", "text": "…" }] }`.
+
+- **Interactive blocks** (accordion, carousel, tabs) work as they are. A section may render client
+  components, and the primitives can be their children. Only the section file itself must stay
+  importable on the server: no `"use client"`, no hooks. If a block keeps content collapsed, use the
+  component's `edit` prop to open it while editing, for example by making every accordion item open
+  by default.
+- **Styling.** shadcn blocks use the theme tokens (`bg-background`, `text-muted-foreground`…) that
+  the site stylesheet defines, so they follow the site's theme and dark mode.
+
+### The schema: field helpers
+
+Build schemas from the helpers in `@/modules/site`. They read stored content leniently: a missing
+or broken field becomes empty, so old pages never crash. They also check saves strictly, and they
+tell the editor how to behave.
+
+| Helper | Stores | Options |
+| --- | --- | --- |
+| `text()` | A string | `label`, `multiline`, `required`, `maxLength` (the last two are checked on save) |
+| `list(item)` | An array of `item` | `label`, `itemLabel` (used in error paths: "Quote 2"), `fixed` (no adding or removing) |
+| `group({...})` | A nested object (a card, a button) | `label` |
+| `media()` | `{ src, width, height }`, uploaded to the `site-media` bucket | `label`, `accept`: `"image"`, `"video"` or `"captions"` |
+
+Plain zod values work too, but they don't get editor behaviour. Link addresses are a `text` for
+now, shown in the editor with `<EditNote>`; a `link()` field comes in Phase 2.
+
+### The markup: primitives
+
+Render content through the primitives. On the public site they output plain HTML. In the editor
+they become the editing controls.
+
+| Primitive | On the site | In the editor |
+| --- | --- | --- |
+| `<Text path as id className multiline optional vars>` | The text, in the `as` element | Editable in place. `optional` hides it on the site when empty; `vars={{ hours }}` fills `{hours}` on the site only. |
+| `<List path items>{(item, i) => …}</List>` | Each item | Same, with paths inside relative to the item (`path="quote"`) |
+| `<RemoveItem label />` | Nothing | × that removes the current list item |
+| `<AddItem path label />` | Nothing | "+ Add …" that appends a blank item |
+| `<MediaEdit path label accept removable />` | Nothing | Replace and Remove buttons; place it inside a `relative` box |
+| `<EditNote path label />` | Nothing | An editable note for text that isn't shown on the page (image alt text, link addresses) |
+| `<EditOnly>` | Nothing | Its children |
+
+`<List>` takes `items` because it runs on the server, where it can't read the section's content
+the way the other primitives do. Anything printed directly, like `{content.title}`, shows on the
+page but isn't editable. Use the component's `edit` prop only for layout tweaks, such as keeping a
+`<details>` open while editing.
+
+### Data from the database
+
+When a section needs more than its own content, such as "latest posts", declare the data type on
+the section and add a server loader:
+
+```ts
+// In the section file
+data: sectionData<Post[]>(),
+component: ({ content, data }) => …,
+
+// src/extensions/sections/data.ts
+defineSectionLoader(latestPostsSection, ({ locale }) => getLatestPosts(locale)),
+```
+
+The section file also runs in the editor's browser frame, so database code must stay in the
+loader. Public pages load data only for the sections they show.
+
+### Showing a CMS table on the website (collections)
+
+A **collection** turns a resource's records (services, projects, team members…) into website
+content. Editors manage the records in the CMS as usual. The generic **Collection cards** and
+**Collection carousel** sections show them on any page. In the editor, each section's **Settings**
+button (on the section toolbar) picks which collection to show and how many items.
+
+Adding one takes three steps. Services (`src/extensions/collections`) is the working example:
+
+1. **Name it** in `src/extensions/collections/index.ts`:
+   ```ts
+   export const projectsCollection = defineCollection({ name: "projects", label: L("Projects", "Proiecte") });
+   export const collections = registerCollections([servicesCollection, projectsCollection]);
+   ```
+2. **Say where its items come from** in `src/extensions/collections/data.ts`:
+   ```ts
+   defineCollectionSource(projectsCollection, {
+     table: project,
+     published: project.published,  // only published rows reach the site
+     locale: project.locale,        // optional: without it, every row shows in every language
+     order: project.position,
+     card: (row) => ({ id: String(row.id), title: row.title, text: row.summary, image: row.image, href: "", editHref: `/cms/projects/${row.id}` }),
+   }),
+   ```
+3. **Refresh pages when records are saved.** Wrap the resource's add, update and delete actions
+   with `afterCommit(…, () => refreshCollection("projects"))`, as `service/config/api.ts` does.
+
+For pictures, give the table a `jsonb` image column (`{ src, width, height }`) and use the
+`siteImage` form field with `props: { resource: "<resource id>" }`. Uploads go to the public
+`site-media` bucket, so static pages can show them, and that resource's editors may upload.
+
+Collection items aren't edited on the page: they're records, not page content. In the editor each
+card has an **Edit in CMS** link instead. A section of your own can read collections too, with
+`data: sectionData<Record<string, CollectionCard[]>>()` and a loader that returns
+`loadCollections` (see `src/extensions/sections/data.ts`).
+
+### Header and footer
+
+`src/extensions/site/SiteHeader.tsx` and `SiteFooter.tsx` work like sections, but they're
+registered apart from page sections: they aren't offered in "Add section", and page saves refuse
+them. Their content is stored in `site_settings`, one row per language. `src/db/seed/site-settings/`
+holds the seed, which the site also shows until a row exists. Replace the header and footer with
+your own markup freely; keep their content keys in step with the seed. Labels that belong to the interface, such as Log in, Menu and
+Language, stay in `messages/`.
+
+### Rules that keep the site fast and safe
+
+- **Never rename a section's `type`, and keep stored shapes compatible.** Adding a field is safe
+  (old content reads it as empty). Renaming or removing one leaves the old data unread. Content
+  migrations come in Phase 3.
+- **Section files stay importable on the server.** No `"use client"`, no state or effects. Put
+  interactive pieces in their own client components and render them from the section.
+- **Public pages are static.** Don't read cookies, headers or the signed-in user in site layouts
+  or pages. Call `setRequestLocale(locale)` in every site layout and page. Signed-in UI, like the
+  account menu and "Edit this page", comes from `useSiteSession()`. After changing site routes,
+  check that `pnpm build` still marks them ● or ○.
+- **Read site content through the tagged reads** (`getSitePage`, `getLessons`,
+  `getSiteSettings`), and refresh tags after commits with `afterCommit` + the helpers in
+  `src/components/site/cache.ts`. Changes made outside the CMS appear within an hour.
+
+### Checklist for a new section
+
+1. `pnpm manifest section <name>`, or write the file and register it.
+2. Every visible text uses `<Text>`, lists use `<List>` with `<RemoveItem>`/`<AddItem>`, and
+   images have `<MediaEdit>`.
+3. Labels and defaults exist in every language.
+4. `pnpm typecheck`, then add the section to a page in the CMS and edit it on the canvas.
+5. Optionally add it to a seed page in `src/db/seed/site-pages/`. `db:seed:content` validates it.
 
 ## Authorization: RBAC
 

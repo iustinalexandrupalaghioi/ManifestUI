@@ -9,6 +9,8 @@ import {
   Contact2Icon,
   UserIcon,
   ShieldCheckIcon,
+  FileTextIcon,
+  PanelsTopLeftIcon,
 } from "lucide-react";
 
 export function useMenuItems(): MenuSection[] {
@@ -38,6 +40,25 @@ export function useMenuItems(): MenuSection[] {
           path: `${BASE_ROUTE}/relations`,
           title: t("relationsDescription"),
           icon: Contact2Icon,
+        },
+      ],
+    },
+    {
+      module: t("website"),
+      links: [
+        {
+          type: "link",
+          name: t("sitePages"),
+          path: `${BASE_ROUTE}/site-pages`,
+          title: t("sitePagesDescription"),
+          icon: FileTextIcon,
+        },
+        {
+          type: "link",
+          name: t("siteSettings"),
+          path: `${BASE_ROUTE}/site-settings`,
+          title: t("siteSettingsDescription"),
+          icon: PanelsTopLeftIcon,
         },
       ],
     },

@@ -1,0 +1,17 @@
+{
+  "header": {
+    "brand": "Compania ta",
+    "links": [],
+    "cta": {
+      "label": "Contactează-ne",
+      "href": "mailto:hello@example.com"
+    },
+    "ctaShort": "Contact"
+  },
+  "footer": {
+    "brand": "Compania ta",
+    "tagline": "",
+    "columns": [],
+    "copyright": "© {year} Compania ta"
+  }
+}

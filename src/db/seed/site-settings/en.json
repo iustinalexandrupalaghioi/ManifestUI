@@ -1,0 +1,17 @@
+{
+  "header": {
+    "brand": "Your company",
+    "links": [],
+    "cta": {
+      "label": "Contact us",
+      "href": "mailto:hello@example.com"
+    },
+    "ctaShort": "Contact"
+  },
+  "footer": {
+    "brand": "Your company",
+    "tagline": "",
+    "columns": [],
+    "copyright": "© {year} Your company"
+  }
+}

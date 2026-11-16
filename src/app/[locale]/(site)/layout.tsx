@@ -3,43 +3,30 @@ import { setRequestLocale } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { Navbar } from "@/components/site/Navbar";
-import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
-import { getMyCanAccessCms } from "@/framework/authorization/actions/getMyPermissions";
-import { fetchUserProfile } from "@/app/[locale]/(site)/data/currentUserProfile";
-import { resolveAvatarUrl } from "@/framework/authentication/lib/resolveAvatarUrl";
+import { SiteSessionProvider } from "@/components/site/session/SiteSession";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ManifestUI",
-  description: "Full-stack app built with ManifestUI",
+  description: "Built with ManifestUI",
 };
 
-export default async function SiteLayout({
-  children,
-  params,
-}: LayoutProps<"/[locale]">) {
+/**
+ * The public site. Nothing here reads the request (cookies, the signed-in
+ * user), so pages can be static and served from the cache until they're
+ * saved in the CMS; the signed-in parts (account menu, "Edit this page") load
+ * in the browser.
+ */
+export default async function SiteLayout({ children, params }: LayoutProps<"/[locale]">) {
   const { locale } = await params;
   setRequestLocale(locale);
-
-  const [userId, canAccessCms] = await Promise.all([
-    getCurrentUserId(),
-    getMyCanAccessCms(),
-  ]);
-  const profile = userId ? await fetchUserProfile(userId) : null;
-  const displayName = profile?.full_name || profile?.email || "Account";
-  const avatarUrl =
-    profile && userId ? resolveAvatarUrl({ ...profile, id: userId }) : null;
 
   return (
     <ThemeProvider>
       <Toaster />
-      <Navbar
-        isAuthenticated={!!userId}
-        displayName={displayName}
-        avatarUrl={avatarUrl}
-        canAccessCms={canAccessCms}
-      />
-      {children}
+      <SiteSessionProvider>
+        <Navbar />
+        {children}
+      </SiteSessionProvider>
     </ThemeProvider>
   );
 }

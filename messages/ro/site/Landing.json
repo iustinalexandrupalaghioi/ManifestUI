@@ -1,0 +1,22 @@
+{
+  "nav": {
+    "main": "Principal",
+    "home": "Acasă",
+    "menu": "Meniu",
+    "closeMenu": "Închide meniul",
+    "language": "Limbă",
+    "themeLight": "Luminoasă",
+    "themeDark": "Întunecată",
+    "themeSystem": "Sistem"
+  },
+  "footer": {
+    "preferences": "Preferințe"
+  },
+  "pages": {
+    "updated": "Ultima actualizare: {date}",
+    "missingTitle": "Această pagină nu este configurată încă",
+    "missingBody": "Creează în CMS o pagină din secțiuni cu adresa „{slug}” (Site › Pagini de site), apoi adaugă-i secțiuni (README › Building the website).",
+    "editPage": "Editează pagina",
+    "editLesson": "Editează lecția"
+  }
+}

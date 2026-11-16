@@ -1,11 +1,29 @@
-import { getTranslations } from "next-intl/server";
+import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
+import { routing } from "@/i18n/routing";
+import { getSitePage, HOME_SLUG } from "@/components/site/pages/content";
+import { MissingPage, SitePageView } from "@/components/site/pages/SitePageView";
 
-export default async function HomePage() {
-  const t = await getTranslations("Site");
-  return (
-    <main className="mx-auto flex max-w-2xl flex-col items-center gap-4 px-4 py-24 text-center">
-      <h1 className="text-3xl font-semibold">{t("title")}</h1>
-      <p className="text-muted-foreground">{t("description")}</p>
-    </main>
-  );
+/** The home page: the "home" site page from the CMS (Website › Site pages). */
+export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
+  const page = await getSitePage(locale, HOME_SLUG);
+  if (!page) return {};
+  return {
+    title: page.title,
+    description: page.description || undefined,
+    alternates: {
+      canonical: `/${locale}`,
+      languages: Object.fromEntries(routing.locales.map((code) => [code, `/${code}`])),
+    },
+    openGraph: { type: "website", title: page.title, description: page.description, url: `/${locale}` },
+  };
+}
+
+export default async function HomePage({ params }: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const page = await getSitePage(locale, HOME_SLUG);
+  if (!page) return <MissingPage slug={HOME_SLUG} withFooter />;
+  return <SitePageView page={page} locale={locale} />;
 }

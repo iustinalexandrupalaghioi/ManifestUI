@@ -1,48 +1,15 @@
-import { getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
-import { ThemeSwitcher } from "@/framework/components/partials/ThemeSwitcher";
-import { LocaleSwitcher } from "@/framework/components/partials/LocaleSwitcher";
-import { Button } from "@/components/ui/button";
-import { UserMenu } from "./UserMenu";
+import { getLocale } from "next-intl/server";
+import { RenderSection } from "@/modules/site";
+import { siteHeader } from "@/extensions/site/SiteHeader";
+import { getSiteSettings } from "./settings/content";
 
-export async function Navbar({
-  isAuthenticated,
-  displayName,
-  avatarUrl,
-  canAccessCms,
-}: {
-  isAuthenticated: boolean;
-  displayName: string;
-  avatarUrl?: string | null;
-  canAccessCms: boolean;
-}) {
-  const t = await getTranslations("Auth");
-
-  return (
-    <nav className="sticky top-0 z-50 flex h-14 w-full items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm md:px-8">
-      <div className="flex items-center gap-6">
-        <Link href="/" className="font-heading text-lg font-semibold">
-          ManifestUI
-        </Link>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {isAuthenticated ? (
-          <UserMenu
-            displayName={displayName}
-            avatarUrl={avatarUrl}
-            canAccessCms={canAccessCms}
-          />
-        ) : (
-          <>
-            <LocaleSwitcher />
-            <ThemeSwitcher />
-            <Button asChild variant="outline" size="sm">
-              <Link href="/auth/login">{t("login")}</Link>
-            </Button>
-          </>
-        )}
-      </div>
-    </nav>
-  );
+/**
+ * Sticky site header: the header from Website > Site settings for the
+ * current locale (layout in src/extensions/site/SiteHeader.tsx). The same for
+ * every visitor (pages are static); the account parts come from the browser
+ * session.
+ */
+export async function Navbar() {
+  const settings = await getSiteSettings(await getLocale());
+  return <RenderSection def={siteHeader} id="site-header" content={settings.header} edit={false} />;
 }

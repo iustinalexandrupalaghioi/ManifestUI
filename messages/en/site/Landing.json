@@ -1,0 +1,22 @@
+{
+  "nav": {
+    "main": "Main",
+    "home": "Home",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "language": "Language",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "footer": {
+    "preferences": "Preferences"
+  },
+  "pages": {
+    "updated": "Last updated {date}",
+    "missingTitle": "This page isn’t set up yet",
+    "missingBody": "Create a sections page with the address \"{slug}\" in the CMS (Website › Site pages), then add sections to it (README › Building the website).",
+    "editPage": "Edit this page",
+    "editLesson": "Edit this lesson"
+  }
+}
