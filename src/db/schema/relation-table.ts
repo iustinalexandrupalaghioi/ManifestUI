@@ -1,20 +1,11 @@
-import {
-  pgTable,
-  pgPolicy,
-  text,
-  bigint,
-  integer,
-  date,
-  numeric,
-  timestamp,
-  unique,
-  check,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, bigint, integer, date, numeric, timestamp, unique, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 // Demo/seed data (dummyjson-style) — the entity todos relate to. Renamed
 // from "users" so that name could be freed up for the real, auth-synced
 // users table (see ./user.ts).
+// Row-level security is on with no policies: Supabase's public API can't read or
+// change these rows. The app reads and writes them through its server connection.
 export const relation = pgTable(
   "relation",
   {
@@ -48,30 +39,9 @@ export const relation = pgTable(
   (table) => [
     unique("relation_email_key").on(table.email),
     unique("relation_username_key").on(table.username),
-    pgPolicy("Enable delete for all users", {
-      as: "permissive",
-      for: "delete",
-      to: ["public"],
-      using: sql`true`,
-    }),
-    pgPolicy("Enable read access for all users", {
-      as: "permissive",
-      for: "select",
-      to: ["public"],
-    }),
-    pgPolicy("Enable update for all users", {
-      as: "permissive",
-      for: "update",
-      to: ["public"],
-    }),
-    pgPolicy("enable insert to all users", {
-      as: "permissive",
-      for: "insert",
-      to: ["public"],
-    }),
     check(
       "relation_gender_check",
       sql`gender = ANY (ARRAY['male'::text, 'female'::text, 'other'::text])`,
     ),
   ],
-);
+).enableRLS();
