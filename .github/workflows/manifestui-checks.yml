@@ -7,7 +7,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # Write only to commit an updated pnpm-lock.yaml back to the branch (see "Install dependencies").
+  contents: write
 
 concurrency:
   group: manifestui-checks-${{ github.ref }}
@@ -41,8 +42,27 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      # A commit that changes package.json without pnpm-lock.yaml (ManifestUI Studio
+      # adding packages, for example) would fail a frozen install. Then the lockfile
+      # is updated here and committed back to the branch, and the checks below run
+      # against it. Commits made with GITHUB_TOKEN don't start another run.
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        id: install
+        run: |
+          if pnpm install --frozen-lockfile; then exit 0; fi
+          echo "::notice title=Lockfile updated::pnpm-lock.yaml didn't match package.json; updating it."
+          pnpm install --no-frozen-lockfile
+          if git diff --quiet -- pnpm-lock.yaml; then exit 0; fi
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit the updated lockfile
+        if: steps.install.outputs.updated == 'true' && github.ref_type == 'branch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "Update pnpm-lock.yaml to match package.json"
+          git push origin "HEAD:${GITHUB_REF_NAME}" || echo "::warning title=Lockfile not pushed::Couldn't push the updated pnpm-lock.yaml (protected branch?). Run pnpm install and commit it."
 
       - name: Generate Next.js route types
         run: pnpm exec next typegen
