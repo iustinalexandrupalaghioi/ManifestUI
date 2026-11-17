@@ -1050,7 +1050,7 @@ drop the example, delete the Services resource, its CMS routes, the table and it
 collection from `src/extensions/collections/index.ts` and `data.ts`. Keep the two collection
 sections for your own collections.
 
-Adding another collection takes three steps:
+Adding another collection takes two steps:
 
 1. **Name it** in `src/extensions/collections/index.ts`:
    ```ts
@@ -1061,14 +1061,16 @@ Adding another collection takes three steps:
    ```ts
    defineCollectionSource(projectsCollection, {
      table: project,
+     resource: "projects",          // CMS resource id: its saves refresh the pages showing the collection
      published: project.published,  // only published rows reach the site
      locale: project.locale,        // optional: without it, every row shows in every language
      order: project.position,
      card: (row) => ({ id: String(row.id), title: row.title, text: row.summary, image: row.image, href: "", editHref: `/cms/projects/${row.id}` }),
    }),
    ```
-3. **Refresh pages when records are saved.** Wrap the resource's add, update and delete actions
-   with `afterCommit(…, () => refreshCollection("projects"))`, as `service/config/api.ts` does.
+   Pages update within seconds of a save: the CMS refreshes `resource` whenever its add, update or
+   delete commits (`src/app/[locale]/cms/createResourceActions.ts`). For rows changed some other way
+   (a script, your own action), call `refreshCollection("projects")` from `@/modules/site/server`.
 
 For pictures, give the table a `jsonb` image column (`{ src, width, height }`) and use the
 `siteImage` form field with `props: { resource: "<resource id>" }`. Uploads go to the public
