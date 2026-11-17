@@ -294,10 +294,6 @@ async function doctorCommand() {
 
   const required = [...ENV_FIELDS.map((field) => field.key), "NEXT_PUBLIC_BASE_URL"];
   for (const key of required) check(!!env[key], `${key} is set`, `${key} is missing (pnpm manifest env)`);
-  // Only the ManifestUI Studio app needs a GitHub App.
-  if (existsSync(resolve(ROOT, "src/studio")) && !env.GITHUB_APP_SLUG) {
-    warn("GITHUB_APP_SLUG is not set (needed for the studio's GitHub sign-in)");
-  }
 
   for (const key of ["DATABASE_URL", "DIRECT_DATABASE_URL"]) {
     if (!env[key]) continue;

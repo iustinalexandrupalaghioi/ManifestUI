@@ -13,9 +13,7 @@
  *   modules    src/modules/<name>: optional features on the framework (the
  *              website builder); imports its own module, framework, platform
  *   app        everything else in src (routes, components, extensions, db,
- *              manifest.config): the project; imports anything except Studio
- *              internals (only @/studio/public)
- *   studio     src/studio and its routes: imports anything
+ *              manifest.config): the project; imports anything
  *
  *   pnpm check:boundaries
  */
@@ -31,7 +29,6 @@ const PLATFORM = ["src/components/ui/", "src/lib/", "src/hooks/", "src/i18n/", "
 function layerOf(file) {
   if (file.startsWith("src/framework/")) return "framework";
   if (file.startsWith("src/modules/")) return "modules";
-  if (file.startsWith("src/studio/") || file.startsWith("src/app/[locale]/studio/")) return "studio";
   if (file.startsWith("src/lib/storage/")) return "app";
   if (PLATFORM.some((dir) => file.startsWith(dir))) return "platform";
   return "app";
@@ -45,13 +42,10 @@ const ALLOWED = {
   framework: ["framework", "platform"],
   modules: ["modules", "framework", "platform"],
   app: ["app", "modules", "framework", "platform"],
-  studio: ["studio", "app", "modules", "framework", "platform"],
 };
 
 /** The single, typed way back from the framework to the project: its config. */
 const EXCEPTIONS = [{ from: "src/framework/runtime.ts", to: "src/manifest.config.ts" }];
-/** Studio's public surface for the rest of the app. */
-const STUDIO_PUBLIC = "src/studio/public.ts";
 
 function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -95,7 +89,6 @@ for (const file of walk(src)) {
     if (EXCEPTIONS.some((e) => e.from === from && e.to === to)) continue;
     let ok = ALLOWED[fromLayer].includes(toLayer);
     if (ok && fromLayer === "modules" && toLayer === "modules" && moduleName(from) !== moduleName(to)) ok = false;
-    if (fromLayer !== "studio" && toLayer === "studio" && to === STUDIO_PUBLIC) ok = true;
     if (!ok) problems.push(`${from}  →  ${spec}   (${fromLayer} may not import ${toLayer})`);
   }
 }
