@@ -1,18 +1,18 @@
 import "server-only";
 
-import { unstable_cache, updateTag } from "next/cache";
+import { updateTag } from "next/cache";
+
+export { cachedRead } from "@/modules/site/server";
 
 /**
  * Cache for the public site's content. Reads are cached per page or lesson
  * and tagged; CMS saves expire exactly the tags they touch (after the
  * transaction commits), so the next visitor gets the new version. Anything
- * changed outside the CMS (seeding, SQL) shows up within `SAFETY_NET` seconds.
+ * changed outside the CMS (seeding, SQL) shows up within an hour (src/modules/site/cache.ts).
  *
  * The site still renders per request (its layout reads the signed-in user),
  * but no longer queries the database for content on every request.
  */
-const SAFETY_NET = 60 * 60;
-
 export const SITE_TAGS = {
   /** Every site page. */
   pages: "site-pages",
@@ -24,24 +24,12 @@ export const SITE_TAGS = {
   lesson: (slug: string) => `learn-lesson:${slug}`,
   /** The header and footer of one locale. */
   settings: (locale: string) => `site-settings:${locale}`,
-  /** A collection's items (every locale). */
-  collection: (name: string) => `collection:${name}`,
 } as const;
-
-/** Caches `load` under `key`, tagged with `tags`. */
-export function cachedRead<T>(key: string[], tags: string[], load: () => Promise<T>): Promise<T> {
-  return unstable_cache(load, key, { tags, revalidate: SAFETY_NET })();
-}
 
 /** After saving site pages: refreshes these pages (old and new addresses), or every page when none are given. */
 export function refreshSitePages(pages?: { slug: string; locale: string }[]) {
   if (!pages) return updateTag(SITE_TAGS.pages);
   for (const { slug, locale } of pages) updateTag(SITE_TAGS.page(slug, locale));
-}
-
-/** After saving a collection's records (add, edit, delete): refreshes every page that shows the collection. */
-export function refreshCollection(name: string) {
-  updateTag(SITE_TAGS.collection(name));
 }
 
 /** After saving site settings: refreshes every page's header and footer in these locales. */

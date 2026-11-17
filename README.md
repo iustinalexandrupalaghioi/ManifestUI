@@ -24,6 +24,7 @@ works."
 - [First-time setup](#first-time-setup)
 - [Running the app](#running-the-app)
 - [Project structure](#project-structure)
+- [Architecture: layers](#architecture-layers)
 - [Database & migrations](#database--migrations)
 - [Adding a new resource](#adding-a-new-resource)
 - [Data views](#data-views)
@@ -217,6 +218,44 @@ src/
                                   (localePrefix: "always") — strings live in messages/en,
                                   messages/ro
 ```
+
+## Architecture: layers
+
+The code is split into layers. Each layer only imports from the layers below it, so the framework
+and the modules stay reusable, and the project plugs into them instead of the other way round
+(dependency inversion).
+
+| Layer | Where | What it is | May import |
+| --- | --- | --- | --- |
+| **platform** | `src/components/ui`, `src/lib`, `src/hooks`, `src/i18n`, `src/contexts` | Shared infrastructure: shadcn/ui, Supabase clients, utilities | platform |
+| **framework** | `src/framework/` | The CRUD engine: resources, forms, data views, auth, RBAC, the extension API | framework, platform |
+| **modules** | `src/modules/<name>/` | Optional features built on the framework, such as the website builder (`modules/site`) | its own module, framework, platform |
+| **app** | everything else in `src/`: routes, `components/`, `extensions/`, `db/`, `lib/storage/` | This project: its resources, sections, tables and adapters | app, modules, framework, platform |
+
+**How the framework reaches the project.** It never imports project code. Everything it needs comes
+from one file, `src/manifest.config.ts`, the composition root:
+
+```ts
+export default defineManifestConfig({
+  db,                                // the Drizzle client the framework reads and writes with
+  resources: resourceDescriptors,    // every CMS resource: labels, routes, permission messages
+  authTables,                        // the user and access tables authentication and RBAC query
+  auth: { beforeOAuthSignIn },       // optional hooks
+});
+```
+
+The framework reads it through `src/framework/runtime.ts`, the only framework file allowed to import
+from the project. The tables it queries (`user`, `group`, `group_permission`, `user_group`) stay in
+`src/db/schema/` with the rest of the schema; the config hands them over, and
+`declare module "@/framework/config" { interface Register { authTables: … } }` gives the framework
+their exact column types (the same pattern as the extensions registry). The framework only states
+which columns it needs (`AuthTablesShape` in `src/framework/config.ts`). Other ports work the same way: the file storage handler
+(`src/lib/storage`, registered with the framework), extensions (`src/extensions/index.ts`), and the
+site module's media uploads (`<SiteEditorProvider upload>` in the editor's preview frame).
+
+`pnpm check:boundaries` checks every import against these rules, and CI runs it. When it fails, the
+fix is almost never an exception. Pass what the lower layer needs through the config, a
+registration or a prop, or move the code to the layer that owns it.
 
 ## Database & migrations
 

@@ -6,7 +6,7 @@ import { useLocale } from "next-intl";
 import { z } from "zod";
 import { defineFieldComponent } from "@/framework/extensions";
 import { uploadSiteMedia } from "@/components/site/media/upload";
-import { MEDIA_TYPES } from "@/components/site/media/types";
+import { MEDIA_TYPES } from "@/modules/site";
 
 const TEXT = {
   en: { upload: "Upload image", replace: "Replace", remove: "Remove", empty: "No image", failed: "Upload failed", forbidden: "No permission to upload" },

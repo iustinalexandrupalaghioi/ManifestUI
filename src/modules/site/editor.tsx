@@ -7,24 +7,38 @@
  * updates the page form; saving the page publishes it. Used only when
  * sections render with `edit` on.
  */
-import { useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { createContext, useContext, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { ImageUpIcon, Loader2Icon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { uploadSiteMedia } from "../media/upload";
-import { MEDIA_TYPES, type MediaKind } from "../media/types";
-import type { SectionType } from "./model";
+import { MEDIA_TYPES, type MediaKind } from "./media";
+import type { MediaValue } from "./sections/fields";
 
 export type EditMessage =
   | { type: "manifestui:edit"; sectionId: string; path: string; value: unknown }
   | { type: "manifestui:list"; sectionId: string; path: string; op: "add" | "remove"; index?: number }
   | { type: "manifestui:section-action"; sectionId: string; action: "up" | "down" | "hide" | "show" | "remove" }
-  | { type: "manifestui:add-section"; afterId: string | null; sectionType: SectionType }
+  | { type: "manifestui:add-section"; afterId: string | null; sectionType: string }
   | { type: "manifestui:selected"; id: string };
 
 export const postToEditor = (message: EditMessage) =>
   window.parent?.postMessage(message, window.location.origin);
 
 const EMPTY_MEDIA = { src: "", width: 0, height: 0 };
+
+/** Uploads a media file picked in the editor; returns where it's served and its size. */
+export type MediaUploader = (file: File, kind: MediaKind) => Promise<MediaValue>;
+
+const MediaUploadContext = createContext<MediaUploader | null>(null);
+
+/**
+ * Gives the editing controls a way to upload media. The project supplies it
+ * (its storage and permissions); wrap the editor's preview frame in it.
+ */
+export function SiteEditorProvider({ upload, children }: { upload: MediaUploader; children: ReactNode }) {
+  return <MediaUploadContext.Provider value={upload}>{children}</MediaUploadContext.Provider>;
+}
+
+const noUploader: MediaUploader = () => Promise.reject(new Error("no-uploader"));
 
 /**
  * An editable text. It renders no React children: the DOM text is set from
@@ -199,6 +213,7 @@ export function MediaReplaceButton({
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const upload = useContext(MediaUploadContext) ?? noUploader;
 
   return (
     <div className={cn("absolute top-3 right-3 z-20 flex flex-col items-end gap-1", className)}>
@@ -216,7 +231,7 @@ export function MediaReplaceButton({
           setBusy(true);
           setError("");
           try {
-            postToEditor({ type: "manifestui:edit", sectionId, path, value: await uploadSiteMedia(file, accept) });
+            postToEditor({ type: "manifestui:edit", sectionId, path, value: await upload(file, accept) });
           } catch (err) {
             setError(err instanceof Error && err.message === "forbidden" ? "No permission to upload" : "Upload failed");
           } finally {

@@ -9,7 +9,7 @@
  */
 import { z } from "zod";
 import type { TranslatableText } from "@/framework/types/i18n-types";
-import type { MediaKind } from "@/components/site/media/types";
+import type { MediaKind } from "../media";
 
 export type FieldMeta =
   | { kind: "text"; label?: TranslatableText; multiline: boolean; required: boolean; maxLength?: number }

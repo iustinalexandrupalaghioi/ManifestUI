@@ -6,9 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
-import { postToEditor } from "./editable";
+import { uploadSiteMedia } from "../media/upload";
 import { parseSections, SECTION_TYPES, sectionLabel, type Section } from "./model";
-import { getSection, RenderSections, settingFields } from "@/modules/site";
+import { getSection, postToEditor, RenderSections, settingFields, SiteEditorProvider } from "@/modules/site";
 
 /** Messages exchanged with the CMS section editor (same origin only). */
 export type PreviewMessage =
@@ -101,7 +101,16 @@ function SectionInserter({ afterId, locale }: { afterId: string | null; locale: 
  * (move, hide, remove). Hidden sections show as a bar that can bring them
  * back; sections are added between others. Links don't navigate.
  */
+/** The editor's preview frame; uploads go to the site's media storage. */
 export function SectionsPreview({ data }: { data: Record<string, unknown> }) {
+  return (
+    <SiteEditorProvider upload={uploadSiteMedia}>
+      <PreviewFrame data={data} />
+    </SiteEditorProvider>
+  );
+}
+
+function PreviewFrame({ data }: { data: Record<string, unknown> }) {
   const [sections, setSections] = useState<Section[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [locale, setLocale] = useState("en");

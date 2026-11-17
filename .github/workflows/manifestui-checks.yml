@@ -70,6 +70,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Check layer boundaries
+        run: pnpm check:boundaries
+
       - name: Check the Drizzle schema
         # Turns the schema into SQL without a database: fails on broken table definitions.
         run: pnpm exec drizzle-kit export --sql > /dev/null

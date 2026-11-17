@@ -6,8 +6,10 @@ import "server-only";
  */
 import { and, asc, eq, getTableColumns, type AnyColumn, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
-import { db } from "@/db";
-import { cachedRead, SITE_TAGS } from "@/components/site/cache";
+import { getDbClient } from "@/framework/lib/dbClient";
+import { cachedRead, collectionTag } from "./cache";
+
+export { cachedRead, refreshCollection } from "./cache";
 import type { CollectionCard, CollectionDef } from "./collections";
 import type { SectionDef } from "./sections/define";
 
@@ -25,7 +27,7 @@ export interface CollectionSource {
  * Where a collection's items come from: a table (a CMS resource's), which
  * rows are published, their language and order, and how a row becomes a
  * card. Reads are cached under the collection's tag; call
- * `refreshCollection(name)` (src/components/site/cache.ts) after the
+ * `refreshCollection(name)` (from this file) after the
  * resource's saves commit, so pages show changes within seconds.
  */
 export function defineCollectionSource<TTable extends PgTable>(
@@ -44,7 +46,7 @@ export function defineCollectionSource<TTable extends PgTable>(
     const filters = [options.published && eq(options.published, true), options.locale && eq(options.locale, locale)].filter(
       (filter): filter is SQL => !!filter,
     );
-    const rows = await db
+    const rows = await getDbClient()
       .select(getTableColumns(options.table))
       .from(options.table as PgTable)
       .where(filters.length ? and(...filters) : undefined)
@@ -55,7 +57,7 @@ export function defineCollectionSource<TTable extends PgTable>(
     name: collection.name,
     load: async ({ locale }) => {
       try {
-        return await cachedRead(["collection", collection.name, locale], [SITE_TAGS.collection(collection.name)], () => read(locale));
+        return await cachedRead(["collection", collection.name, locale], [collectionTag(collection.name)], () => read(locale));
       } catch (error) {
         // CI builds have no database; at runtime the error surfaces.
         if (process.env.NEXT_PHASE === "phase-production-build") return [];

@@ -3,7 +3,8 @@
 import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
 import { hasServerPermission } from "@/framework/authorization/lib/permissions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { MEDIA_TYPES, SITE_MEDIA_BUCKET, type MediaKind } from "./types";
+import { MEDIA_TYPES, type MediaKind } from "@/modules/site";
+import { SITE_MEDIA_BUCKET } from "./types";
 
 type Result = { ok: true; path: string; token: string; publicUrl: string } | { ok: false; error: string };
 

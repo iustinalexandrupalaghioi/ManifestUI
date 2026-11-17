@@ -1,7 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { getDbClient } from "@/framework/lib/dbClient";
-import "@/db";
 import { user } from "@/db/schema";
 
 export async function fetchUserProfile(

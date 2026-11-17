@@ -24,7 +24,7 @@ import {
 } from "@/components/site/sections/model";
 import type { PreviewMessage } from "@/components/site/sections/SectionsPreview";
 import { parseSiteSettings, SITE_SETTINGS_PARTS } from "@/components/site/settings/model";
-import type { EditMessage } from "@/components/site/sections/editable";
+import type { EditMessage } from "@/modules/site";
 
 const UI = {
   en: {
@@ -303,7 +303,9 @@ export const sectionsEditor = defineBlockComponent({
       // The header and footer are fixed: no adding, moving, hiding or removing.
       if (settingsMode && (message.type === "manifestui:add-section" || message.type === "manifestui:section-action")) return;
       if (message.type === "manifestui:add-section") {
-        addSection(message.sectionType, message.afterId);
+        // The frame sends a plain string: only add types that are registered.
+        const type = SECTION_TYPES.find((known) => known === message.sectionType);
+        if (type) addSection(type, message.afterId);
         return;
       }
       const current = latest();

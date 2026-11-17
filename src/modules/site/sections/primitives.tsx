@@ -14,8 +14,8 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useLocale } from "next-intl";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { TranslatableText } from "@/framework/types/i18n-types";
-import type { MediaKind } from "@/components/site/media/types";
-import { EditableNote, EditableText, ItemRemove, ListAdd, MediaReplaceButton } from "@/components/site/sections/editable";
+import type { MediaKind } from "../media";
+import { EditableNote, EditableText, ItemRemove, ListAdd, MediaReplaceButton } from "../editor";
 
 interface Scope {
   sectionId: string;

@@ -8,6 +8,16 @@ export { defineSection, newSectionContent, sectionData } from "./sections/define
 export type { SectionComponentProps, SectionDef, SectionSchema } from "./sections/define";
 export { choice, group, list, media, settingFields, text } from "./sections/fields";
 export type { Choice, MediaValue } from "./sections/fields";
+export { MEDIA_TYPES, type MediaKind } from "./media";
+export {
+  EditableNote,
+  EditableText,
+  MediaReplaceButton,
+  postToEditor,
+  SiteEditorProvider,
+  type EditMessage,
+  type MediaUploader,
+} from "./editor";
 export { defineCollection, getCollection, listCollections, registerCollections } from "./collections";
 export type { CollectionCard, CollectionDef } from "./collections";
 export { getSection, listSections, registerSections } from "./sections/registry";

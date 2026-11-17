@@ -2,8 +2,8 @@
 
 import { eq } from "drizzle-orm";
 import { getSupabase } from "@/lib/supabase/getSupabase";
-import { db } from "@/db";
-import { user } from "@/db/schema";
+import { getDbClient } from "@/framework/lib/dbClient";
+import { getManifestConfig } from "@/framework/runtime";
 import type { ActionResult } from "@/framework/lib/actionResult";
 
 interface UpdateProfileInput {
@@ -38,7 +38,8 @@ export async function updateProfile(
 
   if (error) return { ok: false, error: { message: error.message } };
 
-  await db
+  const { user } = getManifestConfig().authTables;
+  await getDbClient()
     .update(user)
     .set({
       fullName: input.full_name,

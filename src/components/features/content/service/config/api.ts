@@ -5,7 +5,7 @@ import { service } from "@/db/schema";
 import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
 import { afterCommit } from "@/framework/lib/transactionalAction";
-import { refreshCollection } from "@/components/site/cache";
+import { refreshCollection } from "@/modules/site/server";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {

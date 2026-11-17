@@ -2,7 +2,6 @@ import "server-only";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
-import { setDbClient } from "@/framework/lib/dbClient";
 
 declare global {
   var __dbClient: postgres.Sql | undefined;
@@ -19,5 +18,3 @@ const client =
 if (process.env.NODE_ENV !== "production") globalThis.__dbClient = client;
 
 export const db = drizzle(client, { schema, casing: "snake_case" });
-
-setDbClient(db);
