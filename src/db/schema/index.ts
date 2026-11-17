@@ -6,3 +6,6 @@ export * from "./group";
 export * from "./user-group";
 export * from "./group-permission";
 export * from "./relations";
+export * from "./site-page";
+export * from "./site-settings";
+export * from "./service";

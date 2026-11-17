@@ -32,6 +32,7 @@ const NAMESPACES = [
   { group: "features", name: "Todos" },
   { group: "features", name: "GroupPermissions" },
   { group: "site", name: "Site" },
+  { group: "site", name: "Landing" },
 ] as const;
 
 export default getRequestConfig(async ({ requestLocale }) => {

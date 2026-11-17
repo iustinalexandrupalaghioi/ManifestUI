@@ -11,61 +11,29 @@ import {
   type ExpandedState,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useMemo, useRef } from "react";
 import { usePersistedState } from "@/framework/lib/usePersistedState";
-import { deleteEditingStore } from "../../features/editing/editing.store";
-import { deleteFilteringStores } from "../../features/filtering/filtering.store";
 import type { FilterInput } from "../../features/filtering/filters";
 import { useCellContextMenuFilter } from "../../features/filtering/useFiltering";
-import {
-  deleteSelectionStore,
-  getSelectionStore,
-} from "../../features/selection/selection.store";
-import { deleteSortingStores } from "../../features/sorting/sorting.store";
-import { deleteAggregatesStores } from "../../features/aggregates/aggregates.store";
 import type { AggregateResult } from "../../features/aggregates/aggregates";
 import { buildDefaultAggregateRules } from "../../features/aggregates/useAggregatableColumns";
-import {
-  deleteGroupingStores,
-  getGroupingStore,
-} from "../../features/grouping/grouping.store";
 import { buildDefaultGrouping } from "../../features/grouping/useGroupableColumns";
-import { countLeafRows } from "../../features/grouping/grouping";
-import { GroupValueDisplay } from "../../features/grouping/ui/GroupValueDisplay";
-import type {
-  GroupAggregateRow,
-  GroupByRule,
-} from "../../features/grouping/grouping";
+import type { GroupAggregateRow } from "../../features/grouping/grouping";
 import { getViewsStore } from "../../features/views/views.store";
-import type { DataViewFeature, DataViewFeatureContext } from "../contracts";
+import type { DataViewFeature } from "../contracts";
 import type { DataTableConfig } from "../types";
 import type { ResolvedViewDefaults } from "../../features/views/viewDefaults";
-import {
-  deleteCoreStore,
-  getCoreStore,
-  useCoreStore,
-} from "../stores/DataViewStore";
-import { deleteViewModeStore, getViewModeStore } from "../stores/ViewModeStore";
+import { useCoreStore } from "../stores/DataViewStore";
 import "../tanstack-augmentations";
 import { useAvailableHeight } from "./useAvailableHeight";
 import { useColumnHandlers } from "./useColumnHandler";
 import { useColumnState } from "./useColumnState";
 import { useInfiniteScroll } from "./useInfiniteScroll";
 import { useScrollFreeze } from "./useScrollFreeze";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { useSelectionSync } from "./useSelectionSync";
+import { groupingChangeHandler, useGroupColumn } from "./useGroupColumn";
+import { useColumnSizeVars, useDataViewStoresCleanup, useFeatureHooks } from "./useDataViewLifecycle";
 import { SYSTEM_COLUMN_IDS } from "../systemColumns";
-
-function sameSelection(a: Record<string, boolean>, b: Record<string, boolean>) {
-  const aKeys = Object.keys(a)
-    .filter((k) => a[k])
-    .sort();
-  const bKeys = Object.keys(b)
-    .filter((k) => b[k])
-    .sort();
-  if (aKeys.length !== bKeys.length) return false;
-  return aKeys.every((k, i) => k === bKeys[i]);
-}
 
 export interface DataViewProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -156,31 +124,7 @@ export function useDataView<TData, TValue>(
     viewDefaults,
   );
 
-  const selectionStore = getSelectionStore(tableId);
-  const storedSelection = selectionStore((s) => s.rowSelection);
-  const lastSyncRef = useRef<"toStore" | "toLocal" | null>(null);
-
-  useEffect(() => {
-    if (lastSyncRef.current === "toLocal") {
-      lastSyncRef.current = null;
-      return;
-    }
-    if (!sameSelection(rowSelection, storedSelection)) {
-      lastSyncRef.current = "toStore";
-      selectionStore.getState().setRowSelection(rowSelection);
-    }
-  }, [rowSelection]);
-
-  useEffect(() => {
-    if (lastSyncRef.current === "toStore") {
-      lastSyncRef.current = null;
-      return;
-    }
-    if (!sameSelection(storedSelection, rowSelection)) {
-      lastSyncRef.current = "toLocal";
-      setRowSelection(storedSelection);
-    }
-  }, [storedSelection]);
+  useSelectionSync(tableId, rowSelection, setRowSelection);
 
   // ── Column state + sorting ───────────────────────────────────────────────
   const {
@@ -225,81 +169,10 @@ export function useDataView<TData, TValue>(
   const setGlobalFilter = useCoreStore(tableId, (s) => s.setGlobalFilter);
 
   // ── Grouping ──────────────────────────────────────────────────────────────
-  const onGroupingChange = (
-    updater: string[] | ((old: string[]) => string[]),
-  ) => {
-    const nextIds =
-      typeof updater === "function" ? updater(groupingIds) : updater;
-    const byId = new Map(grouping.map((g) => [g.columnId, g]));
-    const next: GroupByRule[] = nextIds.map((id) => {
-      const existing = byId.get(id);
-      if (existing) return existing;
-      const meta = tableRef.current?.getColumn(id)?.columnDef.meta;
-      return {
-        columnId: id,
-        columnName: meta?.columnName ?? id,
-        columnLabel: meta?.columnLabel ?? id,
-        columnType: meta?.columnType ?? "text",
-        ...(meta?.origin ? { origin: meta.origin } : {}),
-      };
-    });
-    const mode = getViewModeStore(tableId).getState().activeMode;
-    if (mode === "list") {
-      getGroupingStore(tableId, listViewId).getState().setGrouping(next);
-      getViewsStore(tableId).getState().updateListDraft({ grouping: next });
-    } else {
-      getGroupingStore(tableId, tableViewId).getState().setGrouping(next);
-      getViewsStore(tableId).getState().updateTableDraft({ grouping: next });
-    }
-  };
+  const onGroupingChange = groupingChangeHandler({ tableId, grouping, groupingIds, tableRef, tableViewId, listViewId });
 
   // ── Group column ─────────────────────────────────────────────────────────
-  const tGrouping = useTranslations("Grouping");
-  const groupColumn: ColumnDef<TData> = useMemo(
-    () => ({
-      id: "group",
-      header: () => tGrouping("group"),
-      cell: ({ row }) => {
-        if (!row.getIsGrouped()) return null;
-        const meta = tableRef.current?.getColumn(row.groupingColumnId!)
-          ?.columnDef.meta;
-        return (
-          <button
-            type="button"
-            className="flex h-full w-full items-center gap-1.5 text-left"
-            style={{ paddingLeft: `${row.depth * 20}px` }}
-            onClick={row.getToggleExpandedHandler()}
-          >
-            <span className="inline-flex size-4 shrink-0 items-center justify-center text-muted-foreground">
-              {row.getIsExpanded() ? <ChevronDown /> : <ChevronRight />}
-            </span>
-            <span className="shrink-0 text-muted-foreground">
-              {meta?.columnLabel ?? row.groupingColumnId}:{" "}
-            </span>
-            <span className="truncate font-semibold">
-              <GroupValueDisplay
-                value={row.getValue(row.groupingColumnId!)}
-                type={meta?.columnType ?? "text"}
-                options={meta?.selectOptions}
-                bucket={meta?.bucket}
-              />
-            </span>
-            <span className="shrink-0 text-muted-foreground">
-              ({countLeafRows(row)})
-            </span>
-          </button>
-        );
-      },
-      enableSorting: false,
-      enableColumnFilter: false,
-      enableResizing: true,
-      enableHiding: false,
-      enableGrouping: false,
-      size: 220,
-      minSize: 140,
-    }),
-    [tGrouping],
-  );
+  const groupColumn = useGroupColumn(tableRef);
 
   const tableColumns = useMemo(
     () => [groupColumn, ...columns],
@@ -383,18 +256,7 @@ export function useDataView<TData, TValue>(
   );
 
   // ── Column size vars ─────────────────────────────────────────────────────
-  const rafRef = useRef<number | null>(null);
-  useLayoutEffect(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      const colSizes: Record<string, number> = {};
-      for (const header of table.getFlatHeaders()) {
-        colSizes[`--header-${header.id}-size`] = header.getSize();
-        colSizes[`--col-${header.column.id}-size`] = header.column.getSize();
-      }
-      getCoreStore(tableId).getState().setColumnSizeVars(colSizes);
-    });
-  }, [table.getState().columnSizing, table.getState().columnVisibility]);
+  useColumnSizeVars(table, tableId);
 
   // ── Layout ───────────────────────────────────────────────────────────────
   const autoHeight = useAvailableHeight(
@@ -406,25 +268,7 @@ export function useDataView<TData, TValue>(
   const handleScroll = useScrollFreeze(scrollContainerRef, isResizing);
 
   // ── Feature registry loop ────────────────────────────────────────────────
-  const prevFeaturesLengthRef = useRef(features.length);
-  if (process.env.NODE_ENV !== "production") {
-    if (prevFeaturesLengthRef.current !== features.length) {
-      throw new Error(
-        "DataView: the features array length changed between renders. " +
-          "Define features as a module-level constant, not inline or in useMemo.",
-      );
-    }
-  }
-  prevFeaturesLengthRef.current = features.length;
-
-  const featureContext: DataViewFeatureContext<TData> = useMemo(
-    () => ({ tableId, getTable: () => table }),
-    [tableId],
-  );
-
-  for (const feature of features) {
-    feature.useFeature?.(featureContext);
-  }
+  useFeatureHooks(features, tableId, table);
 
   // ── Infinite scroll ──────────────────────────────────────────────────────
   useInfiniteScroll(loadMoreRef, scrollContainerRef, {
@@ -435,18 +279,7 @@ export function useDataView<TData, TValue>(
   });
 
   // ── Cleanup ───────────────────────────────────────────────────────────────
-  useEffect(() => {
-    return () => {
-      deleteCoreStore(tableId);
-      deleteViewModeStore(tableId);
-      deleteSelectionStore(tableId);
-      deleteFilteringStores(tableId);
-      deleteSortingStores(tableId);
-      deleteAggregatesStores(tableId);
-      deleteGroupingStores(tableId);
-      deleteEditingStore(tableId);
-    };
-  }, [tableId]);
+  useDataViewStoresCleanup(tableId);
 
   // ── Contexts ──────────────────────────────────────────────────────────────
   const coreCtx = useMemo(

@@ -1,17 +1,10 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { getDbClient } from "@/framework/lib/dbClient";
-import "@/db";
 import { user } from "@/db/schema";
+import type { FullUserProfile } from "@/framework/authentication/types";
 
-export interface FullUserProfile {
-  id: string;
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-  avatar_url: string | null;
-  avatar_path: string | null;
-}
+export type { FullUserProfile };
 
 export async function fetchFullUserProfile(
   userId: string,

@@ -1,10 +1,10 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 import { getDbClient } from "@/framework/lib/dbClient";
-import "@/db";
-import { user } from "@/db/schema";
+import { getManifestConfig } from "../../runtime";
 
 export async function isAdministrator(userId: string): Promise<boolean> {
+  const { user } = getManifestConfig().authTables;
   const rows = await getDbClient()
     .select({ administrator: user.administrator })
     .from(user)

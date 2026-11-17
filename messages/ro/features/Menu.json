@@ -16,5 +16,12 @@
   "groupPermissions": "Permisiuni grup",
   "groupPermissionsDescription": "Administrează ce poate face fiecare grup",
   "userGroups": "Grupuri utilizator",
-  "userGroupsDescription": "Atribuie grupuri utilizatorilor"
+  "userGroupsDescription": "Atribuie grupuri utilizatorilor",
+  "website": "Site web",
+  "sitePages": "Pagini de site",
+  "sitePagesDescription": "Editează paginile site-ului public, de exemplu paginile legale",
+  "siteSettings": "Setări site",
+  "siteSettingsDescription": "Editează antetul și subsolul site-ului public",
+  "services": "Servicii",
+  "servicesDescription": "Serviciile afișate pe site, de exemplu într-un carusel de servicii"
 }

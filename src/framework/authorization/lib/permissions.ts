@@ -1,7 +1,9 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { getDbClient } from "@/framework/lib/dbClient";
-import { group, groupPermission, userGroup } from "@/db/schema";
+import { getManifestConfig } from "../../runtime";
+
+const tables = () => getManifestConfig().authTables;
 import { ALL_PERMISSIONS } from "../constants";
 import { isAdministrator } from "./isAdministrator";
 
@@ -49,6 +51,7 @@ export async function getPermissionsForGroupIds(
   groupIds: number[],
 ): Promise<string[]> {
   if (groupIds.length === 0) return [];
+  const { groupPermission } = tables();
 
   const rows = await getDbClient()
     .select({
@@ -74,6 +77,7 @@ export async function getUserPermissions(userId: string): Promise<string[]> {
     return [ALL_PERMISSIONS];
   }
 
+  const { userGroup } = tables();
   const groupRows = await getDbClient()
     .select({ groupId: userGroup.groupId })
     .from(userGroup)
@@ -99,6 +103,7 @@ export async function hasGroup(
 ): Promise<boolean> {
   if (await isAdministrator(userId)) return true;
 
+  const { group, userGroup } = tables();
   const rows = await getDbClient()
     .select({ id: group.id })
     .from(userGroup)
@@ -117,6 +122,7 @@ export async function hasGroup(
 export async function hasAnyGroup(userId: string): Promise<boolean> {
   if (await isAdministrator(userId)) return true;
 
+  const { userGroup } = tables();
   const rows = await getDbClient()
     .select({ groupId: userGroup.groupId })
     .from(userGroup)

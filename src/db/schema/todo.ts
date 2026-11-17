@@ -1,17 +1,9 @@
-import {
-  pgTable,
-  foreignKey,
-  pgPolicy,
-  smallint,
-  text,
-  boolean,
-  timestamp,
-  bigint,
-  date,
-} from "drizzle-orm/pg-core";
+import { pgTable, foreignKey, smallint, text, boolean, timestamp, bigint, date } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { relation } from "./relation-table";
 
+// Row-level security is on with no policies: Supabase's public API can't read or
+// change these rows. The app reads and writes them through its server connection.
 export const todo = pgTable(
   "todo",
   {
@@ -43,26 +35,5 @@ export const todo = pgTable(
     })
       .onUpdate("cascade")
       .onDelete("restrict"),
-    pgPolicy("Enable delete for users based on user_id", {
-      as: "permissive",
-      for: "delete",
-      to: ["public"],
-      using: sql`true`,
-    }),
-    pgPolicy("Enable insert for authenticated users only", {
-      as: "permissive",
-      for: "insert",
-      to: ["public"],
-    }),
-    pgPolicy("Enable read access for all users", {
-      as: "permissive",
-      for: "select",
-      to: ["public"],
-    }),
-    pgPolicy("Enable update for authenticated users only", {
-      as: "permissive",
-      for: "update",
-      to: ["public"],
-    }),
   ],
-);
+).enableRLS();

@@ -175,3 +175,24 @@ input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* ── ManifestUI website builder: the tokens the site sections use ── */
+:root {
+  --surface: color-mix(in oklab, var(--muted) 70%, var(--background));
+  --surface-2: var(--muted);
+  --cta-band: #0f2a31;
+  --brand-ink: #0a1519;
+}
+.dark {
+  --surface: color-mix(in oklab, var(--muted) 45%, var(--background));
+  --surface-2: var(--muted);
+  --cta-band: #0f2a31;
+  --brand-ink: #050d10;
+}
+@theme inline {
+  --font-display: var(--font-heading);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-cta-band: var(--cta-band);
+  --color-brand-ink: var(--brand-ink);
+}

@@ -26,7 +26,7 @@ import { toastSuccess, toastError } from "@/framework/lib/toast";
 import { updateProfile } from "../actions/update-profile";
 import { resolveAvatarUrl } from "@/framework/authentication/lib/resolveAvatarUrl";
 import { FormInput } from "@/framework/components/form/form-fields/FormInput";
-import type { FullUserProfile } from "@/app/[locale]/(site)/data/fetchFullUserProfile";
+import type { FullUserProfile } from "../types";
 
 function makeProfileSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
   return z.object({

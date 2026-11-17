@@ -16,5 +16,12 @@
   "groupPermissions": "Group permissions",
   "groupPermissionsDescription": "Manage what each group can do",
   "userGroups": "User groups",
-  "userGroupsDescription": "Assign groups to users"
+  "userGroupsDescription": "Assign groups to users",
+  "website": "Website",
+  "sitePages": "Site pages",
+  "sitePagesDescription": "Edit pages of the public site, such as the legal pages",
+  "siteSettings": "Site settings",
+  "siteSettingsDescription": "Edit the header and footer of the public site",
+  "services": "Services",
+  "servicesDescription": "Services shown on the website, e.g. in a services carousel"
 }

@@ -60,6 +60,23 @@ async function runPerIdImpl<TId extends string | number>(
   return { succeededIds, failures };
 }
 
+/**
+ * Runs `hook` once a `crud.add/update/delete` entry's transaction has
+ * committed, with its result and arguments; for side effects that must not
+ * see uncommitted data, such as refreshing cached pages. The hook's return
+ * value is the action's result, so the transaction can hand the hook data
+ * (e.g. the row's previous address) that the client never sees:
+ *
+ *   updatePost: afterCommit(crud.update(...), (_result, id) => { updateTag(`post:${id}`); }),
+ */
+export function afterCommit<V, A extends unknown[], R, T>(
+  entry: readonly [V, (...args: A) => Promise<R>],
+  hook: (result: R, ...args: A) => T | Promise<T>,
+) {
+  const [verb, fn] = entry;
+  return [verb, async (...args: A): Promise<T> => hook(await fn(...args), ...args)] as const;
+}
+
 // Builds `[verb, fn]` entries for defineResourceActions (rbac.ts) —
 // resourceId (bound here, once per file) and the verb (implied by which of
 // add/update/delete you call) never need to be repeated at the call site.

@@ -5,7 +5,7 @@ import { getCurrentUserId } from "../lib/getCurrentUserId";
 import { hasServerPermission } from "../lib/permissions";
 import { AccessDeniedDialog } from "./AccessDeniedDialog";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
-import { resourceDescriptors } from "@/app/[locale]/cms/resourceDescriptors";
+import { getManifestConfig } from "../../runtime";
 
 export async function ResourceGuard({
   resourceId,
@@ -31,7 +31,7 @@ export async function ResourceGuard({
     // Resolve the descriptor's translated plural label, not the raw
     // resourceId (e.g. "group-permissions") — the same "raw identifier leaks
     // into translated sentence" bug class as DeleteDialog's old `noun` prop.
-    const descriptor = resourceDescriptors.find((d) => d.id === resourceId);
+    const descriptor = getManifestConfig().resources.find((d) => d.id === resourceId);
     const resourceLabel = descriptor
       ? resolveLabel(descriptor.plural, locale)
       : undefined;

@@ -4,69 +4,21 @@ import { subscribeWithSelector } from "zustand/middleware"
 import { getViewModeStore } from "../../core/stores/ViewModeStore"
 import { getFilteringStore } from "../filtering/filtering.store"
 import { getSortingStore } from "../sorting/sorting.store"
-import { getAggregatesStore } from "../aggregates/aggregates.store"
 import type { AggregateRule } from "../aggregates/aggregates"
-import { getGroupingStore } from "../grouping/grouping.store"
 import type { GroupByRule } from "../grouping/grouping"
-import type {
-  ListViewRecord,
-  PersistedViewState,
-  TableViewRecord,
-} from "./views.types"
-import { DEFAULT_LIST_VIEW_ID, DEFAULT_TABLE_VIEW_ID } from "./views.types"
+import type { ListViewRecord, PersistedViewState, TableViewRecord } from "./views.types"
 import type { ResolvedViewDefaults } from "./viewDefaults"
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Default state factory
-// ─────────────────────────────────────────────────────────────────────────────
-
-function makeDefaultState(
-  defaultViewName: string,
-  initialColumnVisibility: VisibilityState,
-  initialListColumnVisibility: VisibilityState,
-  initialAggregates: AggregateRule[] = [],
-  initialGrouping: GroupByRule[] = [],
-  defaults?: ResolvedViewDefaults
-): PersistedViewState {
-  const table = defaults?.table
-  const list = defaults?.list
-  return {
-    tableViews: {
-      activeViewId: DEFAULT_TABLE_VIEW_ID,
-      views: [
-        {
-          id: DEFAULT_TABLE_VIEW_ID,
-          name: defaultViewName,
-          type: "table",
-          columnVisibility: initialColumnVisibility,
-          columnSizing: table?.columnSizing ?? {},
-          columnOrder: table?.columnOrder ?? [],
-          columnPinning: table?.columnPinning ?? { left: [] },
-          sorting: table?.sorting ?? [],
-          filters: table?.filters ?? [],
-          aggregates: initialAggregates,
-          grouping: initialGrouping,
-        },
-      ],
-    },
-    listViews: {
-      activeViewId: DEFAULT_LIST_VIEW_ID,
-      views: [
-        {
-          id: DEFAULT_LIST_VIEW_ID,
-          name: defaultViewName,
-          type: "list",
-          listColumnVisibility: initialListColumnVisibility,
-          listColumnOrder: list?.listColumnOrder ?? [],
-          sorting: list?.sorting ?? [],
-          filters: list?.filters ?? [],
-          aggregates: initialAggregates,
-          grouping: initialGrouping,
-        },
-      ],
-    },
-  }
-}
+import {
+  activeViewOf,
+  addViewFromActive,
+  makeDefaultState,
+  removeView,
+  renameView,
+  restoreViewStores,
+  saveDraft,
+  switchView,
+  type ViewKind,
+} from "./views.operations"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Store shape
@@ -126,252 +78,67 @@ function createViewsStore(
   )
 
   return create<ViewsStore>()(
-    subscribeWithSelector((set, get) => ({
-      persisted: defaultState,
-      tableDraft: null,
-      listDraft: null,
+    subscribeWithSelector((set, get) => {
+      const draftKey = (kind: ViewKind): "tableDraft" | "listDraft" => (kind === "table" ? "tableDraft" : "listDraft")
+      const switchTo = (kind: ViewKind, id: string) => {
+        set((s) => ({ persisted: switchView(s.persisted, kind, id), [draftKey(kind)]: null }))
+        getViewModeStore(tableId).getState().recordViewUsed(kind, id)
+      }
+      const save = (kind: ViewKind) => {
+        const state = get()
+        const draft = state[draftKey(kind)]
+        if (!draft) return
+        set({ persisted: saveDraft(state.persisted, kind, draft), [draftKey(kind)]: null })
+      }
+      const discard = (kind: ViewKind) => {
+        restoreViewStores(tableId, activeViewOf(get().persisted, kind))
+        set({ [draftKey(kind)]: null })
+      }
+      const saveAs = (kind: ViewKind, name: string) => {
+        const state = get()
+        const { persisted, view } = addViewFromActive(state.persisted, kind, state[draftKey(kind)], name)
+        set({ persisted, [draftKey(kind)]: null })
+        getViewModeStore(tableId).getState().recordViewUsed(kind, view.id)
+      }
+      const remove = (kind: ViewKind, id: string) => {
+        const persisted = removeView(get().persisted, kind, id)
+        if (persisted) set({ persisted, [draftKey(kind)]: null })
+      }
 
-      hydrate: (state) => set({ persisted: state }),
+      return {
+        persisted: defaultState,
+        tableDraft: null,
+        listDraft: null,
 
-      // ── Table view CRUD ────────────────────────────────────────────────
+        hydrate: (state) => set({ persisted: state }),
 
-      switchTableView: (id) => {
-        set((s) => ({
-          persisted: {
-            ...s.persisted,
-            tableViews: { ...s.persisted.tableViews, activeViewId: id },
-          },
-          tableDraft: null,
-        }))
-        getViewModeStore(tableId).getState().recordViewUsed("table", id)
-      },
+        // ── View CRUD (the same operations for grid and card views) ─────────
 
-      saveTableChanges: () => {
-        const { persisted, tableDraft } = get()
+        switchTableView: (id) => switchTo("table", id),
+        saveTableChanges: () => save("table"),
+        discardTableChanges: () => discard("table"),
+        saveAsTableView: (name) => saveAs("table", name),
+        deleteTableView: (id) => remove("table", id),
+        renameTableView: (id, name) => set((s) => ({ persisted: renameView(s.persisted, "table", id, name) })),
 
-        if (!tableDraft) return
-        const activeId = persisted.tableViews.activeViewId
-        set({
-          persisted: {
-            ...persisted,
-            tableViews: {
-              ...persisted.tableViews,
-              views: persisted.tableViews.views.map((v) =>
-                v.id === activeId ? { ...v, ...tableDraft } : v
-              ),
-            },
-          },
-          tableDraft: null,
-        })
-      },
+        switchListView: (id) => switchTo("list", id),
+        saveListChanges: () => save("list"),
+        discardListChanges: () => discard("list"),
+        saveAsListView: (name) => saveAs("list", name),
+        deleteListView: (id) => remove("list", id),
+        renameListView: (id, name) => set((s) => ({ persisted: renameView(s.persisted, "list", id, name) })),
 
-      discardTableChanges: () => {
-        const { persisted } = get()
-        const activeId = persisted.tableViews.activeViewId
-        const activeView =
-          persisted.tableViews.views.find((v) => v.id === activeId) ??
-          persisted.tableViews.views[0]
-        if (activeView) {
-          getSortingStore(tableId, activeView.id).setState({
-            sorting: activeView.sorting,
-          })
-          getFilteringStore(tableId, activeView.id).setState({
-            rules: activeView.filters,
-          })
-          getAggregatesStore(tableId, activeView.id).setState({
-            rules: activeView.aggregates ?? [],
-          })
-          getGroupingStore(tableId, activeView.id).setState({
-            grouping: activeView.grouping ?? [],
-          })
-        }
-        set({ tableDraft: null })
-      },
+        // ── Draft mutations ────────────────────────────────────────────────
 
-      saveAsTableView: (name) => {
-        const { persisted, tableDraft } = get()
-        const active =
-          persisted.tableViews.views.find(
-            (v) => v.id === persisted.tableViews.activeViewId
-          ) ?? persisted.tableViews.views[0]
-        const newView: TableViewRecord = {
-          id: crypto.randomUUID(),
-          name,
-          type: "table",
-          columnVisibility:
-            tableDraft?.columnVisibility ?? active.columnVisibility,
-          columnSizing: tableDraft?.columnSizing ?? active.columnSizing,
-          columnOrder: tableDraft?.columnOrder ?? active.columnOrder,
-          columnPinning: tableDraft?.columnPinning ?? active.columnPinning,
-          sorting: tableDraft?.sorting ?? active.sorting,
-          filters: tableDraft?.filters ?? active.filters,
-          aggregates: tableDraft?.aggregates ?? active.aggregates ?? [],
-          grouping: tableDraft?.grouping ?? active.grouping ?? [],
-        }
-        set({
-          persisted: {
-            ...persisted,
-            tableViews: {
-              activeViewId: newView.id,
-              views: [...persisted.tableViews.views, newView],
-            },
-          },
-          tableDraft: null,
-        })
-        getViewModeStore(tableId).getState().recordViewUsed("table", newView.id)
-      },
+        updateTableDraft: (patch) => {
+          set((s) => ({ tableDraft: { ...(s.tableDraft ?? {}), ...patch } }))
+        },
 
-      deleteTableView: (id) => {
-        if (id === DEFAULT_TABLE_VIEW_ID) return
-        const { persisted } = get()
-        const remaining = persisted.tableViews.views.filter((v) => v.id !== id)
-        const newActiveId = remaining.at(-1)?.id ?? DEFAULT_TABLE_VIEW_ID
-        set({
-          persisted: {
-            ...persisted,
-            tableViews: { activeViewId: newActiveId, views: remaining },
-          },
-          tableDraft: null,
-        })
-      },
-
-      renameTableView: (id, name) => {
-        set((s) => ({
-          persisted: {
-            ...s.persisted,
-            tableViews: {
-              ...s.persisted.tableViews,
-              views: s.persisted.tableViews.views.map((v) =>
-                v.id === id ? { ...v, name } : v
-              ),
-            },
-          },
-        }))
-      },
-
-      // ── List view CRUD ─────────────────────────────────────────────────
-
-      switchListView: (id) => {
-        set((s) => ({
-          persisted: {
-            ...s.persisted,
-            listViews: { ...s.persisted.listViews, activeViewId: id },
-          },
-          listDraft: null,
-        }))
-        getViewModeStore(tableId).getState().recordViewUsed("list", id)
-      },
-
-      saveListChanges: () => {
-        const { persisted, listDraft } = get()
-        if (!listDraft) return
-        const activeId = persisted.listViews.activeViewId
-        set({
-          persisted: {
-            ...persisted,
-            listViews: {
-              ...persisted.listViews,
-              views: persisted.listViews.views.map((v) =>
-                v.id === activeId ? { ...v, ...listDraft } : v
-              ),
-            },
-          },
-          listDraft: null,
-        })
-      },
-
-      discardListChanges: () => {
-        const { persisted } = get()
-        const activeId = persisted.listViews.activeViewId
-        const activeView =
-          persisted.listViews.views.find((v) => v.id === activeId) ??
-          persisted.listViews.views[0]
-        if (activeView) {
-          getSortingStore(tableId, activeView.id).setState({
-            sorting: activeView.sorting,
-          })
-          getFilteringStore(tableId, activeView.id).setState({
-            rules: activeView.filters,
-          })
-          getAggregatesStore(tableId, activeView.id).setState({
-            rules: activeView.aggregates ?? [],
-          })
-          getGroupingStore(tableId, activeView.id).setState({
-            grouping: activeView.grouping ?? [],
-          })
-        }
-        set({ listDraft: null })
-      },
-
-      saveAsListView: (name) => {
-        const { persisted, listDraft } = get()
-        const active =
-          persisted.listViews.views.find(
-            (v) => v.id === persisted.listViews.activeViewId
-          ) ?? persisted.listViews.views[0]
-        const newView: ListViewRecord = {
-          id: crypto.randomUUID(),
-          name,
-          type: "list",
-          listColumnVisibility:
-            listDraft?.listColumnVisibility ?? active.listColumnVisibility,
-          listColumnOrder: listDraft?.listColumnOrder ?? active.listColumnOrder,
-          sorting: listDraft?.sorting ?? active.sorting,
-          filters: listDraft?.filters ?? active.filters,
-          aggregates: listDraft?.aggregates ?? active.aggregates ?? [],
-          grouping: listDraft?.grouping ?? active.grouping ?? [],
-        }
-        set({
-          persisted: {
-            ...persisted,
-            listViews: {
-              activeViewId: newView.id,
-              views: [...persisted.listViews.views, newView],
-            },
-          },
-          listDraft: null,
-        })
-        getViewModeStore(tableId).getState().recordViewUsed("list", newView.id)
-      },
-
-      deleteListView: (id) => {
-        if (id === DEFAULT_LIST_VIEW_ID) return
-        const { persisted } = get()
-        const remaining = persisted.listViews.views.filter((v) => v.id !== id)
-        const newActiveId = remaining.at(-1)?.id ?? DEFAULT_LIST_VIEW_ID
-        set({
-          persisted: {
-            ...persisted,
-            listViews: { activeViewId: newActiveId, views: remaining },
-          },
-          listDraft: null,
-        })
-      },
-
-      renameListView: (id, name) => {
-        set((s) => ({
-          persisted: {
-            ...s.persisted,
-            listViews: {
-              ...s.persisted.listViews,
-              views: s.persisted.listViews.views.map((v) =>
-                v.id === id ? { ...v, name } : v
-              ),
-            },
-          },
-        }))
-      },
-
-      // ── Draft mutations ────────────────────────────────────────────────
-
-      updateTableDraft: (patch) => {
-        set((s) => ({ tableDraft: { ...(s.tableDraft ?? {}), ...patch } }))
-      },
-
-      updateListDraft: (patch) => {
-        set((s) => ({ listDraft: { ...(s.listDraft ?? {}), ...patch } }))
-      },
-    }))
+        updateListDraft: (patch) => {
+          set((s) => ({ listDraft: { ...(s.listDraft ?? {}), ...patch } }))
+        },
+      }
+    })
   )
 }
 
