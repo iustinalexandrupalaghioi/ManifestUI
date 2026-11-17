@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { getSitePage, HOME_SLUG } from "@/components/site/internal/pages/content";
 import { SitePageView } from "@/components/site/pages/SitePageView";
@@ -31,7 +30,6 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/[slug]">
 
 export default async function SitePage({ params }: PageProps<"/[locale]/[slug]">) {
   const { locale, slug } = await params;
-  setRequestLocale(locale);
   if (slug === HOME_SLUG) redirect({ href: "/", locale });
   const page = await getSitePage(locale, slug);
   if (!page) notFound();

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { getSitePage, HOME_SLUG } from "@/components/site/internal/pages/content";
 import { MissingPage, SitePageView } from "@/components/site/pages/SitePageView";
@@ -22,7 +21,6 @@ export async function generateMetadata({ params }: PageProps<"/[locale]">): Prom
 
 export default async function HomePage({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
-  setRequestLocale(locale);
   const page = await getSitePage(locale, HOME_SLUG);
   if (!page) return <MissingPage slug={HOME_SLUG} withFooter />;
   return <SitePageView page={page} locale={locale} />;

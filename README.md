@@ -1098,7 +1098,8 @@ Language, stay in `messages/`.
 - **Section files stay importable on the server.** No `"use client"`, no state or effects. Put
   interactive pieces in their own client components and render them from the section.
 - **Public pages are static.** Don't read cookies, headers or the signed-in user in site layouts
-  or pages. Call `setRequestLocale(locale)` in every site layout and page. Signed-in UI, like the
+  or pages. The locale comes from the `[locale]` segment through `next/root-params` (see i18n),
+  so pages don't set it. Signed-in UI, like the
   account menu and "Edit this page", comes from `useSiteSession()`. After changing site routes,
   check that `pnpm build` still marks them ● or ○.
 - **Read site content through the tagged reads** (`getSitePage`, `getLessons`,
@@ -1217,6 +1218,13 @@ switches locale via `router.replace(pathname, { locale: nextLocale })` from
 and `messages/ro/`, split into per-namespace JSON files (`framework/Common.json`,
 `features/Todos.json`, etc.) that `src/i18n/request.ts` loads by name — add a new namespace
 there if you introduce one.
+
+`src/i18n/request.ts` reads the locale from the `[locale]` segment with `next/root-params`
+(`experimental.rootParams` in `next.config.ts`), not from next-intl's `requestLocale`, which
+would read the request headers and make every page dynamic. So layouts and pages don't call
+`setRequestLocale`. The site (`(site)`) and the CMS (`cms`) each have their own root
+layout (sharing `src/app/[locale]/_root/RootDocument.tsx`) and their own `globals.css`: moving
+between them is a full page load, so one area's theme never leaks into another.
 
 `config/descriptor.ts`/`columns.ts`/`form.ts` labels use `{ en, ro }` objects
 (`TranslatableText`, resolved via `resolveLabel()`) directly rather than `t()` keys (see the
