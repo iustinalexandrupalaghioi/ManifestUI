@@ -1,5 +1,5 @@
 import { registerExtensions } from "@/framework/extensions";
-import { todoAttachmentsPanel } from "@/components/features/main/todo/config/attachmentsPanel";
+import { todoAttachmentsPanel } from "@/components/cms/main/todo/config/attachmentsPanel";
 import { ratingField } from "./RatingField";
 import { recordInfoBlock } from "./RecordInfoBlock";
 import { markdownField } from "./MarkdownField";

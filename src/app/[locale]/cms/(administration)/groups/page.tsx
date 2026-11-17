@@ -1,4 +1,4 @@
-import { GroupOverview } from "@/components/features/administration/group/resource";
+import { GroupOverview } from "@/components/cms/administration/group/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

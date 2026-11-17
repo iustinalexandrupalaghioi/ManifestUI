@@ -65,14 +65,14 @@ works."
    `src/app/[locale]/cms/layout.tsx` (currently "ManifestUI" / "ManifestUI Admin"). The site's name in the header and footer
    is content: edit it in **Website › Site settings** (seeded from `src/db/seed/site-settings/`).
 3. **Decide what to do with the demo resources.** `todos`, `relations`, and `attachments`
-   (`src/components/features/main/`) are a worked example of the resource pattern, not
+   (`src/components/cms/main/`) are a worked example of the resource pattern, not
    meant to ship as-is. Keep them around while you learn the framework (see
    [Adding a new resource](#adding-a-new-resource) — they're the reference every step there
    points at), then delete them once you're comfortable: remove the three folders, drop
    their entries from `resourceDescriptors.ts`/`registerResourceComponents.ts`, remove their tables
    from `src/db/schema/` (`todo`, `todo_attachment`, `relation`), and delete their menu/i18n
    entries. Leave `groups`/`group-permissions`/`user-groups`/`users`
-   (`src/components/features/administration/`) alone — that's the RBAC system itself, not
+   (`src/components/cms/administration/`) alone — that's the RBAC system itself, not
    demo data.
 4. **Point it at your own Supabase project and apply the schema** — run `pnpm manifest setup`
    (see [First-time setup](#first-time-setup)): it writes `.env`, pushes the schema, installs the
@@ -195,9 +195,10 @@ src/
 │   ├── site/                     the site's shared UI (header/footer slots, menus, toggles,
 │   │   │                         carousel, cards) — see Building the website
 │   │   └── internal/             site plumbing: reads, cache tags, media, session, editor preview
-│   ├── cms/                      cms-only UI: AppNavbar, MenuItems, BASE_ROUTE ("/cms")
-│   ├── features/
+│   ├── cms/                      the CMS: AppNavbar, MenuItems, BASE_ROUTE ("/cms") and one
+│   │   │                         folder per module with its resources:
 │   │   ├── main/                 todo/, relation/, todo-attachment/
+│   │   ├── content/              service/, site-page/, site-settings/
 │   │   └── administration/       user/, group/, group-permission/, user-group/
 │   │                             (the RBAC resources themselves — see Authorization)
 │   └── ui/                       app-level UI, distinct from framework/components/ui
@@ -290,8 +291,8 @@ To change the schema:
 
 ## Adding a new resource
 
-Every resource under `src/components/features/**` follows the same shape. Walking through
-`todos` (`src/components/features/main/todo/`) as the template:
+Every resource under `src/components/cms/**` follows the same shape. Walking through
+`todos` (`src/components/cms/main/todo/`) as the template:
 
 ```
 todo/
@@ -344,7 +345,7 @@ Steps to add a new one, say `projects`:
     - `resourceDescriptors.ts` — add `projectsDescriptor` to the array (this is what backs
       `createResourceActions`, `grantablePermissions.ts`'s resource picker, and any central
       resource listing).
-    - `registerResourceComponents.ts` — add `import "@/components/features/main/projects";`
+    - `registerResourceComponents.ts` — add `import "@/components/cms/main/projects";`
       (side-effect import; this is what actually runs `defineResource()` and populates the
       `ResourceRegistry` that lookup/relation fields resolve other resources through).
     - `grantablePermissions.ts` needs no edit for plain CRUD — it derives the resource's
@@ -490,7 +491,7 @@ succeed (`{ succeededIds, failures }`, surfaced in the UI by `ResultDialog`).
 ## Custom actions: action forms and bulk actions
 
 Beyond plain add/edit/delete, a resource can expose custom actions. `todos` has one
-example of each (`src/components/features/main/todo/config/actions/`):
+example of each (`src/components/cms/main/todo/config/actions/`):
 
 - **Action forms** (`complete-with-notes.tsx`) — an `ActionFormConfig`: a labeled action
   that opens a small dialog with its own form (its own Zod schema, its own submit), usable
@@ -630,7 +631,7 @@ when a component only makes sense for one resource and doesn't need to be reusab
 
 The template ships three examples: `ratingField` and `recordInfoBlock` in `src/extensions/`, and
 `todoAttachmentsPanel` (a detail component) in
-`src/components/features/main/todo/config/attachmentsPanel.tsx`.
+`src/components/cms/main/todo/config/attachmentsPanel.tsx`.
 
 ## Building the website
 
@@ -1120,7 +1121,7 @@ Access control is **role-based**: every route and every server action requires a
 user to hold a specific `"<resourceId>:<action>"` permission string (e.g. `"todos:read"`,
 `"group-permissions:update"`, or a custom verb like `"todos:complete-with-note"`). This all
 lives in `src/framework/authorization/` (framework-level) plus the project's own `groups`,
-`group-permissions`, and `user-groups` resources (`src/components/features/administration/`),
+`group-permissions`, and `user-groups` resources (`src/components/cms/administration/`),
 which manage the data through the exact same generic CRUD framework as everything else —
 RBAC configuration is just another set of resources you edit in the app itself, once
 signed in as an administrator.

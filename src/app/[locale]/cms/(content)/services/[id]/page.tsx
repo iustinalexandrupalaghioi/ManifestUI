@@ -1,4 +1,4 @@
-import { ServiceDetailPage } from "@/components/features/content/service/resource";
+import { ServiceDetailPage } from "@/components/cms/content/service/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

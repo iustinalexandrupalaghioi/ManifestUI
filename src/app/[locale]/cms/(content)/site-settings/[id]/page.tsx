@@ -1,4 +1,4 @@
-import { SiteSettingsDetailPage } from "@/components/features/content/site-settings/resource";
+import { SiteSettingsDetailPage } from "@/components/cms/content/site-settings/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

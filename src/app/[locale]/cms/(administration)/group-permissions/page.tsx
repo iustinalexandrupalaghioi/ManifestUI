@@ -1,4 +1,4 @@
-import { GroupPermissionOverview } from "@/components/features/administration/group-permission/resource";
+import { GroupPermissionOverview } from "@/components/cms/administration/group-permission/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

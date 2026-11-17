@@ -1,4 +1,4 @@
-import { GroupPermissionAddPage } from "@/components/features/administration/group-permission/resource";
+import { GroupPermissionAddPage } from "@/components/cms/administration/group-permission/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

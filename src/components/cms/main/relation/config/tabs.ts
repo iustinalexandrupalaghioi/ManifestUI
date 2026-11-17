@@ -1,0 +1,15 @@
+import type { TabConfig } from "@/framework/types/tab-config-type";
+import type { Relation } from "@/components/cms/main/relation/config/api";
+import { relationsFieldTabs } from "./form";
+import type { RelationFormValues } from "./schema";
+
+export const relationsTabs: TabConfig<Relation, RelationFormValues>[] = [
+  {
+    type: "relation",
+    value: "todos",
+    label: { en: "To do's", ro: "Sarcini" },
+    relationKey: "todos",
+  },
+
+  ...relationsFieldTabs.map((tab) => ({ ...tab, type: "fields" as const })),
+];

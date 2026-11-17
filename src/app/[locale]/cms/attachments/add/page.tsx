@@ -1,4 +1,4 @@
-import { AttachmentAddPage } from "@/components/features/main/todo-attachment/resource";
+import { AttachmentAddPage } from "@/components/cms/main/todo-attachment/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {
