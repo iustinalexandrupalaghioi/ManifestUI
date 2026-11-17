@@ -86,7 +86,20 @@ export function afterCommit<V, A extends unknown[], R, T>(
 export function createResourceActions(
   resourceId: string,
   registry: ResourceDescriptor[],
+  options: {
+    /**
+     * Runs after any add/update/delete/action of this resource commits (for
+     * bulk ones, when at least one row changed): the project's place to
+     * refresh whatever shows the resource, e.g. cached website pages.
+     */
+    onCommit?: (resourceId: string) => void;
+  } = {},
 ) {
+  const committed = <R,>(result: R) => {
+    options.onCommit?.(resourceId);
+    return result;
+  };
+  const committedPerId = (result: PerIdResult) => (result.succeededIds.length ? committed(result) : result);
   return {
     // `getId` is only useful when the id is knowable before insert (e.g. a
     // composite key built from the payload, as with user-groups) — omit it
@@ -104,7 +117,7 @@ export function createResourceActions(
             resourceId,
             getId?.(...args),
             "add",
-          ),
+          ).then(committed),
       ] as const;
     },
 
@@ -126,14 +139,14 @@ export function createResourceActions(
             resourceId,
             id,
             "update",
-          ),
+          ).then(committed),
       ] as const;
     },
 
     delete<TId extends string | number>(fn: (tx: Tx, id: TId) => Promise<unknown>) {
       return [
         "delete",
-        (ids: TId[]) => runPerIdImpl(ids, registry, resourceId, fn, "delete"),
+        (ids: TId[]) => runPerIdImpl(ids, registry, resourceId, fn, "delete").then(committedPerId),
       ] as const;
     },
 
@@ -149,7 +162,7 @@ export function createResourceActions(
       return [
         verb,
         (ids: TId[], ...args: TArgs) =>
-          runPerIdImpl(ids, registry, resourceId, build(...args), verb),
+          runPerIdImpl(ids, registry, resourceId, build(...args), verb).then(committedPerId),
       ] as const;
     },
   };

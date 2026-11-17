@@ -7,9 +7,9 @@ import "server-only";
 import { and, asc, eq, getTableColumns, type AnyColumn, type SQL } from "drizzle-orm";
 import type { PgTable } from "drizzle-orm/pg-core";
 import { getDbClient } from "@/framework/lib/dbClient";
-import { cachedRead, collectionTag } from "./cache";
+import { cachedRead, collectionTag, resourceTag } from "./cache";
 
-export { cachedRead, refreshCollection } from "./cache";
+export { cachedRead, refreshCollection, refreshResource } from "./cache";
 import type { CollectionCard, CollectionDef } from "./collections";
 import type { SectionDef } from "./sections/define";
 
@@ -26,14 +26,17 @@ export interface CollectionSource {
 /**
  * Where a collection's items come from: a table (a CMS resource's), which
  * rows are published, their language and order, and how a row becomes a
- * card. Reads are cached under the collection's tag; call
- * `refreshCollection(name)` (from this file) after the
- * resource's saves commit, so pages show changes within seconds.
+ * card. Reads are cached under the collection's tag and, with `resource`,
+ * the CMS resource's tag: the CMS refreshes that one whenever the resource's
+ * saves commit, so pages show changes within seconds. Without `resource`,
+ * call `refreshCollection(name)` (from this file) after saving the records.
  */
 export function defineCollectionSource<TTable extends PgTable>(
   collection: CollectionDef,
   options: {
     table: TTable;
+    /** The CMS resource (descriptor id) whose saves refresh this collection. */
+    resource?: string;
     /** A boolean column: only rows where it's true reach the site. */
     published?: AnyColumn;
     /** A text column with the row's locale; without it every row shows in every language. */
@@ -57,7 +60,8 @@ export function defineCollectionSource<TTable extends PgTable>(
     name: collection.name,
     load: async ({ locale }) => {
       try {
-        return await cachedRead(["collection", collection.name, locale], [collectionTag(collection.name)], () => read(locale));
+        const tags = [collectionTag(collection.name), ...(options.resource ? [resourceTag(options.resource)] : [])];
+        return await cachedRead(["collection", collection.name, locale], tags, () => read(locale));
       } catch (error) {
         // CI builds have no database; at runtime the error surfaces.
         if (process.env.NEXT_PHASE === "phase-production-build") return [];

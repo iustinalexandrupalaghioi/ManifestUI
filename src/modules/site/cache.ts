@@ -22,3 +22,15 @@ export const collectionTag = (name: string) => `collection:${name}`;
 export function refreshCollection(name: string) {
   updateTag(collectionTag(name));
 }
+
+/** The cache tag of everything the site reads from a CMS resource's table. */
+export const resourceTag = (resourceId: string) => `resource:${resourceId}`;
+
+/**
+ * After a CMS resource's save commits: refreshes every page that shows it.
+ * The CMS calls this for every resource (src/app/[locale]/cms/createResourceActions.ts),
+ * so collections declared with `resource` stay current without extra code.
+ */
+export function refreshResource(resourceId: string) {
+  updateTag(resourceTag(resourceId));
+}

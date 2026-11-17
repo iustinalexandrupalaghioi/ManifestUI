@@ -7,10 +7,11 @@ import { servicesCollection } from ".";
 
 const EMPTY_IMAGE = { src: "", width: 0, height: 0 };
 
-/** Where each collection's items come from. Saves refresh them through refreshCollection(name). */
+/** Where each collection's items come from. Saving a record of `resource` in the CMS refreshes its pages. */
 export const collectionSources = [
   defineCollectionSource(servicesCollection, {
     table: service,
+    resource: "services",
     published: service.published,
     locale: service.locale,
     order: service.position,
