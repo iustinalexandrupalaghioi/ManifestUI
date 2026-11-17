@@ -1,8 +1,8 @@
 /**
- * Site module: CMS-managed website pages built from sections. Developers
+ * Website builder: CMS-managed website pages built from sections. Developers
  * define section types in code with `defineSection`; editors compose and fill
  * pages in the CMS, editing on the page. Server-only loaders are in
- * "@/modules/site/server".
+ * "@/framework/site/server".
  */
 export { defineSection, newSectionContent, sectionData } from "./sections/define";
 export type { SectionComponentProps, SectionDef, SectionSchema } from "./sections/define";

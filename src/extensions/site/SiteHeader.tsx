@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ArrowRightIcon } from "lucide-react";
 import { z } from "zod";
-import { AddItem, defineSection, EditNote, EditOnly, list, List, media, MediaEdit, RemoveItem, Text, text } from "@/modules/site";
+import { AddItem, defineSection, EditNote, EditOnly, list, List, media, MediaEdit, RemoveItem, Text, text } from "@/framework/site";
 import { Link } from "@/i18n/navigation";
 import { MobileNav, type NavItem } from "@/components/site/MobileNav";
 import { AccountMenu } from "@/components/site/session/AccountMenu";

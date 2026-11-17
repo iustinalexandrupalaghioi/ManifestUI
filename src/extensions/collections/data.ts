@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createCollectionLoader, defineCollectionSource } from "@/modules/site/server";
+import { createCollectionLoader, defineCollectionSource } from "@/framework/site/server";
 import { service } from "@/db/schema";
 import { BASE_ROUTE } from "@/components/cms/constants";
 import { servicesCollection } from ".";

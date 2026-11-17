@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import { z } from "zod";
-import { AddItem, defineSection, EditOnly, list, List, RemoveItem, Text, text } from "@/modules/site";
+import { AddItem, defineSection, EditOnly, list, List, RemoveItem, Text, text } from "@/framework/site";
 import { LanguageToggle } from "@/components/site/LanguageToggle";
 import { ThemeToggle } from "@/components/site/ThemeToggle";
 import { SiteLink } from "@/components/site/SiteLink";

@@ -1,4 +1,4 @@
-import { defineCollection, registerCollections } from "@/modules/site";
+import { defineCollection, registerCollections } from "@/framework/site";
 
 /**
  * Collections: CMS resources the website shows (services, projects, posts…).

@@ -1,7 +1,7 @@
 /**
  * Collections: CMS resources shown on the website (services, projects,
  * posts…). This client-safe part names a collection; its server part
- * (`defineCollectionSource` in "@/modules/site/server") says which table it
+ * (`defineCollectionSource` in "@/framework/site/server") says which table it
  * reads and how a row becomes a card. Sections show collections by name.
  */
 import type { TranslatableText } from "@/framework/types/i18n-types";

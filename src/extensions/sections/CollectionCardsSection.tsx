@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { defineSection, sectionData, text, type CollectionCard } from "@/modules/site";
+import { defineSection, sectionData, text, type CollectionCard } from "@/framework/site";
 import { Band, SectionHeading } from "@/components/site/sections/blocks";
 import { CollectionCardView } from "@/components/site/CollectionCard";
 import { collectionField, EmptyCollectionHint, limitField, pickCards } from "./collectionFields";

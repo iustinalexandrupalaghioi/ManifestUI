@@ -16,7 +16,7 @@ export interface SectionDataMarker<D> {
 /**
  * Declares the type of the data a section needs besides its content (e.g.
  * records from the database). The loader itself is server-only, so it lives
- * apart from the section: see `defineSectionLoader` in "@/modules/site/server".
+ * apart from the section: see `defineSectionLoader` in "@/framework/site/server".
  */
 export const sectionData = <D,>(): SectionDataMarker<D> => ({});
 

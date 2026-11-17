@@ -5,7 +5,7 @@ import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { type Section } from "@/components/site/internal/sections/model";
 import type { PreviewMessage } from "@/components/site/internal/sections/SectionsPreview";
-import type { EditMessage } from "@/modules/site";
+import type { EditMessage } from "@/framework/site";
 import { UI } from "./ui";
 
 export const DEVICES = { desktop: 1280, phone: 390 } as const;

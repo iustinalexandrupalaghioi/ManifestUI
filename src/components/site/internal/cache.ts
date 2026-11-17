@@ -2,13 +2,13 @@ import "server-only";
 
 import { updateTag } from "next/cache";
 
-export { cachedRead } from "@/modules/site/server";
+export { cachedRead } from "@/framework/site/server";
 
 /**
  * Cache for the public site's content. Reads are cached per page or lesson
  * and tagged; CMS saves expire exactly the tags they touch (after the
  * transaction commits), so the next visitor gets the new version. Anything
- * changed outside the CMS (seeding, SQL) shows up within an hour (src/modules/site/cache.ts).
+ * changed outside the CMS (seeding, SQL) shows up within an hour (src/framework/site/cache.ts).
  *
  * The site still renders per request (its layout reads the signed-in user),
  * but no longer queries the database for content on every request.

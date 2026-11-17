@@ -1,4 +1,4 @@
-import { choice, EditOnly, listCollections, type CollectionCard } from "@/modules/site";
+import { choice, EditOnly, listCollections, type CollectionCard } from "@/framework/site";
 import { collections } from "@/extensions/collections";
 import { L } from "./fields";
 

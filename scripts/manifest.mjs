@@ -450,7 +450,7 @@ const toWords = (name) => toCamel(name).replace(/([a-z0-9])([A-Z])/g, "$1 $2").r
 function sectionTemplate({ type, exportName, label }) {
   const tick = "`";
   return `import { z } from "zod";
-import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/modules/site";
+import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/framework/site";
 import { Band, SectionHeading } from "@/components/site/sections/blocks";
 import { eyebrowField, L, titleField } from "./fields";
 

@@ -1,4 +1,4 @@
-import { registerSections } from "@/modules/site";
+import { registerSections } from "@/framework/site";
 import { siteFooter } from "./SiteFooter";
 import { siteHeader } from "./SiteHeader";
 

@@ -1,5 +1,5 @@
 import { getLocale } from "next-intl/server";
-import { RenderSection } from "@/modules/site";
+import { RenderSection } from "@/framework/site";
 import { siteHeader } from "@/extensions/site/SiteHeader";
 import { getSiteSettings } from "./internal/settings/content";
 

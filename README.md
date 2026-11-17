@@ -210,7 +210,7 @@ src/
 │   └── extensions/               the extension API — see Extensions
 ├── extensions/                   your registered extensions (index.ts), page sections
 │                                 (sections/) and the header and footer (site/)
-├── modules/site/                 the website builder: defineSection, primitives, rendering
+├── framework/site/                 the website builder: defineSection, primitives, rendering
 ├── lib/storage/                  the default (Supabase Storage) file upload handler
 ├── db/
 │   ├── index.ts                  Drizzle client (see the RLS caveat in Authorization)
@@ -224,15 +224,14 @@ src/
 ## Architecture: layers
 
 The code is split into layers. Each layer only imports from the layers below it, so the framework
-and the modules stay reusable, and the project plugs into them instead of the other way round
+stays reusable, and the project plugs into it instead of the other way round
 (dependency inversion).
 
 | Layer | Where | What it is | May import |
 | --- | --- | --- | --- |
 | **platform** | `src/components/ui`, `src/lib`, `src/hooks`, `src/i18n`, `src/contexts` | Shared infrastructure: shadcn/ui, Supabase clients, utilities | platform |
-| **framework** | `src/framework/` | The CRUD engine: resources, forms, data views, auth, RBAC, the extension API | framework, platform |
-| **modules** | `src/modules/<name>/` | Optional features built on the framework, such as the website builder (`modules/site`) | its own module, framework, platform |
-| **app** | everything else in `src/`: routes, `components/`, `extensions/`, `db/`, `lib/storage/` | This project: its resources, sections, tables and adapters | app, modules, framework, platform |
+| **framework** | `src/framework/` | The CRUD engine (resources, forms, data views, auth, RBAC, the extension API) and the website builder (`src/framework/site`) | framework, platform |
+| **app** | everything else in `src/`: routes, `components/`, `extensions/`, `db/`, `lib/storage/` | This project: its resources, sections, tables and adapters | app, framework, platform |
 
 **How the framework reaches the project.** It never imports project code. Everything it needs comes
 from one file, `src/manifest.config.ts`, the composition root:
@@ -253,7 +252,7 @@ from the project. The tables it queries (`user`, `group`, `group_permission`, `u
 their exact column types (the same pattern as the extensions registry). The framework only states
 which columns it needs (`AuthTablesShape` in `src/framework/config.ts`). Other ports work the same way: the file storage handler
 (`src/lib/storage`, registered with the framework), extensions (`src/extensions/index.ts`), and the
-site module's media uploads (`<SiteEditorProvider upload>` in the editor's preview frame).
+website builder's media uploads (`<SiteEditorProvider upload>` in the editor's preview frame).
 
 `pnpm check:boundaries` checks every import against these rules, and CI runs it. When it fails, the
 fix is almost never an exception. Pass what the lower layer needs through the config, a
@@ -681,12 +680,12 @@ The header and footer take the same path from `site_settings`: one row per langu
 | Section definition | `src/extensions/sections/<Name>Section.tsx` | The schema (what content the section holds) and the component (how it looks). |
 | Registry | `src/extensions/sections/index.ts` | Which types exist, in "Add section" order. A stored type that isn't registered is skipped on the site and refused on save. |
 | Server data | `src/extensions/sections/data.ts` | Data a section needs beyond its own content, such as database records. |
-| Primitives and field helpers | `@/modules/site` | Plain output on the site, editing controls in the editor. |
+| Primitives and field helpers | `@/framework/site` | Plain output on the site, editing controls in the editor. |
 | Layout helpers (optional) | `src/components/site/sections/blocks.tsx` | `Band`, `Container`, `SectionHeading`, button and title classes. |
 | Header and footer | `src/extensions/site/` | Defined like sections, stored in `site_settings`. |
 | Site UI | `src/components/site/` | The shared pieces the site renders: header and footer slots (`SiteHeaderSlot`, `SiteFooterSlot`, which load the content and render `src/extensions/site/`), mobile menu, language and theme toggles, links, carousel, collection card, account menu, page view. Restyle them freely. |
 | Site plumbing | `src/components/site/internal/` | Page and settings reads, cache tags (refreshed on CMS saves), media upload, the browser session, and the editor's preview frame. You don't normally edit it. |
-| The site module | `src/modules/site/` | `defineSection`, registry, validation, rendering. You don't normally edit it. |
+| The website builder | `src/framework/site/` | `defineSection`, registry, validation, rendering. You don't normally edit it. |
 
 ### Setting up the tables
 
@@ -879,7 +878,7 @@ export function Features() {
 
 ```tsx
 import { z } from "zod";
-import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/modules/site";
+import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/framework/site";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { L } from "./fields";
 
@@ -936,7 +935,7 @@ The stored content is then exactly what the SQL seed above inserts for `features
 
 ### The schema: field helpers
 
-Build schemas from the helpers in `@/modules/site`. They read stored content leniently: a missing
+Build schemas from the helpers in `@/framework/site`. They read stored content leniently: a missing
 or broken field becomes empty, so old pages never crash. They also check saves strictly, and they
 tell the editor how to behave.
 
@@ -1071,7 +1070,7 @@ Adding another collection takes two steps:
    ```
    Pages update within seconds of a save: the CMS refreshes `resource` whenever its add, update or
    delete commits (`src/app/[locale]/cms/createResourceActions.ts`). For rows changed some other way
-   (a script, your own action), call `refreshCollection("projects")` from `@/modules/site/server`.
+   (a script, your own action), call `refreshCollection("projects")` from `@/framework/site/server`.
 
 For pictures, give the table a `jsonb` image column (`{ src, width, height }`) and use the
 `siteImage` form field with `props: { resource: "<resource id>" }`. Uploads go to the public

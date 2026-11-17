@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { uploadSiteMedia } from "../media/upload";
 import { parseSections, SECTION_TYPES, sectionLabel, type Section } from "./model";
-import { getSection, postToEditor, RenderSections, settingFields, SiteEditorProvider } from "@/modules/site";
+import { getSection, postToEditor, RenderSections, settingFields, SiteEditorProvider } from "@/framework/site";
 
 /** Messages exchanged with the CMS section editor (same origin only). */
 export type PreviewMessage =

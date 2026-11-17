@@ -1,7 +1,7 @@
 import "server-only";
 
 /**
- * Server-only part of the site module: data loaders for sections that need
+ * Server-only part of the website builder: data loaders for sections that need
  * more than their stored content (database records, generated code…).
  */
 import { and, asc, eq, getTableColumns, type AnyColumn, type SQL } from "drizzle-orm";

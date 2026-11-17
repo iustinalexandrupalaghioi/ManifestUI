@@ -1,4 +1,4 @@
-import { registerSections } from "@/modules/site";
+import { registerSections } from "@/framework/site";
 import { collectionCardsSection } from "./CollectionCardsSection";
 import { collectionCarouselSection } from "./CollectionCarouselSection";
 

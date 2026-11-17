@@ -1,6 +1,6 @@
 import "server-only";
 import { createResourceActions as createResourceActionsBase } from "@/framework/lib/transactionalAction";
-import { refreshResource } from "@/modules/site/server";
+import { refreshResource } from "@/framework/site/server";
 import { resourceDescriptors } from "./resourceDescriptors";
 
 /**

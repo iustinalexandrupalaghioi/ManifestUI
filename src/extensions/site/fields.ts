@@ -1,4 +1,4 @@
-import { group, text } from "@/modules/site";
+import { group, text } from "@/framework/site";
 import { L } from "../sections/fields";
 
 /** A link: its text and where it goes ("/learn", "/#pricing" or a full URL). Becomes `link()` in Phase 2. */

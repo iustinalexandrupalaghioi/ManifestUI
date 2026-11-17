@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 /**
- * Checks that imports follow the project's layers, so the framework and the
- * modules stay reusable and depend only on abstractions:
+ * Checks that imports follow the project's layers, so the framework stays
+ * reusable and depends only on abstractions:
  *
  *   platform   src/components/ui, src/lib, src/hooks, src/i18n, src/contexts
  *              shared infrastructure; imports only platform. src/lib/storage
  *              is not platform: it is the project's adapter for the
  *              framework's storage port, so it counts as app
- *   framework  src/framework: the CRUD engine; imports framework and platform.
+ *   framework  src/framework: the CRUD engine and the website builder
+ *              (src/framework/site); imports framework and platform.
  *              It reaches the project only through src/manifest.config.ts,
  *              read by src/framework/runtime.ts
- *   modules    src/modules/<name>: optional features on the framework (the
- *              website builder); imports its own module, framework, platform
  *   app        everything else in src (routes, components, extensions, db,
  *              manifest.config): the project; imports anything
  *
@@ -28,20 +27,16 @@ const PLATFORM = ["src/components/ui/", "src/lib/", "src/hooks/", "src/i18n/", "
 
 function layerOf(file) {
   if (file.startsWith("src/framework/")) return "framework";
-  if (file.startsWith("src/modules/")) return "modules";
   if (file.startsWith("src/lib/storage/")) return "app";
   if (PLATFORM.some((dir) => file.startsWith(dir))) return "platform";
   return "app";
 }
 
-const moduleName = (file) => file.split("/")[2];
-
 /** Allowed source layer → target layers. */
 const ALLOWED = {
   platform: ["platform"],
   framework: ["framework", "platform"],
-  modules: ["modules", "framework", "platform"],
-  app: ["app", "modules", "framework", "platform"],
+  app: ["app", "framework", "platform"],
 };
 
 /** The single, typed way back from the framework to the project: its config. */
@@ -88,7 +83,6 @@ for (const file of walk(src)) {
     const toLayer = layerOf(to);
     if (EXCEPTIONS.some((e) => e.from === from && e.to === to)) continue;
     let ok = ALLOWED[fromLayer].includes(toLayer);
-    if (ok && fromLayer === "modules" && toLayer === "modules" && moduleName(from) !== moduleName(to)) ok = false;
     if (!ok) problems.push(`${from}  →  ${spec}   (${fromLayer} may not import ${toLayer})`);
   }
 }

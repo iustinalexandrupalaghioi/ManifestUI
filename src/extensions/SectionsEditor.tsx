@@ -23,7 +23,7 @@ import {
   type SectionType,
 } from "@/components/site/internal/sections/model";
 import { SITE_SETTINGS_PARTS } from "@/components/site/internal/settings/model";
-import type { EditMessage } from "@/modules/site";
+import type { EditMessage } from "@/framework/site";
 import { UI } from "./sectionsEditor/ui";
 import { setAtPath, collectProblems, settingsToSections, sectionsToSettings } from "./sectionsEditor/content";
 import { DEVICES, Canvas } from "./sectionsEditor/PreviewCanvas";

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createSectionDataLoader, defineSectionLoader } from "@/modules/site/server";
+import { createSectionDataLoader, defineSectionLoader } from "@/framework/site/server";
 import { loadCollections } from "@/extensions/collections/data";
 import { collectionCardsSection } from "./CollectionCardsSection";
 import { collectionCarouselSection } from "./CollectionCarouselSection";

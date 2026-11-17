@@ -4,7 +4,7 @@
  * src/extensions/site. Client-safe: used by the site, the CMS form and the editor.
  */
 import { z } from "zod";
-import { strictSchema } from "@/modules/site/sections/fields";
+import { strictSchema } from "@/framework/site/sections/fields";
 import { siteFooter } from "@/extensions/site/SiteFooter";
 import { siteHeader } from "@/extensions/site/SiteHeader";
 import "@/extensions/site";
