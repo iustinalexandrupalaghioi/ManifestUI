@@ -1,33 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/framework/lib/utils";
-import {
-  ChevronLeftIcon,
-  ExternalLinkIcon,
-  FileSearch,
-  Loader2Icon,
-  MoreHorizontal,
-  Plus,
-  RotateCcwIcon,
-  Trash2,
-} from "lucide-react";
+import { ChevronLeftIcon, MoreHorizontal } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import ToolbarActions from "./ToolbarActions";
-import { useState, useEffect } from "react";
 import { FilterInput } from "../data-view/features/filtering";
-import { useBrowserNavigation } from "../screen/stores/useBrowserNavigationStore";
-import { ToolbarActionsList } from "./parts/ToolbarActionsList";
+import { ToolbarMenuItems } from "./parts/ToolbarMenuItems";
 import { ToolbarOpenButton } from "./parts/ToolbarOpenButton";
+import { useIsNarrow } from "./parts/useIsNarrow";
 
 export interface TableAction<TData> {
   key: string;
@@ -94,6 +77,11 @@ const VARIANT_STYLES: Record<
   },
 };
 
+/**
+ * A data view's toolbar. The overview and detail variants show Back and
+ * Open buttons with everything else in a "More" menu; the compact nav
+ * variant (embedded lists) puts all of it in the menu.
+ */
 export function Toolbar<TData>({
   selectedRows,
   selectedCount,
@@ -115,17 +103,7 @@ export function Toolbar<TData>({
   preFilters,
 }: ToolbarProps<TData>) {
   const t = useTranslations("Toolbar");
-  const tc = useTranslations("Common");
-  const router = useTransitionRouter();
-  const [isNarrow, setIsNarrow] = useState(false);
-  const { navigateTo } = useBrowserNavigation();
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 640px)");
-    setIsNarrow(mq.matches);
-    const onChange = (e: MediaQueryListEvent) => setIsNarrow(e.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
+  const isNarrow = useIsNarrow();
 
   if (
     !actions?.length &&
@@ -142,64 +120,37 @@ export function Toolbar<TData>({
   }
 
   const styles = VARIANT_STYLES[variant];
-  const canOpen = selectedCount > 0;
-  const openUrl =
-    selectedCount === 1 && getRowUrl ? getRowUrl(selectedRows[0]) : undefined;
+  const wrap = (content: React.ReactNode) =>
+    slotId === false ? content : <ToolbarActions slotId={slotId}>{content}</ToolbarActions>;
 
-  const eligibleForDelete = isDeleteEligible
-    ? selectedRows.filter(isDeleteEligible)
-    : selectedRows;
-
-  const countEligibleActions = (
-    actions: TableAction<TData>[],
-    selectedRows: TData[],
-  ) => {
-    return actions.reduce((count, action) => {
-      const eligible = selectedRows.filter(
-        (r) => action.isEligible?.(r) ?? true,
-      );
-
-      return eligible.length > 0 ? count + 1 : count;
-    }, 0);
+  const menuItems = {
+    selectedRows,
+    selectedCount,
+    popOutUrl,
+    preFilters,
+    addPath,
+    onAdd,
+    onRefresh,
+    isRefreshing,
+    isRefetching,
+    actions,
+    isNarrow,
+    onDelete,
+    isDeleteEligible,
   };
 
-  const eligibleCount = actions
-    ? countEligibleActions(actions, selectedRows)
-    : 0;
-
-  const showBack = onBack || !slotId;
-
   if (variant === "nav") {
-    const hasPrimaryItems = !!(
-      onOpen ||
-      addPath ||
-      onAdd ||
-      onRefresh ||
-      onDelete
-    );
-    const hasCustomActions = !!actions?.length;
-    const menuHasContent = hasPrimaryItems || hasCustomActions;
+    const hasPrimaryItems = !!(onOpen || addPath || onAdd || onRefresh || onDelete);
+    const menuHasContent = hasPrimaryItems || !!actions?.length;
 
-    const navContent = (
-      <div
-        className={cn(
-          "flex h-full w-full items-center",
-          styles.gap,
-          styles.padding,
-        )}
-      >
+    return wrap(
+      <div className={cn("flex h-full w-full items-center", styles.gap, styles.padding)}>
         {children}
 
         <div className="ml-auto flex items-center gap-1">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                className={styles.button}
-                disabled={!menuHasContent}
-              >
+              <Button variant="outline" size="sm" type="button" className={styles.button} disabled={!menuHasContent}>
                 <MoreHorizontal className={styles.icon} />
                 {t("more")}
               </Button>
@@ -212,134 +163,29 @@ export function Toolbar<TData>({
               sideOffset={2}
               alignOffset={-4}
             >
-              {onOpen && (
-                <DropdownMenuItem
-                  disabled={!canOpen}
-                  onSelect={() => onOpen(selectedRows)}
-                >
-                  <FileSearch className="size-4" />
-                  {selectedCount > 1
-                    ? t("openCount", { count: selectedCount })
-                    : t("open")}
-                </DropdownMenuItem>
-              )}
-
-              {popOutUrl && (
-                <DropdownMenuItem
-                  onClick={() =>
-                    navigateTo(
-                      popOutUrl,
-                      preFilters && preFilters.length > 0
-                        ? preFilters
-                        : undefined,
-                    )
-                  }
-                >
-                  <ExternalLinkIcon className="size-4" /> {t("popout")}
-                </DropdownMenuItem>
-              )}
-
-              {(addPath || onAdd) && (
-                <DropdownMenuItem
-                  disabled={router.isPending}
-                  onSelect={() => {
-                    if (onAdd) onAdd();
-                    else if (addPath) router.push(addPath);
-                  }}
-                >
-                  {router.isPending ? (
-                    <Loader2Icon className="size-4 animate-spin" />
-                  ) : (
-                    <Plus className="size-4" />
-                  )}
-                  {t("add")}
-                </DropdownMenuItem>
-              )}
-
-              {onRefresh && (
-                <DropdownMenuItem disabled={isRefreshing} onSelect={onRefresh}>
-                  {isRefetching ? (
-                    <Loader2Icon className="size-4 animate-spin" />
-                  ) : (
-                    <RotateCcwIcon className="size-4" />
-                  )}
-                  {t("refresh")}
-                </DropdownMenuItem>
-              )}
-
-              {hasCustomActions && (
-                <>
-                  {hasPrimaryItems && <DropdownMenuSeparator />}
-                  <ToolbarActionsList
-                    actions={actions!}
-                    selectedRows={selectedRows}
-                    selectedCount={selectedCount}
-                    eligibleCount={eligibleCount}
-                    isNarrow={isNarrow}
-                  />
-                </>
-              )}
-
-              {onDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    disabled={eligibleForDelete.length === 0}
-                    onSelect={() => onDelete(eligibleForDelete)}
-                  >
-                    <Trash2 className="size-4" />
-                    {tc("delete")}
-                    {selectedCount > 1 && (
-                      <span className="ml-1 text-xs text-muted-foreground tabular-nums">
-                        {eligibleForDelete.length}/{selectedCount}
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                </>
-              )}
+              <ToolbarMenuItems {...menuItems} onOpen={onOpen} separateActions={hasPrimaryItems} />
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-    );
-
-    return slotId === false ? (
-      navContent
-    ) : (
-      <ToolbarActions slotId={slotId}>{navContent}</ToolbarActions>
+      </div>,
     );
   }
 
-  const content = (
-    <div
-      className={cn(
-        "flex h-full w-full items-center",
-        styles.gap,
-        slotId !== false && styles.padding,
-      )}
-    >
+  const showBack = onBack || !slotId;
+  const hasMenu = addPath || onAdd || onRefresh || onDelete || !!actions?.length || popOutUrl;
+
+  return wrap(
+    <div className={cn("flex h-full w-full items-center", styles.gap, slotId !== false && styles.padding)}>
       {/* Left group */}
       <div className={cn("flex items-center", styles.gap)}>
         {showBack &&
           (onBack ? (
-            <Button
-              title={t("back")}
-              type="button"
-              variant="outline"
-              size="icon"
-              className={styles.button}
-              onClick={onBack}
-            >
+            <Button title={t("back")} type="button" variant="outline" size="icon" className={styles.button} onClick={onBack}>
               <ChevronLeftIcon className={styles.icon} />
             </Button>
           ) : (
             <Link href="/">
-              <Button
-                title={t("back")}
-                type="button"
-                variant="outline"
-                size="icon"
-              >
+              <Button title={t("back")} type="button" variant="outline" size="icon">
                 <ChevronLeftIcon className={styles.icon} />
               </Button>
             </Link>
@@ -350,8 +196,8 @@ export function Toolbar<TData>({
             onOpen={onOpen}
             selectedRows={selectedRows}
             selectedCount={selectedCount}
-            canOpen={canOpen}
-            openUrl={openUrl}
+            canOpen={selectedCount > 0}
+            openUrl={selectedCount === 1 && getRowUrl ? getRowUrl(selectedRows[0]) : undefined}
             styles={styles}
           />
         )}
@@ -359,122 +205,22 @@ export function Toolbar<TData>({
         {children}
       </div>
 
-      <div
-        className={cn(
-          slotId === false ? "flex items-center" : "ml-auto flex items-center",
-          styles.gap,
-        )}
-      >
-        {(addPath ||
-          onAdd ||
-          onRefresh ||
-          onDelete ||
-          !!actions?.length ||
-          popOutUrl) && (
+      <div className={cn(slotId === false ? "flex items-center" : "ml-auto flex items-center", styles.gap)}>
+        {hasMenu && (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size={styles.labeled ? "sm" : "icon"}
-                type="button"
-                className={styles.button}
-              >
+              <Button variant="outline" size={styles.labeled ? "sm" : "icon"} type="button" className={styles.button}>
                 <MoreHorizontal className={styles.icon} />
                 {styles.labeled && t("more")}
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              onCloseAutoFocus={(e) => e.preventDefault()}
-              className="w-fit"
-              align="end"
-            >
-              {popOutUrl && (
-                <DropdownMenuItem
-                  onClick={() =>
-                    navigateTo(
-                      popOutUrl,
-                      preFilters && preFilters.length > 0
-                        ? preFilters
-                        : undefined,
-                    )
-                  }
-                >
-                  <ExternalLinkIcon className="size-4" />
-                  {t("popout")}
-                </DropdownMenuItem>
-              )}
-
-              {(addPath || onAdd) && (
-                <DropdownMenuItem
-                  disabled={router.isPending}
-                  onSelect={() => {
-                    if (onAdd) onAdd();
-                    else if (addPath) router.push(addPath);
-                  }}
-                >
-                  {router.isPending ? (
-                    <Loader2Icon className="size-4 animate-spin" />
-                  ) : (
-                    <Plus className="size-4" />
-                  )}
-                  {t("add")}
-                </DropdownMenuItem>
-              )}
-
-              {onRefresh && (
-                <DropdownMenuItem disabled={isRefreshing} onSelect={onRefresh}>
-                  {isRefetching ? (
-                    <Loader2Icon className="size-4 animate-spin" />
-                  ) : (
-                    <RotateCcwIcon className="size-4" />
-                  )}
-                  {t("refresh")}
-                </DropdownMenuItem>
-              )}
-
-              {!!actions?.length && (
-                <>
-                  {(addPath || onAdd || onRefresh || popOutUrl) && (
-                    <DropdownMenuSeparator />
-                  )}
-                  <ToolbarActionsList
-                    actions={actions}
-                    selectedRows={selectedRows}
-                    selectedCount={selectedCount}
-                    eligibleCount={eligibleCount}
-                    isNarrow={isNarrow}
-                  />
-                </>
-              )}
-
-              {onDelete && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    disabled={eligibleForDelete.length === 0}
-                    onSelect={() => onDelete(eligibleForDelete)}
-                  >
-                    <Trash2 className="size-4" />
-                    {tc("delete")}
-                    {selectedCount > 1 && (
-                      <span className="ml-1 text-xs text-muted-foreground tabular-nums">
-                        {eligibleForDelete.length}/{selectedCount}
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                </>
-              )}
+            <DropdownMenuContent onCloseAutoFocus={(e) => e.preventDefault()} className="w-fit" align="end">
+              <ToolbarMenuItems {...menuItems} separateActions={!!(addPath || onAdd || onRefresh || popOutUrl)} />
             </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
-    </div>
-  );
-
-  return slotId === false ? (
-    content
-  ) : (
-    <ToolbarActions slotId={slotId}>{content}</ToolbarActions>
+    </div>,
   );
 }
