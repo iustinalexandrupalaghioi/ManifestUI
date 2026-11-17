@@ -1,4 +1,4 @@
-import { SitePageDetailPage } from "@/components/features/content/site-page/resource";
+import { SitePageDetailPage } from "@/components/cms/content/site-page/resource";
 import { ResourceGuard } from "@/framework/authorization/ui/ResourceGuard";
 
 export default function Page() {

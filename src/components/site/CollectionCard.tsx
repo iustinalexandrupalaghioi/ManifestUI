@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { ArrowRightIcon, PencilIcon } from "lucide-react";
-import { EditOnly, type CollectionCard } from "@/modules/site";
+import { EditOnly, type CollectionCard } from "@/framework/site";
 import { SiteLink } from "./SiteLink";
 
 /**

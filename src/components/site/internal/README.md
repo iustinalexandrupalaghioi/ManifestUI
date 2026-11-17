@@ -8,4 +8,4 @@ What the public site runs on, kept apart from the UI you restyle in `src/compone
 - `session/` — the signed-in user in the browser (`useSiteSession`), so pages stay static
 - `sections/` — the registered section types (`model.ts`) and the CMS editor's preview frame
 
-You don't normally edit these. Sections, the header and footer, and collections are configured in `src/extensions/`; the engine is `src/modules/site/`.
+You don't normally edit these. Sections, the header and footer, and collections are configured in `src/components/extensions/`; the engine is `src/framework/site/`.

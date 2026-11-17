@@ -1,11 +1,11 @@
 import { getLocale } from "next-intl/server";
-import { RenderSection } from "@/modules/site";
-import { siteHeader } from "@/extensions/site/SiteHeader";
+import { RenderSection } from "@/framework/site";
+import { siteHeader } from "@/components/extensions/site/SiteHeader";
 import { getSiteSettings } from "./internal/settings/content";
 
 /**
  * Sticky site header: the header from Website > Site settings for the
- * current locale (layout in src/extensions/site/SiteHeader.tsx). The same for
+ * current locale (layout in src/components/extensions/site/SiteHeader.tsx). The same for
  * every visitor (pages are static); the account parts come from the browser
  * session.
  */

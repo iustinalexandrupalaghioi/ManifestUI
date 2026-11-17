@@ -1,13 +1,13 @@
 /**
  * Site settings content ({ header, footer }), stored per locale in
  * `site_settings.content`. Each part is shaped by its defineSection schema in
- * src/extensions/site. Client-safe: used by the site, the CMS form and the editor.
+ * src/components/extensions/site. Client-safe: used by the site, the CMS form and the editor.
  */
 import { z } from "zod";
-import { strictSchema } from "@/modules/site/sections/fields";
-import { siteFooter } from "@/extensions/site/SiteFooter";
-import { siteHeader } from "@/extensions/site/SiteHeader";
-import "@/extensions/site";
+import { strictSchema } from "@/framework/site/sections/fields";
+import { siteFooter } from "@/components/extensions/site/SiteFooter";
+import { siteHeader } from "@/components/extensions/site/SiteHeader";
+import "@/components/extensions/site";
 
 export type SiteSettingsContent = {
   header: z.output<typeof siteHeader.schema>;

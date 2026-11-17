@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
 import { SectionsPreview } from "@/components/site/internal/sections/SectionsPreview";
-import { loadSectionData } from "@/extensions/sections/data";
+import { loadSectionData } from "@/components/extensions/sections/data";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -12,6 +11,5 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  */
 export default async function SitePreviewPage({ params }: PageProps<"/[locale]/site-preview">) {
   const { locale } = await params;
-  setRequestLocale(locale);
   return <SectionsPreview data={await loadSectionData.all({ locale })} />;
 }

@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
-import { setRequestLocale } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SiteHeaderSlot } from "@/components/site/SiteHeaderSlot";
 import { SiteSessionProvider } from "@/components/site/internal/session/SiteSession";
+import { checkLocale, localeParams, RootDocument, rootMetadata } from "../_root/RootDocument";
 import "./globals.css";
 
+export const generateStaticParams = localeParams;
+
 export const metadata: Metadata = {
+  ...rootMetadata,
   description: "Built with ManifestUI",
 };
 
@@ -17,10 +20,10 @@ export const metadata: Metadata = {
  * in the browser.
  */
 export default async function SiteLayout({ children, params }: LayoutProps<"/[locale]">) {
-  const { locale } = await params;
-  setRequestLocale(locale);
+  const locale = checkLocale((await params).locale);
 
   return (
+    <RootDocument locale={locale}>
     <ThemeProvider>
       <Toaster />
       <SiteSessionProvider>
@@ -28,5 +31,6 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[lo
         {children}
       </SiteSessionProvider>
     </ThemeProvider>
+    </RootDocument>
   );
 }

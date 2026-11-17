@@ -4,7 +4,7 @@
  * used on the server (public site) and in the editor frame.
  */
 import type { ReactNode } from "react";
-import { Text } from "@/modules/site";
+import { Text } from "@/framework/site";
 import { cn } from "@/lib/utils";
 import { Reveal } from "../landing/motion";
 

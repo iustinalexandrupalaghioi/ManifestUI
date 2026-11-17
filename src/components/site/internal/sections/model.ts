@@ -1,18 +1,18 @@
 /**
  * Site sections: the content behind CMS-managed pages built from sections
  * (stored in `site_page.sections`). Each section type is defined once with
- * `defineSection` in src/extensions/sections; this file types the generic
- * helpers of the site module with the registered types.
+ * `defineSection` in src/components/extensions/sections; this file types the generic
+ * helpers of the website builder with the registered types.
  *
  * Client-safe: imported by the site, the preview frame and the CMS editor.
  */
 import type { z } from "zod";
-import { type AnySectionDef, blankListItem as blankItem, getSection, labelPath, newSection, parseSections as parse, validateSections as validate } from "@/modules/site";
+import { type AnySectionDef, blankListItem as blankItem, getSection, labelPath, newSection, parseSections as parse, validateSections as validate } from "@/framework/site";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import type { TranslatableText } from "@/framework/types/i18n-types";
-import { sections } from "@/extensions/sections";
+import { sections } from "@/components/extensions/sections";
 // The header and footer (Site settings) render and edit like sections too.
-import "@/extensions/site";
+import "@/components/extensions/site";
 
 // Until a section is registered, any section type (so an empty registry still typechecks).
 type RegisteredDef = [(typeof sections)[number]] extends [never] ? AnySectionDef : (typeof sections)[number];
@@ -39,7 +39,7 @@ export const emptySection = (type: SectionType, locale = "en") => newSection(typ
 /** A blank item for the list at `path` (a content path), or null if it isn't a list that can grow. */
 export const blankListItem = (type: SectionType, path: string) => blankItem(type, path);
 
-/** Save-time check of submitted sections against the registered types; see validateSections in the site module. */
+/** Save-time check of submitted sections against the registered types; see validateSections in the website builder. */
 export const validateSections = (value: unknown) => validate(value, { types: SECTION_TYPES });
 
 /** "FAQ › Questions › Question 2 › Answer" for a content path inside a section of this type. */

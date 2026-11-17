@@ -28,7 +28,7 @@ const ROOT = process.cwd();
 const ENV_FILE = resolve(ROOT, ".env");
 const SYNC_SQL = resolve(ROOT, "src/db/sql/auth-user-sync.sql");
 const TRIGGER = "manifestui_sync_auth_user";
-const SECTIONS_DIR = resolve(ROOT, "src/extensions/sections");
+const SECTIONS_DIR = resolve(ROOT, "src/components/extensions/sections");
 const SECTIONS_INDEX = resolve(SECTIONS_DIR, "index.ts");
 // The learning path's lessons table only exists in projects that have it.
 const SITE_TABLES = [
@@ -294,10 +294,6 @@ async function doctorCommand() {
 
   const required = [...ENV_FIELDS.map((field) => field.key), "NEXT_PUBLIC_BASE_URL"];
   for (const key of required) check(!!env[key], `${key} is set`, `${key} is missing (pnpm manifest env)`);
-  // Only the ManifestUI Studio app needs a GitHub App.
-  if (existsSync(resolve(ROOT, "src/studio")) && !env.GITHUB_APP_SLUG) {
-    warn("GITHUB_APP_SLUG is not set (needed for the studio's GitHub sign-in)");
-  }
 
   for (const key of ["DATABASE_URL", "DIRECT_DATABASE_URL"]) {
     if (!env[key]) continue;
@@ -454,7 +450,7 @@ const toWords = (name) => toCamel(name).replace(/([a-z0-9])([A-Z])/g, "$1 $2").r
 function sectionTemplate({ type, exportName, label }) {
   const tick = "`";
   return `import { z } from "zod";
-import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/modules/site";
+import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/framework/site";
 import { Band, SectionHeading } from "@/components/site/sections/blocks";
 import { eyebrowField, L, titleField } from "./fields";
 
@@ -517,7 +513,7 @@ async function sectionCommand(nameArg) {
   const file = resolve(SECTIONS_DIR, `${pascal}Section.tsx`);
 
   if (existsSync(file)) throw new CliError(`${relative(ROOT, file)} already exists.`);
-  const taken = ["src/extensions/sections", "src/extensions/site"].some(
+  const taken = ["src/components/extensions/sections", "src/components/extensions/site"].some(
     (dir) => spawnSync("git", ["grep", "-q", `type: "${type}"`, "--", dir], { cwd: ROOT }).status === 0,
   );
   if (taken) throw new CliError(`A section with type "${type}" already exists. Pick another name.`);

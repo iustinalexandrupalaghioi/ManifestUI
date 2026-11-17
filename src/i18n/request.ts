@@ -1,3 +1,4 @@
+import { locale as rootLocale } from "next/root-params";
 import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
 import { routing } from "./routing";
@@ -35,8 +36,11 @@ const NAMESPACES = [
   { group: "site", name: "Landing" },
 ] as const;
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requested = await requestLocale;
+export default getRequestConfig(async () => {
+  // The [locale] segment above every root layout (`next/root-params`), so pages
+  // stay static: next-intl's `requestLocale` would read the request headers.
+  // Outside [locale] (API routes) there is none, and the default applies.
+  const requested = await rootLocale();
   const locale = hasLocale(routing.locales, requested)
     ? requested
     : routing.defaultLocale;
