@@ -62,8 +62,8 @@ works."
    start a clean history (`rm -rf .git && git init`).
 2. **Rename the project** — update `package.json`'s `name` field, the `title`/`description`
    in `src/app/[locale]/layout.tsx`, `src/app/[locale]/(site)/layout.tsx`, and
-   `src/app/[locale]/cms/layout.tsx` (currently "ManifestUI" / "ManifestUI Admin"), and the
-   hardcoded "ManifestUI" text in `src/components/site/Navbar.tsx`.
+   `src/app/[locale]/cms/layout.tsx` (currently "ManifestUI" / "ManifestUI Admin"). The site's name in the header and footer
+   is content: edit it in **Website › Site settings** (seeded from `src/db/seed/site-settings/`).
 3. **Decide what to do with the demo resources.** `todos`, `relations`, and `attachments`
    (`src/components/features/main/`) are a worked example of the resource pattern, not
    meant to ship as-is. Keep them around while you learn the framework (see
@@ -192,8 +192,9 @@ src/
 │   └── api/webhooks/             route handlers, e.g. the auth-users sync webhook — outside
 │                                 [locale] since API routes aren't locale-scoped
 ├── components/
-│   ├── site/                     (site)-only UI: Navbar, page reads and caching, the
-│   │                             page editor's preview — see Building the website
+│   ├── site/                     the site's shared UI (header/footer slots, menus, toggles,
+│   │   │                         carousel, cards) — see Building the website
+│   │   └── internal/             site plumbing: reads, cache tags, media, session, editor preview
 │   ├── cms/                      cms-only UI: AppNavbar, MenuItems, BASE_ROUTE ("/cms")
 │   ├── features/
 │   │   ├── main/                 todo/, relation/, todo-attachment/
@@ -682,7 +683,8 @@ The header and footer take the same path from `site_settings`: one row per langu
 | Primitives and field helpers | `@/modules/site` | Plain output on the site, editing controls in the editor. |
 | Layout helpers (optional) | `src/components/site/sections/blocks.tsx` | `Band`, `Container`, `SectionHeading`, button and title classes. |
 | Header and footer | `src/extensions/site/` | Defined like sections, stored in `site_settings`. |
-| Reads and caching | `src/components/site/` | `getSitePage`, `getSiteSettings`, and the cache tags that a CMS save refreshes. |
+| Site UI | `src/components/site/` | The shared pieces the site renders: header and footer slots (`SiteHeaderSlot`, `SiteFooterSlot`, which load the content and render `src/extensions/site/`), mobile menu, language and theme toggles, links, carousel, collection card, account menu, page view. Restyle them freely. |
+| Site plumbing | `src/components/site/internal/` | Page and settings reads, cache tags (refreshed on CMS saves), media upload, the browser session, and the editor's preview frame. You don't normally edit it. |
 | The site module | `src/modules/site/` | `defineSection`, registry, validation, rendering. You don't normally edit it. |
 
 ### Setting up the tables
@@ -1099,7 +1101,7 @@ Language, stay in `messages/`.
   check that `pnpm build` still marks them ● or ○.
 - **Read site content through the tagged reads** (`getSitePage`, `getLessons`,
   `getSiteSettings`), and refresh tags after commits with `afterCommit` + the helpers in
-  `src/components/site/cache.ts`. Changes made outside the CMS appear within an hour.
+  `src/components/site/internal/cache.ts`. Changes made outside the CMS appear within an hour.
 
 ### Checklist for a new section
 

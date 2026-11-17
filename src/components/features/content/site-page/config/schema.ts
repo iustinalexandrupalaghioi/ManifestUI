@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { parseSections, validateSections } from "@/components/site/sections/model";
+import { parseSections, validateSections } from "@/components/site/internal/sections/model";
 import { PageKind, PageLocale } from "./constants";
 
 export const sitePageSchema = z.object({

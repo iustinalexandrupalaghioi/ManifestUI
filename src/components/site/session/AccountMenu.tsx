@@ -2,7 +2,7 @@
 
 import { Link } from "@/i18n/navigation";
 import { UserMenu } from "../UserMenu";
-import { useSiteSession } from "./SiteSession";
+import { useSiteSession } from "../internal/session/SiteSession";
 
 /** Desktop navbar slot: the account menu when signed in, otherwise "Log in". */
 export function AccountMenu({ loginLabel, linkClassName }: { loginLabel: string; linkClassName: string }) {

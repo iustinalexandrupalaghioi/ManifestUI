@@ -1,5 +1,5 @@
-import { type Section } from "@/components/site/sections/model";
-import { parseSiteSettings, SITE_SETTINGS_PARTS } from "@/components/site/settings/model";
+import { type Section } from "@/components/site/internal/sections/model";
+import { parseSiteSettings, SITE_SETTINGS_PARTS } from "@/components/site/internal/settings/model";
 
 /** Immutably sets a dotted path ("demo.1.image") inside section content. */
 export function setAtPath(target: unknown, path: string[], value: unknown): unknown {

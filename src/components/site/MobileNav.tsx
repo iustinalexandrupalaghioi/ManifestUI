@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import type { Theme } from "@/contexts/ThemeContext";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
-import { useSiteSession } from "./session/SiteSession";
+import { useSiteSession } from "./internal/session/SiteSession";
 
 export type NavItem = {
   label: string;

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { getSitePage, HOME_SLUG } from "@/components/site/pages/content";
+import { getSitePage, HOME_SLUG } from "@/components/site/internal/pages/content";
 import { SitePageView } from "@/components/site/pages/SitePageView";
 
 /**
@@ -10,7 +10,7 @@ import { SitePageView } from "@/components/site/pages/SitePageView";
  * Static routes such as /learn take precedence over this one; the "home"
  * page lives at /<locale>.
  */
-// Static: each page is rendered on its first visit and kept until it's saved in the CMS (see components/site/cache.ts).
+// Static: each page is rendered on its first visit and kept until it's saved in the CMS (see components/site/internal/cache.ts).
 export function generateStaticParams() {
   return [];
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
-import { getSitePage, HOME_SLUG } from "@/components/site/pages/content";
+import { getSitePage, HOME_SLUG } from "@/components/site/internal/pages/content";
 import { MissingPage, SitePageView } from "@/components/site/pages/SitePageView";
 
 /** The home page: the "home" site page from the CMS (Website › Site pages). */

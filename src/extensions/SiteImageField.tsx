@@ -5,7 +5,7 @@ import { ImageIcon, ImageUpIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { useLocale } from "next-intl";
 import { z } from "zod";
 import { defineFieldComponent } from "@/framework/extensions";
-import { uploadSiteMedia } from "@/components/site/media/upload";
+import { uploadSiteMedia } from "@/components/site/internal/media/upload";
 import { MEDIA_TYPES } from "@/modules/site";
 
 const TEXT = {

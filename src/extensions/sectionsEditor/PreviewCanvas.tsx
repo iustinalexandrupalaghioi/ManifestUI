@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
-import { type Section } from "@/components/site/sections/model";
-import type { PreviewMessage } from "@/components/site/sections/SectionsPreview";
+import { type Section } from "@/components/site/internal/sections/model";
+import type { PreviewMessage } from "@/components/site/internal/sections/SectionsPreview";
 import type { EditMessage } from "@/modules/site";
 import { UI } from "./ui";
 

@@ -2,7 +2,7 @@
 
 import { defineResource } from "@/framework/core/define-resource";
 import type { siteSettings } from "@/db/schema";
-import { parseSiteSettings } from "@/components/site/settings/model";
+import { parseSiteSettings } from "@/components/site/internal/settings/model";
 import starter from "@/db/seed/site-settings/en.json";
 import {
   fetchSiteSettingsDetail,

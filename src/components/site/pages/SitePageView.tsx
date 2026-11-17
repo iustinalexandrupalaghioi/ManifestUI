@@ -3,8 +3,8 @@ import { Markdown } from "@/components/site/learn/Markdown";
 import { MotionProvider } from "@/components/site/landing/motion";
 import { RenderSections } from "@/modules/site";
 import { loadSectionData } from "@/extensions/sections/data";
-import { SiteFooter } from "@/components/site/SiteFooter";
-import type { SitePageContent } from "./content";
+import { SiteFooterSlot } from "@/components/site/SiteFooterSlot";
+import type { SitePageContent } from "../internal/pages/content";
 import { EditPageButton } from "./EditPageButton";
 
 /**
@@ -28,7 +28,7 @@ export async function SitePageView({
         <main>
           <RenderSections sections={page.sections} data={data} />
         </main>
-        {withFooter && <SiteFooter />}
+        {withFooter && <SiteFooterSlot />}
         <EditPageButton kind="page" id={page.id} />
       </MotionProvider>
     );
@@ -47,7 +47,7 @@ export async function SitePageView({
           <Markdown source={page.body} />
         </article>
       </main>
-      {withFooter && <SiteFooter />}
+      {withFooter && <SiteFooterSlot />}
       <EditPageButton kind="page" id={page.id} />
     </>
   );
@@ -62,7 +62,7 @@ export async function MissingPage({ slug, withFooter = false }: { slug: string; 
         <h1 className="m-0 font-display text-3xl font-semibold">{t("missingTitle")}</h1>
         <p className="m-0 text-base text-muted-foreground">{t("missingBody", { slug })}</p>
       </main>
-      {withFooter && <SiteFooter />}
+      {withFooter && <SiteFooterSlot />}
     </>
   );
 }

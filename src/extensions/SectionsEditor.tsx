@@ -21,8 +21,8 @@ import {
   sectionLabel,
   type Section,
   type SectionType,
-} from "@/components/site/sections/model";
-import { SITE_SETTINGS_PARTS } from "@/components/site/settings/model";
+} from "@/components/site/internal/sections/model";
+import { SITE_SETTINGS_PARTS } from "@/components/site/internal/settings/model";
 import type { EditMessage } from "@/modules/site";
 import { UI } from "./sectionsEditor/ui";
 import { setAtPath, collectProblems, settingsToSections, sectionsToSettings } from "./sectionsEditor/content";

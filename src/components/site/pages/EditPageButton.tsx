@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { PencilIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { BASE_ROUTE } from "@/components/cms/constants";
-import { useSiteSession } from "../session/SiteSession";
+import { useSiteSession } from "../internal/session/SiteSession";
 
 /**
  * "Edit this page" for people who may edit it: opens the page (or lesson) in

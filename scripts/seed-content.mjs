@@ -24,8 +24,8 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import postgres from "postgres";
-import { parseSections, validateSections } from "../src/components/site/sections/model.ts";
-import { siteSettingsContentSchema } from "../src/components/site/settings/model.ts";
+import { parseSections, validateSections } from "../src/components/site/internal/sections/model.ts";
+import { siteSettingsContentSchema } from "../src/components/site/internal/settings/model.ts";
 
 const url = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
 if (!url) {

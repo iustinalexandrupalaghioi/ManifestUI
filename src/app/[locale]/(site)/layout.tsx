@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Navbar } from "@/components/site/Navbar";
-import { SiteSessionProvider } from "@/components/site/session/SiteSession";
+import { SiteHeaderSlot } from "@/components/site/SiteHeaderSlot";
+import { SiteSessionProvider } from "@/components/site/internal/session/SiteSession";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,7 +24,7 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[lo
     <ThemeProvider>
       <Toaster />
       <SiteSessionProvider>
-        <Navbar />
+        <SiteHeaderSlot />
         {children}
       </SiteSessionProvider>
     </ThemeProvider>
