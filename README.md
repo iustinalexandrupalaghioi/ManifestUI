@@ -103,7 +103,7 @@ also its own command:
 | `pnpm manifest auth-sync` | Installs a trigger that keeps the app's `user` table in sync with Supabase Auth, and backfills existing accounts. |
 | `pnpm manifest admin [email]` | Makes a user administrator. If the account doesn't exist, it creates it and prints a temporary password once. |
 | `pnpm manifest site` | Sets up the website: website tables, the seed content in `src/db/seed/`, section and database checks. See [Building the website](#building-the-website). |
-| `pnpm manifest section <name>` | Scaffolds a page section in `src/extensions/sections/` and registers it. |
+| `pnpm manifest section <name>` | Scaffolds a page section in `src/components/extensions/sections/` and registers it. |
 | `pnpm manifest doctor` | Checks env vars, both database connections, the app tables, the sync trigger, that an administrator exists, and that Supabase Auth answers. |
 
 (It's `pnpm manifest setup` rather than `pnpm setup` because `pnpm setup` is a built-in pnpm
@@ -201,16 +201,16 @@ src/
 │   │   ├── content/              service/, site-page/, site-settings/
 │   │   └── administration/       user/, group/, group-permission/, user-group/
 │   │                             (the RBAC resources themselves — see Authorization)
+│   ├── extensions/               your registered extensions (index.ts), page sections
+│   │                             (sections/), collections and the header and footer (site/)
 │   └── ui/                       app-level UI, distinct from framework/components/ui
 ├── framework/                    the reusable CRUD framework (defineResource, forms,
 │   │                             data-view, dialogs, files) — not covered in depth by
 │   │                             this doc
 │   ├── authorization/            RBAC: permissions.ts, ResourceGuard, usePermissions,
 │   │                             AccessDeniedDialog — see Authorization
-│   └── extensions/               the extension API — see Extensions
-├── extensions/                   your registered extensions (index.ts), page sections
-│                                 (sections/) and the header and footer (site/)
-├── framework/site/                 the website builder: defineSection, primitives, rendering
+│   ├── extensions/               the extension API — see Extensions
+│   └── site/                     the website builder: defineSection, primitives, rendering
 ├── lib/storage/                  the default (Supabase Storage) file upload handler
 ├── db/
 │   ├── index.ts                  Drizzle client (see the RLS caveat in Authorization)
@@ -251,7 +251,7 @@ from the project. The tables it queries (`user`, `group`, `group_permission`, `u
 `declare module "@/framework/config" { interface Register { authTables: … } }` gives the framework
 their exact column types (the same pattern as the extensions registry). The framework only states
 which columns it needs (`AuthTablesShape` in `src/framework/config.ts`). Other ports work the same way: the file storage handler
-(`src/lib/storage`, registered with the framework), extensions (`src/extensions/index.ts`), and the
+(`src/lib/storage`, registered with the framework), extensions (`src/components/extensions/index.ts`), and the
 website builder's media uploads (`<SiteEditorProvider upload>` in the editor's preview frame).
 
 `pnpm check:boundaries` checks every import against these rules, and CI runs it. When it fails, the
@@ -546,7 +546,7 @@ Every definition takes:
 
 ### 1. Define the component
 
-`src/extensions/RatingField.tsx`, a star rating bound to a numeric form value:
+`src/components/extensions/RatingField.tsx`, a star rating bound to a numeric form value:
 
 ```tsx
 "use client";
@@ -581,7 +581,7 @@ export const ratingField = defineFieldComponent({
 
 ### 2. Register it
 
-Add it to `src/extensions/index.ts`. The module augmentation makes every `type` and `props` you
+Add it to `src/components/extensions/index.ts`. The module augmentation makes every `type` and `props` you
 write in config type-checked against the registered components:
 
 ```ts
@@ -598,7 +598,7 @@ declare module "@/framework/extensions/registry" {
 }
 ```
 
-`src/extensions/index.ts` is imported once on the client by the CMS providers
+`src/components/extensions/index.ts` is imported once on the client by the CMS providers
 (`src/app/[locale]/cms/providers.tsx`), so registered components are available on every CMS
 page.
 
@@ -628,7 +628,7 @@ dataView: { overview: { slots: { afterTable: myTotals.with() } } }
 Slots also accept a plain render function (for example `afterForm: (item) => <MyPanel item={item} />`)
 when a component only makes sense for one resource and doesn't need to be reusable or configurable.
 
-The template ships three examples: `ratingField` and `recordInfoBlock` in `src/extensions/`, and
+The template ships three examples: `ratingField` and `recordInfoBlock` in `src/components/extensions/`, and
 `todoAttachmentsPanel` (a detail component) in
 `src/components/cms/main/todo/config/attachmentsPanel.tsx`.
 
@@ -656,10 +656,10 @@ site_page                       one row per page and language
                     │
                     │  "type" picks the section definition
                     ▼
-src/extensions/sections/index.ts         registerSections([heroSection, …])
+src/components/extensions/sections/index.ts         registerSections([heroSection, …])
                     │
                     ▼
-src/extensions/sections/HeroSection.tsx  defineSection({ type: "hero", schema, defaults, component })
+src/components/extensions/sections/HeroSection.tsx  defineSection({ type: "hero", schema, defaults, component })
    schema     reads "content": missing or broken fields become empty, unknown keys are ignored
    component  renders it with <Text path="title" />, <List>, <MediaEdit>…
                     │
@@ -672,18 +672,18 @@ public site: plain HTML, static        CMS editor: the same component in the
 
 The header and footer take the same path from `site_settings`: one row per language, with
 `content` shaped as `{ "header": {…}, "footer": {…} }`, rendered by `siteHeader` and `siteFooter` in
-`src/extensions/site/`.
+`src/components/extensions/site/`.
 
 | Part | Where | What it does |
 | --- | --- | --- |
 | Page content | `site_page.sections` (jsonb) | What editors saved: an ordered list of `{ id, type, hidden?, content }`. `content` follows the section's schema. |
-| Section definition | `src/extensions/sections/<Name>Section.tsx` | The schema (what content the section holds) and the component (how it looks). |
-| Registry | `src/extensions/sections/index.ts` | Which types exist, in "Add section" order. A stored type that isn't registered is skipped on the site and refused on save. |
-| Server data | `src/extensions/sections/data.ts` | Data a section needs beyond its own content, such as database records. |
+| Section definition | `src/components/extensions/sections/<Name>Section.tsx` | The schema (what content the section holds) and the component (how it looks). |
+| Registry | `src/components/extensions/sections/index.ts` | Which types exist, in "Add section" order. A stored type that isn't registered is skipped on the site and refused on save. |
+| Server data | `src/components/extensions/sections/data.ts` | Data a section needs beyond its own content, such as database records. |
 | Primitives and field helpers | `@/framework/site` | Plain output on the site, editing controls in the editor. |
 | Layout helpers (optional) | `src/components/site/sections/blocks.tsx` | `Band`, `Container`, `SectionHeading`, button and title classes. |
-| Header and footer | `src/extensions/site/` | Defined like sections, stored in `site_settings`. |
-| Site UI | `src/components/site/` | The shared pieces the site renders: header and footer slots (`SiteHeaderSlot`, `SiteFooterSlot`, which load the content and render `src/extensions/site/`), mobile menu, language and theme toggles, links, carousel, collection card, account menu, page view. Restyle them freely. |
+| Header and footer | `src/components/extensions/site/` | Defined like sections, stored in `site_settings`. |
+| Site UI | `src/components/site/` | The shared pieces the site renders: header and footer slots (`SiteHeaderSlot`, `SiteFooterSlot`, which load the content and render `src/components/extensions/site/`), mobile menu, language and theme toggles, links, carousel, collection card, account menu, page view. Restyle them freely. |
 | Site plumbing | `src/components/site/internal/` | Page and settings reads, cache tags (refreshed on CMS saves), media upload, the browser session, and the editor's preview frame. You don't normally edit it. |
 | The website builder | `src/framework/site/` | `defineSection`, registry, validation, rendering. You don't normally edit it. |
 
@@ -794,11 +794,11 @@ only what's missing; `--force` overwrites existing rows, which loses CMS edits.
 pnpm manifest section testimonials
 ```
 
-This creates `src/extensions/sections/TestimonialsSection.tsx`, a heading plus a list of cards,
+This creates `src/components/extensions/sections/TestimonialsSection.tsx`, a heading plus a list of cards,
 and registers it. Run `pnpm dev`, open a sections page in **Website › Site pages**, and pick
 **Add section › Testimonials**. Then reshape the schema and the markup; the editor follows. Doing
 it by hand is the same two steps: write the file, then add it to the list in
-`src/extensions/sections/index.ts`.
+`src/components/extensions/sections/index.ts`.
 
 A section file looks like this:
 
@@ -874,7 +874,7 @@ export function Features() {
 3. **Each image becomes a `media()`.** Render `content.image.src` with `<img>` or `next/image`, and put
    `<MediaEdit path="image" />` in a `relative` box around it. For a link, make the label a `<Text>`
    and the address a `text()` that editors change with `<EditNote>`.
-4. **Wrap it in `defineSection`** and add it to `registerSections` in `src/extensions/sections/index.ts`.
+4. **Wrap it in `defineSection`** and add it to `registerSections` in `src/components/extensions/sections/index.ts`.
 
 ```tsx
 import { z } from "zod";
@@ -973,7 +973,7 @@ component: ({ content }) => (
 
 Use it for variants such as columns, a layout, or showing the images. For an on/off option, use a
 `choice()` with two values. The collection sections use it to pick the collection and how many items
-to show (`src/extensions/sections/collectionFields.tsx`).
+to show (`src/components/extensions/sections/collectionFields.tsx`).
 
 ### What editors can and can't change
 
@@ -1026,7 +1026,7 @@ the section and add a server loader:
 data: sectionData<Post[]>(),
 component: ({ content, data }) => …,
 
-// src/extensions/sections/data.ts
+// src/components/extensions/sections/data.ts
 defineSectionLoader(latestPostsSection, ({ locale }) => getLatestPosts(locale)),
 ```
 
@@ -1042,22 +1042,22 @@ button (on the section toolbar) picks which collection to show and how many item
 
 This project includes a working example, **Services**: the `service` table
 (`src/db/schema/service.ts`), its CMS resource (**Website › Services**), three starter services per
-language in `src/db/seed/services/`, and the collection in `src/extensions/collections`.
+language in `src/db/seed/services/`, and the collection in `src/components/extensions/collections`.
 `pnpm manifest site` creates the table and adds the starter services. Then give editors permission
 for Services, add a **Collection carousel** to a page, and pick **Services** in its Settings. To
 drop the example, delete the Services resource, its CMS routes, the table and its seed, remove
 `servicesDescriptor`, the menu link and the `service` schema export, and remove the services
-collection from `src/extensions/collections/index.ts` and `data.ts`. Keep the two collection
+collection from `src/components/extensions/collections/index.ts` and `data.ts`. Keep the two collection
 sections for your own collections.
 
 Adding another collection takes two steps:
 
-1. **Name it** in `src/extensions/collections/index.ts`:
+1. **Name it** in `src/components/extensions/collections/index.ts`:
    ```ts
    export const projectsCollection = defineCollection({ name: "projects", label: L("Projects", "Proiecte") });
    export const collections = registerCollections([servicesCollection, projectsCollection]);
    ```
-2. **Say where its items come from** in `src/extensions/collections/data.ts`:
+2. **Say where its items come from** in `src/components/extensions/collections/data.ts`:
    ```ts
    defineCollectionSource(projectsCollection, {
      table: project,
@@ -1079,11 +1079,11 @@ For pictures, give the table a `jsonb` image column (`{ src, width, height }`) a
 Collection items aren't edited on the page: they're records, not page content. In the editor each
 card has an **Edit in CMS** link instead. A section of your own can read collections too, with
 `data: sectionData<Record<string, CollectionCard[]>>()` and a loader that returns
-`loadCollections` (see `src/extensions/sections/data.ts`).
+`loadCollections` (see `src/components/extensions/sections/data.ts`).
 
 ### Header and footer
 
-`src/extensions/site/SiteHeader.tsx` and `SiteFooter.tsx` work like sections, but they're
+`src/components/extensions/site/SiteHeader.tsx` and `SiteFooter.tsx` work like sections, but they're
 registered apart from page sections: they aren't offered in "Add section", and page saves refuse
 them. Their content is stored in `site_settings`, one row per language. `src/db/seed/site-settings/`
 holds the seed, which the site also shows until a row exists. Replace the header and footer with

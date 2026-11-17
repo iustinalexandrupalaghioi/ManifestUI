@@ -14,7 +14,7 @@ export const sitePageSchema = z.object({
   kind: z.enum(PageKind.values),
   body: z.string().default(""),
   /**
-   * Checked against the registered defineSection schemas (src/extensions/sections)
+   * Checked against the registered defineSection schemas (src/components/extensions/sections)
    * in the form and again in the save action, so invalid content is refused on the server.
    */
   sections: z

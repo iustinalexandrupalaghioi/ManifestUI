@@ -9,8 +9,8 @@ import { MobileNav, type NavItem } from "@/components/site/MobileNav";
 import { AccountMenu } from "@/components/site/session/AccountMenu";
 import { isExternalHref, SiteLink, toSiteHref } from "@/components/site/SiteLink";
 import { cn } from "@/lib/utils";
-import { L } from "@/extensions/sections/fields";
-import { linkField } from "@/extensions/site/fields";
+import { L } from "@/components/extensions/sections/fields";
+import { linkField } from "@/components/extensions/site/fields";
 
 /** In the editor, a link with its address editable underneath (and an optional × next to it); on the site, just the link. */
 export function withNote(edit: boolean, link: ReactNode, hrefPath: string, remove?: ReactNode) {

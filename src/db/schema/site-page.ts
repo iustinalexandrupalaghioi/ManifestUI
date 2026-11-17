@@ -22,7 +22,7 @@ export const sitePage = pgTable(
     description: text().notNull().default(""),
     kind: text().notNull().default("text"),
     body: text().notNull().default(""),
-    /** Sections of a "sections" page; each type's shape is its defineSection schema in src/extensions/sections. */
+    /** Sections of a "sections" page; each type's shape is its defineSection schema in src/components/extensions/sections. */
     sections: jsonb().notNull().default([]),
     published: boolean().notNull().default(false),
     updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull().defaultNow(),

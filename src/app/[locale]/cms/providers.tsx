@@ -8,7 +8,7 @@ import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/cache/currentU
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import "./registerResourceComponents";
-import "@/extensions";
+import "@/components/extensions";
 import "@/lib/storage/registerDefaultStorageHandler";
 
 export function Providers({

@@ -8,7 +8,7 @@ import { collectionCarouselSection } from "./CollectionCarouselSection";
  * `pnpm manifest section <name>` (guide: README › Building the website).
  */
 export const sections = registerSections([
-  // Generic sections that show a CMS collection (src/extensions/collections), e.g. the services.
+  // Generic sections that show a CMS collection (src/components/extensions/collections), e.g. the services.
   collectionCardsSection,
   collectionCarouselSection,
 ]);

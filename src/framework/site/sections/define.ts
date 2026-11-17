@@ -49,7 +49,7 @@ export interface SectionDef<TType extends string = string, S extends SectionSche
   component: (props: SectionComponentProps<z.output<S>, TData>) => ReactNode;
 }
 
-/** A section type for CMS-managed pages; register it in src/extensions/sections. */
+/** A section type for CMS-managed pages; register it in src/components/extensions/sections. */
 export function defineSection<const TType extends string, S extends SectionSchema, TData = undefined>(
   def: SectionDef<TType, S, TData>,
 ): SectionDef<TType, S, TData> {

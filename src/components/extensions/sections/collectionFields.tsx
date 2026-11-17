@@ -1,5 +1,5 @@
 import { choice, EditOnly, listCollections, type CollectionCard } from "@/framework/site";
-import { collections } from "@/extensions/collections";
+import { collections } from "@/components/extensions/collections";
 import { L } from "./fields";
 
 void collections; // registered before the options are read

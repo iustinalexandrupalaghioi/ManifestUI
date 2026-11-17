@@ -28,7 +28,7 @@ const ROOT = process.cwd();
 const ENV_FILE = resolve(ROOT, ".env");
 const SYNC_SQL = resolve(ROOT, "src/db/sql/auth-user-sync.sql");
 const TRIGGER = "manifestui_sync_auth_user";
-const SECTIONS_DIR = resolve(ROOT, "src/extensions/sections");
+const SECTIONS_DIR = resolve(ROOT, "src/components/extensions/sections");
 const SECTIONS_INDEX = resolve(SECTIONS_DIR, "index.ts");
 // The learning path's lessons table only exists in projects that have it.
 const SITE_TABLES = [
@@ -513,7 +513,7 @@ async function sectionCommand(nameArg) {
   const file = resolve(SECTIONS_DIR, `${pascal}Section.tsx`);
 
   if (existsSync(file)) throw new CliError(`${relative(ROOT, file)} already exists.`);
-  const taken = ["src/extensions/sections", "src/extensions/site"].some(
+  const taken = ["src/components/extensions/sections", "src/components/extensions/site"].some(
     (dir) => spawnSync("git", ["grep", "-q", `type: "${type}"`, "--", dir], { cwd: ROOT }).status === 0,
   );
   if (taken) throw new CliError(`A section with type "${type}" already exists. Pick another name.`);

@@ -4,7 +4,7 @@ import { pgTable, pgPolicy, text, bigint, timestamp, unique, check, jsonb } from
 /**
  * Site-wide settings edited in the CMS (Website > Site settings): one row per
  * locale. `content` holds the header and footer ({ header, footer }), each
- * shaped by its defineSection schema in src/extensions/site.
+ * shaped by its defineSection schema in src/components/extensions/site.
  */
 export const siteSettings = pgTable(
   "site_settings",

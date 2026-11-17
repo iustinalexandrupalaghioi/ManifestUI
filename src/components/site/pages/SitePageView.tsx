@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Markdown } from "@/components/site/learn/Markdown";
 import { MotionProvider } from "@/components/site/landing/motion";
 import { RenderSections } from "@/framework/site";
-import { loadSectionData } from "@/extensions/sections/data";
+import { loadSectionData } from "@/components/extensions/sections/data";
 import { SiteFooterSlot } from "@/components/site/SiteFooterSlot";
 import type { SitePageContent } from "../internal/pages/content";
 import { EditPageButton } from "./EditPageButton";

@@ -4,9 +4,9 @@ import { AddItem, defineSection, EditOnly, list, List, RemoveItem, Text, text } 
 import { LanguageToggle } from "@/components/site/LanguageToggle";
 import { ThemeToggle } from "@/components/site/ThemeToggle";
 import { SiteLink } from "@/components/site/SiteLink";
-import { L, titleField } from "@/extensions/sections/fields";
-import { linkField } from "@/extensions/site/fields";
-import { withNote } from "@/extensions/site/SiteHeader";
+import { L, titleField } from "@/components/extensions/sections/fields";
+import { linkField } from "@/components/extensions/site/fields";
+import { withNote } from "@/components/extensions/site/SiteHeader";
 
 const linkClass =
   "inline-flex min-h-11 items-center rounded-sm text-[15px] text-muted-foreground no-underline hover:text-foreground sm:min-h-0 sm:py-1";
