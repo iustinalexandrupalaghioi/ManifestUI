@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -27,6 +26,7 @@ import { updateProfile } from "../actions/update-profile";
 import { resolveAvatarUrl } from "@/framework/authentication/lib/resolveAvatarUrl";
 import { FormInput } from "@/framework/components/form/form-fields/FormInput";
 import type { FullUserProfile } from "../types";
+import { AuthCard, authPrimaryButton, authSecondaryButton } from "./AuthCard";
 
 function makeProfileSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
   return z.object({
@@ -52,7 +52,10 @@ export function ProfileForm({
   profile,
   className,
   ...props
-}: { profile: FullUserProfile } & React.ComponentPropsWithoutRef<"div">) {
+}: { profile: FullUserProfile } & Omit<
+  React.ComponentPropsWithoutRef<"div">,
+  "title"
+>) {
   const t = useTranslations("AuthForms");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -160,122 +163,124 @@ export function ProfileForm({
     setIsEditing(false);
   };
 
+  const avatar = (
+    <div className="relative shrink-0">
+      <Avatar className="size-16">
+        <AvatarImage src={avatarUrl ?? undefined} alt={displayName} />
+        <AvatarFallback className="font-heading text-lg font-semibold">
+          {displayName ? initials(displayName) : "?"}
+        </AvatarFallback>
+      </Avatar>
+      {isEditing && (
+        <>
+          <button
+            type="button"
+            aria-label={t("profile.changeAvatar")}
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            <CameraIcon className="size-3.5" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleAvatarSelected}
+          />
+        </>
+      )}
+    </div>
+  );
+
+  const contact = (
+    <span className="flex flex-wrap items-center gap-x-1.5 text-sm">
+      <span className="break-all">{displayEmail || "—"}</span>
+      {displayPhone && (
+        <>
+          <span aria-hidden="true">•</span>
+          <span>{displayPhone}</span>
+        </>
+      )}
+    </span>
+  );
+
+  const settings = !isEditing && (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className="h-10 rounded-xl bg-card font-semibold hover:bg-muted"
+        >
+          <SettingsIcon className="text-muted-foreground" />
+          {t("profile.settings")}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-fit">
+        <DropdownMenuItem onSelect={() => setIsEditing(true)}>
+          <PencilIcon className="text-muted-foreground" />
+          {t("profile.editProfile")}
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/auth/update-password">
+            <KeyRoundIcon className="text-muted-foreground" />
+            {t("profile.changePasswordLink")}
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
-    <div
-      className={cn("flex flex-col gap-6 max-w-md mx-auto my-10", className)}
+    <AuthCard
+      title={displayName}
+      description={contact}
+      leading={avatar}
+      actions={settings}
+      className={cn("max-w-xl", className)}
       {...props}
     >
-      <Card>
-        <CardContent className="flex flex-col gap-6 pt-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Avatar className="size-12">
-                  <AvatarImage src={avatarUrl ?? undefined} alt={displayName} />
-                  <AvatarFallback>
-                    {displayName ? initials(displayName) : "?"}
-                  </AvatarFallback>
-                </Avatar>
-                {isEditing && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                    >
-                      <CameraIcon className="size-3.5" />
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarSelected}
-                    />
-                  </>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">{displayName}</span>
-                <div className="flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
-                  <span>{displayEmail || "—"}</span>
-                  {displayPhone && (
-                    <>
-                      <span aria-hidden="true">•</span>
-                      <span>{displayPhone}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+      {isEditing && (
+        <FormProvider {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-5 border-t pt-7"
+          >
+            <FormInput<ProfileFormValues>
+              name="full_name"
+              label={t("profile.fullNameLabel")}
+            />
+            <FormInput<ProfileFormValues>
+              name="email"
+              label={t("profile.emailLabel")}
+              type="email"
+            />
+            <FormInput<ProfileFormValues>
+              name="phone"
+              label={t("profile.phoneLabel")}
+            />
 
-            {!isEditing && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <SettingsIcon className="text-muted-foreground" />
-                    {t("profile.settings")}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-fit">
-                  <DropdownMenuItem onSelect={() => setIsEditing(true)}>
-                    <PencilIcon className="text-muted-foreground" />
-                    {t("profile.editProfile")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/auth/update-password">
-                      <KeyRoundIcon className="text-muted-foreground" />
-                      {t("profile.changePasswordLink")}
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-
-          {isEditing && (
-            <FormProvider {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="flex flex-col gap-4"
+            <div className="flex w-full flex-col gap-2 pt-2 md:flex-row-reverse">
+              <Button
+                type="submit"
+                className={cn(authPrimaryButton, "md:flex-1")}
+                disabled={isPending}
               >
-                <FormInput<ProfileFormValues>
-                  name="full_name"
-                  label={t("profile.fullNameLabel")}
-                />
-                <FormInput<ProfileFormValues>
-                  name="email"
-                  label={t("profile.emailLabel")}
-                  type="email"
-                />
-                <FormInput<ProfileFormValues>
-                  name="phone"
-                  label={t("profile.phoneLabel")}
-                />
-
-                <div className="flex w-full flex-col gap-2 pt-2 md:flex-row-reverse">
-                  <Button
-                    type="submit"
-                    className="w-full md:flex-1"
-                    disabled={isPending}
-                  >
-                    {isPending ? t("profile.submitting") : t("profile.submit")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full md:flex-1"
-                    disabled={isPending}
-                    onClick={handleCancel}
-                  >
-                    {t("profile.cancel")}
-                  </Button>
-                </div>
-              </form>
-            </FormProvider>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                {isPending ? t("profile.submitting") : t("profile.submit")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(authSecondaryButton, "md:flex-1")}
+                disabled={isPending}
+                onClick={handleCancel}
+              >
+                {t("profile.cancel")}
+              </Button>
+            </div>
+          </form>
+        </FormProvider>
+      )}
+    </AuthCard>
   );
 }

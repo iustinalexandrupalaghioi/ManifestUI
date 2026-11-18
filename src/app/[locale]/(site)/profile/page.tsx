@@ -10,9 +10,9 @@ export default async function Page() {
   if (!profile) {
     const t = await getTranslations("AuthForms");
     return (
-      <div className="mx-auto my-10 max-w-2xl px-4 text-center text-muted-foreground">
+      <p className="m-0 mx-auto max-w-md text-center text-base leading-relaxed text-muted-foreground">
         {t("profile.notReady")}
-      </div>
+      </p>
     );
   }
 

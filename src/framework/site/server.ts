@@ -17,10 +17,26 @@ import type { SectionDef } from "./sections/define";
 // Collections
 // ─────────────────────────────────────────────
 
+/** One collection item: its card and the whole row (read through the cache, so as JSON: dates are strings). */
+export interface CollectionItem<TRow = Record<string, unknown>> {
+  card: CollectionCard;
+  row: CachedRow<TRow>;
+}
+
+/** A row as cached reads return it: JSON values, so dates become ISO strings. */
+export type CachedRow<T> = {
+  [K in keyof T]: T[K] extends Date ? string : T[K] extends Date | null ? string | null : T[K];
+};
+
 export interface CollectionSource {
   name: string;
   /** The collection's published items in `locale`, as cards (cached until a record is saved). */
   load: (context: SectionLoadContext) => Promise<CollectionCard[]>;
+  /**
+   * One published item in `locale` whose `column` (a table property, e.g. "slug") equals
+   * `value`, or null. Cached with the same tags as `load`, so a CMS save refreshes it too.
+   */
+  find?: (context: SectionLoadContext, column: string, value: string) => Promise<CollectionItem | null>;
 }
 
 /**
@@ -45,10 +61,13 @@ export function defineCollectionSource<TTable extends PgTable>(
     card: (row: TTable["$inferSelect"]) => CollectionCard;
   },
 ): CollectionSource {
-  const read = async (locale: string) => {
-    const filters = [options.published && eq(options.published, true), options.locale && eq(options.locale, locale)].filter(
+  const filtersFor = (locale: string) =>
+    [options.published && eq(options.published, true), options.locale && eq(options.locale, locale)].filter(
       (filter): filter is SQL => !!filter,
     );
+  const tags = [collectionTag(collection.name), ...(options.resource ? [resourceTag(options.resource)] : [])];
+  const read = async (locale: string) => {
+    const filters = filtersFor(locale);
     const rows = await getDbClient()
       .select(getTableColumns(options.table))
       .from(options.table as PgTable)
@@ -56,19 +75,57 @@ export function defineCollectionSource<TTable extends PgTable>(
       .orderBy(...(options.order ? [asc(options.order)] : []));
     return (rows as TTable["$inferSelect"][]).map(options.card);
   };
+  const readOne = async (locale: string, column: string, value: string): Promise<CollectionItem | null> => {
+    const match = (getTableColumns(options.table) as Record<string, AnyColumn>)[column];
+    if (!match) throw new Error(`Collection "${collection.name}": its table has no column "${column}".`);
+    const rows = (await getDbClient()
+      .select(getTableColumns(options.table))
+      .from(options.table as PgTable)
+      .where(and(eq(match, value), ...filtersFor(locale)))
+      .limit(1)) as TTable["$inferSelect"][];
+    const row = rows[0];
+    return row ? { card: options.card(row), row: row as CollectionItem["row"] } : null;
+  };
+  // CI builds have no database: they render empty; at runtime the error surfaces.
+  const duringBuild = () => process.env.NEXT_PHASE === "phase-production-build";
   return {
     name: collection.name,
     load: async ({ locale }) => {
       try {
-        const tags = [collectionTag(collection.name), ...(options.resource ? [resourceTag(options.resource)] : [])];
         return await cachedRead(["collection", collection.name, locale], tags, () => read(locale));
       } catch (error) {
-        // CI builds have no database; at runtime the error surfaces.
-        if (process.env.NEXT_PHASE === "phase-production-build") return [];
+        if (duringBuild()) return [];
+        throw error;
+      }
+    },
+    find: async ({ locale }, column, value) => {
+      try {
+        return await cachedRead(["collection-item", collection.name, locale, column, value], tags, () =>
+          readOne(locale, column, value),
+        );
+      } catch (error) {
+        if (duringBuild()) return null;
         throw error;
       }
     },
   };
+}
+
+/**
+ * One item of a collection for its own page (e.g. /projects/<slug>): published, in `locale`,
+ * matched by a column such as its slug. Returns its card and its row, typed by `TRow`
+ * (`typeof project.$inferSelect`), or null when there's no such item.
+ */
+export async function findCollectionItem<TRow = Record<string, unknown>>(
+  sources: readonly CollectionSource[],
+  name: string,
+  context: SectionLoadContext,
+  column: string,
+  value: string,
+): Promise<CollectionItem<TRow> | null> {
+  const source = sources.find((item) => item.name === name);
+  if (!source?.find) throw new Error(`No collection source named "${name}" (src/components/extensions/collections/data.ts).`);
+  return (await source.find(context, column, value)) as CollectionItem<TRow> | null;
 }
 
 /** Loads every collection's cards for a locale, by collection name (each cached on its own). */

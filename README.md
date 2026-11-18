@@ -787,6 +787,19 @@ run `pnpm db:seed:content`. Use `src/db/seed/site-pages/<locale>/<slug>.json` wi
 the section schemas, exactly like a CMS save, and writes nothing if any of it is invalid. It inserts
 only what's missing; `--force` overwrites existing rows, which loses CMS edits.
 
+To push only what you changed, select it with `--only` (comma-separated `<kind>`, `<kind>/<slug>`
+for every language, or `<kind>/<locale>/<slug>`; kinds are `site-pages`, `learn-lessons`,
+`services` and `site-settings`, the last selected by locale), and check first with `--dry-run`,
+which lists the rows without touching the database:
+
+```bash
+pnpm db:seed:content --force --only site-settings/en --dry-run
+pnpm db:seed:content --force --only site-settings/en
+```
+
+An unknown argument, or a selector that matches no seed file, stops the script before anything
+is written.
+
 
 ### Adding a section
 
@@ -1080,6 +1093,27 @@ Collection items aren't edited on the page: they're records, not page content. I
 card has an **Edit in CMS** link instead. A section of your own can read collections too, with
 `data: sectionData<Record<string, CollectionCard[]>>()` and a loader that returns
 `loadCollections` (see `src/components/extensions/sections/data.ts`).
+
+**Item pages.** When cards link to `/projects/{slug}` (`` href: `/projects/${row.slug}` ``), add the page
+at that address, `src/app/[locale]/(site)/projects/[slug]/page.tsx`, and read the item with
+`findCollectionItem` from `@/framework/site/server`. It applies the collection's own filters
+(published, language) and cache tags, so a CMS save refreshes the item page too:
+
+```tsx
+type Props = { params: Promise<{ locale: string; slug: string }> };
+
+// Rendered on its first visit, then cached until the record is saved.
+export function generateStaticParams() {
+  return [];
+}
+
+export default async function ProjectPage({ params }: Props) {
+  const { locale, slug } = await params;
+  const item = await findCollectionItem<typeof project.$inferSelect>(collectionSources, "projects", { locale }, "slug", slug);
+  if (!item) notFound();
+  return <h1>{item.card.title}</h1>; // item.row has every column (dates arrive as ISO strings)
+}
+```
 
 ### Header and footer
 
