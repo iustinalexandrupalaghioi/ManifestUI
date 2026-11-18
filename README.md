@@ -1094,6 +1094,27 @@ card has an **Edit in CMS** link instead. A section of your own can read collect
 `data: sectionData<Record<string, CollectionCard[]>>()` and a loader that returns
 `loadCollections` (see `src/components/extensions/sections/data.ts`).
 
+**Item pages.** When cards link to `/projects/{slug}` (`` href: `/projects/${row.slug}` ``), add the page
+at that address, `src/app/[locale]/(site)/projects/[slug]/page.tsx`, and read the item with
+`findCollectionItem` from `@/framework/site/server`. It applies the collection's own filters
+(published, language) and cache tags, so a CMS save refreshes the item page too:
+
+```tsx
+type Props = { params: Promise<{ locale: string; slug: string }> };
+
+// Rendered on its first visit, then cached until the record is saved.
+export function generateStaticParams() {
+  return [];
+}
+
+export default async function ProjectPage({ params }: Props) {
+  const { locale, slug } = await params;
+  const item = await findCollectionItem<typeof project.$inferSelect>(collectionSources, "projects", { locale }, "slug", slug);
+  if (!item) notFound();
+  return <h1>{item.card.title}</h1>; // item.row has every column (dates arrive as ISO strings)
+}
+```
+
 ### Header and footer
 
 `src/components/extensions/site/SiteHeader.tsx` and `SiteFooter.tsx` work like sections, but they're
