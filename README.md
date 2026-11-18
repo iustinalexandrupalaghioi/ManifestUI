@@ -787,6 +787,19 @@ run `pnpm db:seed:content`. Use `src/db/seed/site-pages/<locale>/<slug>.json` wi
 the section schemas, exactly like a CMS save, and writes nothing if any of it is invalid. It inserts
 only what's missing; `--force` overwrites existing rows, which loses CMS edits.
 
+To push only what you changed, select it with `--only` (comma-separated `<kind>`, `<kind>/<slug>`
+for every language, or `<kind>/<locale>/<slug>`; kinds are `site-pages`, `learn-lessons`,
+`services` and `site-settings`, the last selected by locale), and check first with `--dry-run`,
+which lists the rows without touching the database:
+
+```bash
+pnpm db:seed:content --force --only site-settings/en --dry-run
+pnpm db:seed:content --force --only site-settings/en
+```
+
+An unknown argument, or a selector that matches no seed file, stops the script before anything
+is written.
+
 
 ### Adding a section
 
