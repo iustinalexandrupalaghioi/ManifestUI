@@ -7,16 +7,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { FormInput } from "@/framework/components/form/form-fields/FormInput";
-import { cn } from "@/lib/utils";
 import { forgotPassword } from "../actions/forgot-password";
+import { AuthCard, authLink, authPrimaryButton } from "./AuthCard";
 
 function makeFormSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
   return z.object({
@@ -29,10 +22,7 @@ function makeFormSchema(t: ReturnType<typeof useTranslations<"AuthForms">>) {
 
 type FormSchema = z.infer<ReturnType<typeof makeFormSchema>>;
 
-export function ForgotPasswordForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+export function ForgotPasswordForm(props: Omit<React.ComponentPropsWithoutRef<"div">, "title">) {
   const t = useTranslations("AuthForms");
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,82 +46,51 @@ export function ForgotPasswordForm({
     });
   };
 
+  const backToLogin = (
+    <>
+      {t("forgotPassword.rememberedPassword")}{" "}
+      <Link href="/auth/login" className={authLink}>
+        {t("forgotPassword.loginLink")}
+      </Link>
+    </>
+  );
+
   if (success) {
     return (
-      <div
-        className={cn("flex flex-col gap-6 max-w-96 mx-auto my-10", className)}
+      <AuthCard
+        title={t("forgotPassword.successTitle")}
+        description={t("forgotPassword.successDescription")}
+        footer={backToLogin}
         {...props}
       >
-        <Card>
-          <CardHeader className="flex flex-col-reverse md:flex-row items-start justify-between md:items-center gap-2">
-            <div className="flex flex-col gap-2">
-              <CardTitle className="text-2xl">
-                {t("forgotPassword.successTitle")}
-              </CardTitle>
-              <CardDescription>
-                {t("forgotPassword.successDescription")}
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {t("forgotPassword.successMessage")}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+        <p className="m-0 text-sm leading-relaxed text-muted-foreground">{t("forgotPassword.successMessage")}</p>
+      </AuthCard>
     );
   }
 
   return (
-    <div
-      className={cn("flex flex-col gap-6 max-w-96 mx-auto my-10", className)}
+    <AuthCard
+      title={t("forgotPassword.title")}
+      description={t("forgotPassword.description")}
+      footer={backToLogin}
       {...props}
     >
-      <Card>
-        <CardHeader className="flex flex-col-reverse md:flex-row items-start justify-between md:items-center gap-2">
-          <div className="flex flex-col gap-2">
-            <CardTitle className="text-2xl">
-              {t("forgotPassword.title")}
-            </CardTitle>
-            <CardDescription>
-              {t("forgotPassword.description")}
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <FormProvider {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormInput<FormSchema>
-                name="email"
-                label={t("forgotPassword.emailLabel")}
-                type="email"
-                placeholder={t("forgotPassword.emailPlaceholder")}
-              />
+      <FormProvider {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <FormInput<FormSchema>
+            name="email"
+            label={t("forgotPassword.emailLabel")}
+            type="email"
+            placeholder={t("forgotPassword.emailPlaceholder")}
+          />
 
-              {error && (
-                <p className="text-sm text-destructive text-center">{error}</p>
-              )}
+          {error && <p className="text-center text-sm text-destructive">{error}</p>}
 
-              <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending
-                  ? t("forgotPassword.submitting")
-                  : t("forgotPassword.submit")}
-              </Button>
-
-              <div className="mt-4 text-center text-sm">
-                {t("forgotPassword.rememberedPassword")}{" "}
-                <Link
-                  href="/auth/login"
-                  className="underline underline-offset-4"
-                >
-                  {t("forgotPassword.loginLink")}
-                </Link>
-              </div>
-            </form>
-          </FormProvider>
-        </CardContent>
-      </Card>
-    </div>
+          <Button type="submit" className={authPrimaryButton} disabled={isPending}>
+            {isPending ? t("forgotPassword.submitting") : t("forgotPassword.submit")}
+          </Button>
+        </form>
+      </FormProvider>
+    </AuthCard>
   );
 }
