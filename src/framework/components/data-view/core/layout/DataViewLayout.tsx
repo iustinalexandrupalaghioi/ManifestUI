@@ -24,6 +24,11 @@ import type { AggregateResult } from "../../features/aggregates/aggregates";
 import type { GroupAggregateRow } from "../../features/grouping/grouping";
 import { buildFilterableColumns } from "../../features/filtering/useFiltering";
 import { SelectionToolbar } from "../../features/selection";
+import { ToolbarCollapseProvider } from "../../../toolbar/parts/ToolbarCollapse";
+import { cn } from "@/framework/lib/utils";
+import { useCoreStore } from "../../core/stores/DataViewStore";
+import { getFilteringStore } from "../../features/filtering/filtering.store";
+import { getGroupingStore } from "../../features/grouping/grouping.store";
 import { ViewBar } from "../../features/views/ui/ViewBar";
 import {
   useActiveListView,
@@ -100,6 +105,17 @@ export function DataViewLayout({
   const tableViewId = activeTableView?.id ?? DEFAULT_TABLE_VIEW_ID;
   const listViewId = activeListView?.id ?? DEFAULT_LIST_VIEW_ID;
 
+  // What the collapsed phone toolbar hides but still applies, counted on its chevron.
+  const activeViewId = isList ? listViewId : tableViewId;
+  const globalFilter = useCoreStore(tableId, (s) => s.globalFilter);
+  const filterCount = getFilteringStore(tableId, activeViewId)((s) => s.rules.length);
+  const groupCount = getGroupingStore(tableId, activeViewId)((s) => s.grouping.length);
+  const activeToolCount =
+    (quickSearchEnabled && featureIds.has("quickSearch") && globalFilter ? 1 : 0) +
+    (featureIds.has("filtering") ? filterCount : 0) +
+    (featureIds.has("sorting") ? table.getState().sorting.length : 0) +
+    (featureIds.has("grouping") ? groupCount : 0);
+
   const enrichedPreFilters = useMemo<FilterRule[]>(
     () =>
       preFilters.map((f) => {
@@ -146,6 +162,8 @@ export function DataViewLayout({
     <DataViewFilterProvider value={{ enrichedPreFilters, filterableColumns }}>
       <div id={tableId} className="w-full overflow-hidden ps-2">
         {toolbar ? (
+          <ToolbarCollapseProvider activeCount={activeToolCount}>
+            {(expanded) => (
           <>
             {/* ── Row A: the toolbar, at the top. Its parts are flex items of one bar: one line from `sm`
                  up; on phones it wraps into rows: actions · search · filters, sort, group,
@@ -158,17 +176,18 @@ export function DataViewLayout({
               {toolbar}
               <span aria-hidden className="order-3 hidden h-6 w-px shrink-0 bg-border sm:block" />
               {quickSearchEnabled && featureIds.has("quickSearch") && (
-                <QuickSearchField className="order-3 w-full min-w-0 sm:w-56" />
+                <QuickSearchField className={cn("order-3 w-full min-w-0 sm:w-56", !expanded && "max-sm:hidden")} />
               )}
-              {/* 40px touch targets on phones, like the action buttons. */}
-              <div className="order-4 flex w-full min-w-0 flex-wrap items-center gap-2 max-sm:[&_button]:h-10 sm:w-auto">
+              {/* 40px touch targets on phones, like the action buttons. Phones show these once the
+                  toolbar's chevron opens them. */}
+              <div className={cn("order-4 flex w-full min-w-0 flex-wrap items-center gap-2 empty:hidden max-sm:[&_button]:h-10 sm:w-auto", !expanded && "max-sm:hidden")}>
                 {featureIds.has("filtering") && <FilterBar />}
                 {featureIds.has("sorting") && <SortBar />}
                 {featureIds.has("grouping") && <GroupByBar />}
                 {!isList && featureIds.has("aggregates") && <TotalsBar />}
                 {isList && featureIds.has("columnManager") && <ColumnManagerButton type="list" />}
               </div>
-              <div className="order-8 flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+              <div className={cn("order-8 flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end", !expanded && "max-sm:hidden")}>
                 {featureIds.has("selection") && (
                   <SelectionToolbar tableId={tableId} totalCount={totalCount} />
                 )}
@@ -184,6 +203,8 @@ export function DataViewLayout({
               {features.map((f) => f.id !== "edit" && f.Toolbar && <f.Toolbar key={f.id} />)}
             </div>
           </>
+            )}
+          </ToolbarCollapseProvider>
         ) : (
         /* ── Row 1: ViewBar + popout | counter ── */
         <div className="mb-2 flex items-start justify-between  gap-2">

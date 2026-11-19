@@ -12,5 +12,8 @@
   "save": "Save",
   "reload": "Reload",
   "unsaved": "Unsaved changes",
-  "recordActions": "Record actions"
+  "recordActions": "Record actions",
+  "showTools": "Show search and filters",
+  "hideTools": "Hide search and filters",
+  "activeTools": "{count, plural, one {# active} other {# active}}"
 }
