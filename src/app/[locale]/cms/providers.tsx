@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { getQueryClient } from "@/framework/lib/queryClient";
 import { PERMISSIONS_QUERY_KEY } from "@/framework/authorization/cache/permissions";
 import { CURRENT_USER_QUERY_KEY } from "@/framework/authorization/cache/currentUserId";
+import { NavigationTrail } from "@/framework/hooks/navigationTrail";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import "./registerResourceComponents";
@@ -47,6 +48,7 @@ export function Providers({
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster />
+      <NavigationTrail />
       <ThemeProvider>
         {appNavBar}
         {/* Bounds page content to exactly the space left under the navbar.
