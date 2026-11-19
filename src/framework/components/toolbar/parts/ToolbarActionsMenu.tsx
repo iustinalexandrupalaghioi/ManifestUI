@@ -7,20 +7,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, ZapIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/framework/lib/utils";
 import type { TableAction } from "../Toolbar";
-import { countEligibleActions } from "./ToolbarMenuItems";
+
+/** How many actions apply to at least one selected row. */
+export function countEligibleActions<TData>(actions: TableAction<TData>[], selectedRows: TData[]) {
+  return actions.reduce((count, action) => {
+    const eligible = selectedRows.filter((r) => action.isEligible?.(r) ?? true);
+    return eligible.length > 0 ? count + 1 : count;
+  }, 0);
+}
 
 /** "Actions ▾": the resource's custom actions for the selected records. */
 export function ToolbarActionsMenu<TData>({
   actions,
   selectedRows,
+  compact,
   className,
 }: {
   actions: TableAction<TData>[];
   selectedRows: TData[];
+  /** An icon instead of the label on phones (record toolbars). */
+  compact?: boolean;
   className?: string;
 }) {
   const t = useTranslations("Toolbar");
@@ -35,9 +45,12 @@ export function ToolbarActionsMenu<TData>({
           variant="outline"
           size="sm"
           disabled={disabled}
+          aria-label={t("actions")}
+          title={t("actions")}
           className={cn("h-10 sm:h-8", className)}
         >
-          {t("actions")}
+          {compact && <ZapIcon aria-hidden className="sm:hidden" />}
+          <span className={compact ? "hidden sm:inline" : undefined}>{t("actions")}</span>
           <ChevronDownIcon aria-hidden />
         </Button>
       </DropdownMenuTrigger>
