@@ -14,6 +14,7 @@ import { EditControls } from "../data-view/features/editing/ui/EditControls";
 import { ToolbarMenuItems } from "./parts/ToolbarMenuItems";
 import { ToolbarActionsMenu } from "./parts/ToolbarActionsMenu";
 import { useIsNarrow } from "./parts/useIsNarrow";
+import { ToolbarCollapseButton } from "./parts/ToolbarCollapse";
 
 export interface TableAction<TData> {
   key: string;
@@ -247,20 +248,26 @@ function OverviewToolbar<TData>({
       {onDelete && <DeleteButton selectedRows={selectedRows} onDelete={onDelete} isDeleteEligible={isDeleteEligible} />}
       {children}
       {!!actions?.length && <ToolbarActionsMenu actions={actions} selectedRows={selectedRows} />}
-      {hasMore && (
-        <MoreMenu label={t("more")} className="ml-auto sm:ml-0">
-          <ToolbarMenuItems
-            selectedRows={selectedRows}
-            selectedCount={selectedCount}
-            popOutUrl={popOutUrl}
-            preFilters={preFilters}
-            onRefresh={onRefresh}
-            isRefreshing={isRefreshing}
-            isRefetching={isRefetching}
-            isNarrow={isNarrow}
-            separateActions={false}
-          />
-        </MoreMenu>
+      {/* ⋯ and, in a list on phones, the chevron that opens the rest of the bar, at the end of the row. */}
+      {(hasMore || dataView) && (
+        <div className="ml-auto flex items-center gap-1.5 empty:hidden sm:ml-0 sm:gap-2">
+          {hasMore && (
+            <MoreMenu label={t("more")}>
+              <ToolbarMenuItems
+                selectedRows={selectedRows}
+                selectedCount={selectedCount}
+                popOutUrl={popOutUrl}
+                preFilters={preFilters}
+                onRefresh={onRefresh}
+                isRefreshing={isRefreshing}
+                isRefetching={isRefetching}
+                isNarrow={isNarrow}
+                separateActions={false}
+              />
+            </MoreMenu>
+          )}
+          {dataView && <ToolbarCollapseButton />}
+        </div>
       )}
     </>
   );

@@ -12,5 +12,8 @@
   "save": "Salvează",
   "reload": "Reîncarcă",
   "unsaved": "Modificări nesalvate",
-  "recordActions": "Acțiuni înregistrare"
+  "recordActions": "Acțiuni înregistrare",
+  "showTools": "Arată căutarea și filtrele",
+  "hideTools": "Ascunde căutarea și filtrele",
+  "activeTools": "{count, plural, one {# activ} few {# active} other {# active}}"
 }

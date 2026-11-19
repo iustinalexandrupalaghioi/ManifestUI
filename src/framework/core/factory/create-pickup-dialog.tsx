@@ -36,6 +36,7 @@ import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
 import { getItemId } from "../resource-id";
 import { TOOLBAR_BUTTON } from "@/framework/components/toolbar/Toolbar";
+import { ToolbarCollapseButton } from "@/framework/components/toolbar/parts/ToolbarCollapse";
 import { resolveViewDefaults } from "@/framework/components/data-view/features/views/viewDefaults";
 
 export function createPickupDialog<
@@ -176,6 +177,7 @@ export function createPickupDialog<
             tableId={tableId}
             toolbar={
               // The same bar as a list page: its action is Refresh (a record is picked from its row).
+              <>
               <Button
                 title={tt("refresh")}
                 aria-label={tt("refresh")}
@@ -189,6 +191,8 @@ export function createPickupDialog<
                 {isRefetching ? <Loader2Icon className="animate-spin" aria-hidden /> : <RotateCcwIcon aria-hidden />}
                 <span className="hidden sm:inline">{tt("refresh")}</span>
               </Button>
+              <ToolbarCollapseButton className="ml-auto" />
+              </>
             }
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
