@@ -5,12 +5,12 @@ import { createPortal } from "react-dom"
 
 interface ToolbarActionsProps {
   children: React.ReactNode
-  slotId?: string
+  slotId: string
 }
 
 const ToolbarActions = ({
   children,
-  slotId = "toolbar-slot",
+  slotId,
 }: ToolbarActionsProps) => {
   const [slot, setSlot] = useState<Element | null>(null)
 

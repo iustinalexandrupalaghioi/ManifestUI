@@ -1,12 +1,19 @@
 import { Link } from "@/i18n/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { LucideHome } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 import { ThemeSwitcher } from "@/framework/components/partials/ThemeSwitcher";
 import { LocaleSwitcher } from "@/framework/components/partials/LocaleSwitcher";
 import { UserMenu } from "@/components/site/UserMenu";
 import { Button } from "@/components/ui/button";
+import { BASE_ROUTE, NAVBAR_TONE } from "./constants";
+import { NavBreadcrumb } from "./NavBreadcrumb";
+import { NavMenu } from "./NavMenu";
 
+/**
+ * The CMS navbar: where you are (menu, home, breadcrumb) and who you are
+ * (language, theme, account). A page's actions live in its own toolbar.
+ */
 export async function AppNavBar({
   isAuthenticated,
   displayName,
@@ -19,18 +26,26 @@ export async function AppNavBar({
   canAccessCms: boolean;
 }) {
   const t = await getTranslations("Auth");
+  const tSite = await getTranslations("Site");
+  const tMenu = await getTranslations("Menu");
 
   return (
-    <nav className="sticky top-0 z-50 mb-4 flex h-12 w-full items-center justify-between border-b bg-primary px-2 md:h-14">
-      <div className="flex h-14 items-center gap-4">
-        <Link href="/cms" className="flex items-center">
-          <LucideHome className="text-primary-foreground" />
-        </Link>
-
-        <div id="toolbar-slot" className="h-full w-full bg-background" />
+    <nav
+      data-tone={NAVBAR_TONE}
+      className="cms-navbar sticky top-0 z-50 flex h-[52px] w-full shrink-0 items-center gap-2 border-b bg-sidebar px-2 text-sidebar-foreground sm:h-12 sm:px-3">
+      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+        <NavMenu />
+        <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex">
+          <Link href={BASE_ROUTE} aria-label={tMenu("home")} title={tMenu("home")}>
+            <HomeIcon />
+          </Link>
+        </Button>
+        <span aria-hidden className="mx-1 hidden h-5 w-px shrink-0 bg-border sm:block" />
+        <NavBreadcrumb />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
+        {/* Signed in, language and theme are in the account menu; on phones also in the ☰ menu. */}
         {isAuthenticated ? (
           <UserMenu
             displayName={displayName}
@@ -39,8 +54,10 @@ export async function AppNavBar({
           />
         ) : (
           <>
-            <LocaleSwitcher />
-            <ThemeSwitcher />
+            <div className="hidden items-center gap-2 sm:flex">
+              <LocaleSwitcher label={tSite("language")} />
+              <ThemeSwitcher label={tSite("theme")} />
+            </div>
             <Button asChild variant="ghost" size="sm">
               <Link href="/auth/login">{t("login")}</Link>
             </Button>

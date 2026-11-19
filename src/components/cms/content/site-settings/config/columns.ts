@@ -9,6 +9,6 @@ export const siteSettingsColumns: ColumnConfig[] = [
 
 export const siteSettingsListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
-  { field: "locale", label: { en: "Language", ro: "Limbă" }, type: "select", selectOptions: PageLocale.options },
+  { field: "locale", cardTitle: true, label: { en: "Language", ro: "Limbă" }, type: "select", selectOptions: PageLocale.options },
   { field: "updatedAt", label: { en: "Updated", ro: "Actualizată" }, type: "datetime" },
 ];

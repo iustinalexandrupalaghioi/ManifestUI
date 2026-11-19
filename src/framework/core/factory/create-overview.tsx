@@ -283,6 +283,10 @@ export function createOverview<
       />
     );
 
+    // A list page's toolbar joins the list's own tools in one bar inside the data view;
+    // embedded lists portal theirs (slotId) and custom overviews place ToolbarNode themselves.
+    const inPageToolbar = !slotId && !config.renderOverview;
+
     // Grid editing: saves edited rows in one batch, and opens a row's detail form for pickups.
     const tableMeta = gridEditable
       ? {
@@ -298,6 +302,7 @@ export function createOverview<
         features={resolvedFeatures}
         dataTableConfig={dataView?.dataTable}
         slotId={slotId}
+        toolbar={inPageToolbar ? chromeNode : undefined}
         tableMeta={tableMeta}
         isLoading={isLoading}
         defaultViewName={resolvedViewName}
@@ -355,7 +360,7 @@ export function createOverview<
     const mainContent = (
       <>
         {renderOverviewSlot(config.overviewSlots?.beforeToolbar, slotContext, (fn) => fn(allItems, total))}
-        {chromeNode}
+        {!inPageToolbar && chromeNode}
         {renderOverviewSlot(config.overviewSlots?.afterToolbar, slotContext, (fn) => fn(allItems, total))}
         {tableNode}
         {renderOverviewSlot(config.overviewSlots?.afterTable, slotContext, (fn) => fn(allItems))}

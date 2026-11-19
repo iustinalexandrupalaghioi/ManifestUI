@@ -53,7 +53,12 @@ function ThemeRadioItems() {
 
 // Standalone trigger, used in the navbar when there's no UserMenu to nest
 // it under (logged-out state).
-const ThemeSwitcher = () => {
+const ThemeSwitcher = ({
+  label,
+}: {
+  /** Accessible name for the icon-only trigger. */
+  label?: string;
+} = {}) => {
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
 
@@ -69,7 +74,7 @@ const ThemeSwitcher = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size={"sm"}>
+        <Button variant="outline" size={"sm"} aria-label={label} title={label}>
           <ThemeIcon theme={theme} />
         </Button>
       </DropdownMenuTrigger>

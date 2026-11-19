@@ -1,5 +1,7 @@
 {
   "edit": "Edit",
   "save": "Save",
-  "discard": "Discard"
+  "discard": "Discard",
+  "editHint": "Edit cells in the list",
+  "finishEditing": "Save or discard your edits first"
 }

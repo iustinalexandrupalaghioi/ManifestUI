@@ -23,5 +23,10 @@
   "siteSettings": "Site settings",
   "siteSettingsDescription": "Edit the header and footer of the public site",
   "services": "Services",
-  "servicesDescription": "Services shown on the website, e.g. in a services carousel"
+  "servicesDescription": "Services shown on the website, e.g. in a services carousel",
+  "menu": "Menu",
+  "openMenu": "Open the menu",
+  "home": "Home",
+  "breadcrumb": "Breadcrumb",
+  "newRecord": "New"
 }

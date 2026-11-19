@@ -1,4 +1,5 @@
 import { createEnum } from "@/framework/lib/utils";
+import type { Enum } from "@/framework/types/global/Enum";
 
 /** Values stored in `site_page.locale` (the site's locales), with their labels. */
 export const PageLocale = createEnum({
@@ -15,3 +16,9 @@ export const PageKind = createEnum({
 });
 
 export type PageKind = keyof typeof PageKind.labels;
+
+/** How `site_page.published` reads in lists: a green "Published" or a grey "Draft" badge. */
+export const PublishedState = (locale: string): Enum[] => [
+  { value: "true", label: locale === "ro" ? "Publicată" : "Published", tone: "success" },
+  { value: "false", label: locale === "ro" ? "Ciornă" : "Draft", tone: "neutral" },
+];

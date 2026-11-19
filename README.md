@@ -371,6 +371,17 @@ Steps to add a new one, say `projects`:
 `groupable`, `aggregatable` (with `defaultAggregate`), `selectOptions` for enums, `size`,
 `prefix`/`suffix`, and visibility flags `hidden`, `navigationHidden`, `pickupHidden`.
 
+An enum option can take a `tone` (`neutral`, `info`, `success`, `warning`, `danger`): the value
+then shows as a coloured badge in grid cells, cards and filter chips. A `boolean` column can name its
+values with `selectOptions` keyed `"true"` / `"false"` (site pages show a green "Published" or a grey
+"Draft"). Options without a tone stay plain text.
+
+Card columns also lay out the card: `cardTitle: true` makes a column the card's heading (shown
+large at the top), the other columns form a two-column label/value grid, and `cardWide: true`
+lets a field span both columns. Columns sharing a `group` show as one field under `groupLabel`.
+A card has no delete button of its own: select cards and use the toolbar's **Delete** (or the
+context menu).
+
 `resource.tsx` → `dataView` places them:
 
 - **`overview`** — the resource's list page. `dataTableColumns` for the grid and
@@ -378,6 +389,18 @@ Steps to add a new one, say `projects`:
   by ID). `features` switches tools on or off (sorting, filtering, quickSearch, grouping,
   aggregates, saved views, the grid/cards toggle, card list, resizing, pinning, the column
   manager, selection, inline editing). `slots` adds components around the grid.
+
+  A list page has one toolbar in the page, under the view row (view name, save view, reset view):
+  Back · **Add**, Open, Edit (inline editing), Delete, Actions ▾, ⋯ · search, Filters, Sort ·
+  "N selected · M total" and the Cards | Table toggle. A record page's toolbar has Back · **Save**
+  (also Ctrl/⌘+S), Reload, Add, Delete, Actions ▾, ⋯ and "Unsaved changes". Each button shows only
+  when its feature and permission allow it. The navbar holds only the menu, the breadcrumb,
+  language, theme and the account menu. It's neutral by default; `NAVBAR_TONE = "teal"` in
+  `src/components/cms/constants.ts` makes it a dark teal bar with white text.
+  A link in `src/components/cms/MenuItems.tsx` can be live: `type: "live"` with
+  `useLiveNumber: () => useResourceCount("users")` shows the resource's row count on its tile in
+  the CMS home and beside it in the ☰ menu. It's counted by the resource's own aggregates action,
+  so only users who can read the resource see it, and it refreshes when rows change.
 - **`pickup`** — the dialog that opens from a relationship field to pick a record; its own
   columns, features and default view.
 - **Default views** are config, not code: `overview.defaultView`, `overview.navigationView`

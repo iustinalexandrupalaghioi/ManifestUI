@@ -64,7 +64,7 @@ export const attachmentColumns: ColumnConfig[] = [
 export const attachmentListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
   {
-    field: "filename",
+    field: "filename", cardTitle: true,
     label: { en: "File name", ro: "Nume fișier" },
     type: "text",
   },

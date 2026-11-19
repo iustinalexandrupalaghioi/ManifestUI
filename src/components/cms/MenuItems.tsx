@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { MenuSection } from "@/framework/components/menu/types";
 import { BASE_ROUTE } from "@/components/cms/constants";
+import { useResourceCount } from "@/framework/components/menu/useResourceCount";
 import {
   ListChecksIcon,
   PaperclipIcon,
@@ -48,8 +49,9 @@ export function useMenuItems(): MenuSection[] {
       module: t("website"),
       links: [
         {
-          type: "link",
+          type: "live",
           name: t("sitePages"),
+          useLiveNumber: () => useResourceCount("site-pages"),
           path: `${BASE_ROUTE}/site-pages`,
           title: t("sitePagesDescription"),
           icon: FileTextIcon,

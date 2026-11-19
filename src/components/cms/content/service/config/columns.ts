@@ -56,7 +56,7 @@ export const serviceColumns: ColumnConfig[] = [
 
 export const serviceListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
-  { field: "title", label: { en: "Title", ro: "Titlu" }, type: "text" },
+  { field: "title", cardTitle: true, label: { en: "Title", ro: "Titlu" }, type: "text" },
   { field: "summary", label: { en: "Summary", ro: "Rezumat" }, type: "text" },
   {
     field: "slug",

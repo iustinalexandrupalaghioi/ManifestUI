@@ -50,6 +50,8 @@ interface TableViewLayoutProps {
   isAggregatesFetching?: boolean;
   groupAggregateRows?: GroupAggregateRow[];
   isGroupAggregatesFetching?: boolean;
+  /** The page toolbar shows search, filters, sort and the mode toggle: no row of them here. */
+  toolsInToolbar?: boolean;
 }
 
 export function TableViewLayout({
@@ -72,6 +74,7 @@ export function TableViewLayout({
   isAggregatesFetching,
   groupAggregateRows,
   isGroupAggregatesFetching,
+  toolsInToolbar,
 }: TableViewLayoutProps) {
   const hasFeature = (id: string) => features.some((f) => f.id === id);
 
@@ -137,6 +140,7 @@ export function TableViewLayout({
   return (
     <>
       {/* ── filters + search ── */}
+      {!toolsInToolbar && (
       <div className="mb-2 flex items-start justify-between">
         <div className="flex flex-wrap items-center gap-1">
           {hasFeature("filtering") && <FilterBar />}
@@ -151,12 +155,13 @@ export function TableViewLayout({
           <DataListModeToggle tableId={tableId} hasList={hasListMode} />
         )}
       </div>
+      )}
 
       {/* ── filter chips ── */}
       {hasFeature("filtering") && <FilterChipsBar />}
 
       {/* ── quick search ── */}
-      {quickSearchEnabled && hasFeature("quickSearch") && <QuickSearchInput />}
+      {!toolsInToolbar && quickSearchEnabled && hasFeature("quickSearch") && <QuickSearchInput />}
 
       {/* ── Scroll container ── */}
       <div

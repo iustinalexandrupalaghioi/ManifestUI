@@ -4,6 +4,7 @@ import { ActionFormDialog } from "@/framework/components/dialog/ActionFormDialog
 import { DeleteDialog } from "@/framework/components/dialog/DeleteDialog";
 import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { FormPage } from "@/framework/components/page/FormPage";
+import { recordTitle, usePublishRecordTitle } from "@/framework/components/page/recordTitle";
 import Loader from "@/framework/components/partials/Loader";
 import {
   RecordScreen,
@@ -164,6 +165,8 @@ export function createDetailPage<
       ? getItemId<TId>(item as Record<string, unknown>, idField)
       : undefined;
     const formId = item ? `${noun}-${itemId}` : "";
+    // The navbar's breadcrumb names the record (not in the split view, where the list stays the page).
+    usePublishRecordTitle(isEmbedded || !item ? null : recordTitle(item, itemId));
 
     const { registryRef, hasFileChanges, onSave, onReset } =
       useRecordSave<TFormValues>({

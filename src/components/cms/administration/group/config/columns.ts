@@ -15,7 +15,7 @@ export const groupColumns: ColumnConfig[] = [
 
 export const groupListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
-  { field: "name", label: { en: "Name", ro: "Nume" }, type: "text" },
+  { field: "name", cardTitle: true, label: { en: "Name", ro: "Nume" }, type: "text" },
   { field: "description", label: { en: "Description", ro: "Descriere" }, type: "text" },
   {
     field: "createdAt",

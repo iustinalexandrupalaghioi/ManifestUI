@@ -60,7 +60,12 @@ function LocaleRadioItems({
 
 // Standalone trigger, used in the navbar when there's no UserMenu to nest
 // it under (logged-out state).
-export function LocaleSwitcher() {
+export function LocaleSwitcher({
+  label,
+}: {
+  /** Accessible name for the icon-only trigger. */
+  label?: string;
+} = {}) {
   const { locale, isPending, setLocale } = useLocaleSwitch();
 
   if (routing.locales.length <= 1) return null;
@@ -68,7 +73,7 @@ export function LocaleSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isPending}>
+        <Button variant="outline" size="sm" disabled={isPending} aria-label={label} title={label}>
           <Languages size={16} className="text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>

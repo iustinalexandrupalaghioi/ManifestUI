@@ -38,6 +38,10 @@ export interface ColumnConfig {
   /** Card-only text shown before / after the value, e.g. "$" or "cm". */
   prefix?: TranslatableText;
   suffix?: TranslatableText;
+  /** Cards: this column is the card's heading, above the other fields. */
+  cardTitle?: boolean;
+  /** Cards: the field spans both columns of the card's field grid. */
+  cardWide?: boolean;
 }
 
 const DEFAULT_SIZE_BY_TYPE: Record<ColumnType, number> = {
@@ -92,6 +96,8 @@ export function createColumnsFromConfig<TItem>(
           : undefined,
         prefix: col.prefix ? resolveLabel(col.prefix, locale) : undefined,
         suffix: col.suffix ? resolveLabel(col.suffix, locale) : undefined,
+        ...(col.cardTitle ? { cardTitle: true } : {}),
+        ...(col.cardWide ? { cardWide: true } : {}),
       },
     };
   });

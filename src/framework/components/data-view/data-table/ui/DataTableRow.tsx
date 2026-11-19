@@ -59,7 +59,7 @@ function DataTableRowInner<TData>({
       data-index={virtualRowIndex}
       ref={measureRef}
       className={cn(
-        "select-none",
+        "select-none data-[state=selected]:bg-selected",
         isGroupHeader
           ? "bg-muted/40"
           : alternateRowColor && virtualRowIndex % 2 === 0 && "bg-muted/60",

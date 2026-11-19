@@ -7,5 +7,10 @@
   "add": "Add",
   "refresh": "Refresh",
   "actions": "Actions",
-  "back": "Back"
+  "back": "Back",
+  "delete": "Delete",
+  "save": "Save",
+  "reload": "Reload",
+  "unsaved": "Unsaved changes",
+  "recordActions": "Record actions"
 }

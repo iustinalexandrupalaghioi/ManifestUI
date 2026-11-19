@@ -29,6 +29,11 @@ interface DataViewCoreCtx {
 
 const DataViewCoreContext = createContext<DataViewCoreCtx | null>(null);
 
+/** The surrounding data view, or `null` outside one (a toolbar rendered in a list's bar). */
+export function useOptionalDataViewCore(): DataViewCoreCtx | null {
+  return useContext(DataViewCoreContext);
+}
+
 export function useDataViewCore(): DataViewCoreCtx {
   const ctx = useContext(DataViewCoreContext);
   if (!ctx) {

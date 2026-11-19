@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-table";
 import { useMemo, useRef } from "react";
 import { usePersistedState } from "@/framework/lib/usePersistedState";
+import { useIsNarrow } from "../../../toolbar/parts/useIsNarrow";
 import type { FilterInput } from "../../features/filtering/filters";
 import { useCellContextMenuFilter } from "../../features/filtering/useFiltering";
 import type { AggregateResult } from "../../features/aggregates/aggregates";
@@ -54,6 +55,8 @@ export interface DataViewProps<TData, TValue> {
   defaultViewName?: string;
   quickSearchEnabled?: boolean;
   slotId?: string;
+  /** The page's action toolbar; the list's tools join it in one bar (see DataViewLayout). */
+  toolbar?: import("react").ReactNode;
   preFilters?: FilterInput[];
   initialListColumnVisibility?: VisibilityState;
   tableMeta?: import("@tanstack/react-table").TableMeta<TData>;
@@ -179,6 +182,25 @@ export function useDataView<TData, TValue>(
     [groupColumn, columns],
   );
 
+  // ── Pinning ──────────────────────────────────────────────────────────────
+  // The system columns (checkbox, ⋯) are always pinned. On phones, a view that
+  // pins nothing itself also keeps its first column in place while scrolling sideways.
+  const isNarrow = useIsNarrow();
+  const userPinned = featureIds.has("pinning")
+    ? columnPinning.left.filter((id) => !SYSTEM_COLUMN_IDS.includes(id))
+    : [];
+  const firstDataColumnId = useMemo(() => {
+    const ids =
+      columnOrder.length > 0
+        ? columnOrder
+        : columns.map((column) => column.id ?? ("accessorKey" in column ? String(column.accessorKey) : undefined));
+    return ids.find(
+      (id): id is string => !!id && !SYSTEM_COLUMN_IDS.includes(id) && columnVisibility[id] !== false,
+    );
+  }, [columnOrder, columns, columnVisibility]);
+  const pinnedLeft =
+    isNarrow && userPinned.length === 0 && firstDataColumnId ? [firstDataColumnId] : userPinned;
+
   // ── TanStack table ───────────────────────────────────────────────────────
   const table = useReactTable({
     data,
@@ -201,12 +223,7 @@ export function useDataView<TData, TValue>(
       },
       columnSizing,
       columnPinning: {
-        left: [
-          ...SYSTEM_COLUMN_IDS,
-          ...(featureIds.has("pinning")
-            ? columnPinning.left.filter((id) => !SYSTEM_COLUMN_IDS.includes(id))
-            : []),
-        ],
+        left: [...SYSTEM_COLUMN_IDS, ...pinnedLeft],
       },
       columnOrder:
         columnOrder.length > 0

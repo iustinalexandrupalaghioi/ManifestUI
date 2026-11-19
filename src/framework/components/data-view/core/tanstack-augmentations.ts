@@ -36,6 +36,10 @@ declare module "@tanstack/react-table" {
     groupLabel?: string;
     prefix?: string;
     suffix?: string;
+    /** Cards: the card's heading (see ColumnConfig.cardTitle). */
+    cardTitle?: boolean;
+    /** Cards: spans the field grid's two columns. */
+    cardWide?: boolean;
     editableField?: EditableFieldMeta;
   }
 

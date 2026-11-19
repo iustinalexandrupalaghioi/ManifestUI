@@ -82,7 +82,7 @@ export const groupPermissionListColumns: ColumnConfig[] = [
     hidden: true,
   },
   {
-    field: "groupName",
+    field: "groupName", cardTitle: true,
     label: { en: "Group", ro: "Grup" },
     type: "text",
     columnName: "name",

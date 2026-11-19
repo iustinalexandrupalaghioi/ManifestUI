@@ -78,7 +78,7 @@ export const todoColumns: ColumnConfig[] = [
 // (e.g. under a relation's detail page).
 export const todoListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
-  { field: "title", label: { en: "Title", ro: "Titlu" }, type: "text" },
+  { field: "title", cardTitle: true, label: { en: "Title", ro: "Titlu" }, type: "text" },
   { field: "completed", label: { en: "Completed", ro: "Finalizat" }, type: "boolean" },
   { field: "notes", label: { en: "Notes", ro: "Note" }, type: "text" },
   {

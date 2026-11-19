@@ -1,12 +1,13 @@
 "use client";
 
 import type { TableAction } from "@/framework/components/toolbar/Toolbar";
-import { Toolbar } from "@/framework/components/toolbar/Toolbar";
+import { TOOLBAR_BUTTON, Toolbar } from "@/framework/components/toolbar/Toolbar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/framework/lib/utils";
 import { Loader2Icon, RotateCcwIcon, SaveIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { createContext, use } from "react";
+import { createContext, use, useEffect, useRef } from "react";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 
 import { usePendingChanges } from "../../hooks/usePendingChanges";
@@ -104,7 +105,8 @@ export function FormPage({
     >
       <div
         className={cn(
-          "scrollbar-thumb-rounded scrollbar-thin flex h-[calc(100vh-5rem)] flex-col gap-4 overflow-y-auto px-4 scrollbar-thumb-primary scrollbar-track-muted/80",
+          // The space under the CMS navbar (52px on phones, 48px from sm).
+          "scrollbar-thumb-rounded scrollbar-thin flex h-[calc(100dvh-52px)] flex-col gap-4 overflow-y-auto px-4 pt-3 scrollbar-thumb-primary scrollbar-track-muted/80 sm:h-[calc(100dvh-48px)]",
           className,
         )}
       >
@@ -123,15 +125,19 @@ interface FormPageToolbarProps<T> {
   onAdd?: () => void;
   onBack?: () => void;
   popOutUrl?: string;
-  /** Render the toolbar inline (e.g. inside a split-view detail panel)
-   *  instead of portaling to the navbar's #toolbar-slot. When true, pass
-   *  the returned element as RecordFormShell's `toolbar` prop rather than
-   *  rendering it as a sibling — it needs to live inside the title bar's
-   *  own sticky container (see FormHeader/FormHeaderCollapsible) so the
-   *  two never need to coordinate sticky offsets. */
+  /** Render the toolbar without its own bar, for a title bar that already
+   *  is one (the split-view detail panel). When true, pass the returned
+   *  element as RecordFormShell's `toolbar` prop rather than rendering it
+   *  as a sibling — it needs to live inside the title bar's own sticky
+   *  container (see FormHeader/FormHeaderCollapsible) so the two never need
+   *  to coordinate sticky offsets. */
   inline?: boolean;
 }
 
+/**
+ * A record's toolbar, in the page under the navbar: Back | Save (also
+ * Ctrl/⌘+S), Reload, Add, Delete, Actions ▾, ⋯ | ● Unsaved changes.
+ */
 FormPage.Toolbar = function FormPageToolbar<T>({
   selectedRows = [],
   mutations = [],
@@ -144,10 +150,30 @@ FormPage.Toolbar = function FormPageToolbar<T>({
 }: FormPageToolbarProps<T>) {
   const form = useFormPageContext();
   const router = useTransitionRouter();
+  const t = useTranslations("Toolbar");
+  const canSave = !!form && !form.readOnly && form.canSave && form.isDirty && !form.isSaving;
+
+  // Ctrl/⌘+S saves (and never opens the browser's "Save page" dialog here).
+  const saveRef = useRef<() => void>(() => {});
+  saveRef.current = () => {
+    if (canSave) form.onSave();
+  };
+  useEffect(() => {
+    if (!form || form.readOnly) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        saveRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [form?.readOnly, !!form]);
+
   if (!form) return null;
   const toolbar = (
     <Toolbar
-      slotId={inline ? false : "toolbar-slot"}
+      slotId={inline ? false : undefined}
       variant="detail"
       onBack={() => form.guard(() => (onBack ? onBack() : router.back()))}
       selectedRows={selectedRows}
@@ -158,44 +184,49 @@ FormPage.Toolbar = function FormPageToolbar<T>({
       onAdd={onAdd}
       popOutUrl={popOutUrl}
       setRowSelection={() => {}}
+      trailing={
+        form.isDirty && !form.readOnly ? (
+          <span role="status" className="flex items-center gap-1.5 text-sm text-warning">
+            <span aria-hidden className="size-2 rounded-full bg-warning" />
+            {t("unsaved")}
+          </span>
+        ) : undefined
+      }
     >
       {!form.readOnly && (
         <Button
-          variant="outline"
-          size="icon"
-          title="Save"
-          disabled={form.isSaving || !form.isDirty || !form.canSave}
+          type="button"
+          size="sm"
+          className={TOOLBAR_BUTTON}
+          aria-keyshortcuts="Control+S Meta+S"
+          title={`${t("save")} (Ctrl+S)`}
+          disabled={!canSave}
           onClick={form.onSave}
         >
-          {form.isSaving ? (
-            <Loader2Icon className="size-4 animate-spin" />
-          ) : (
-            <SaveIcon className="size-4" />
-          )}
+          {form.isSaving ? <Loader2Icon className="animate-spin" aria-hidden /> : <SaveIcon aria-hidden />}
+          {t("save")}
         </Button>
       )}
 
       {!form.readOnly && form.onReset && (
         <Button
-          size="icon"
           type="button"
+          size="sm"
           variant="outline"
-          disabled={
-            form.isRefreshing || (!form.alwaysAllowReset && !form.isDirty)
-          }
+          aria-label={t("reload")}
+          title={t("reload")}
+          className={TOOLBAR_BUTTON}
+          disabled={form.isRefreshing || (!form.alwaysAllowReset && !form.isDirty)}
           onClick={() => form.guard(form.onReset!)}
         >
-          {form.isRefetching ? (
-            <Loader2Icon className="size-4 animate-spin" />
-          ) : (
-            <RotateCcwIcon className="size-4" />
-          )}
+          {form.isRefetching ? <Loader2Icon className="animate-spin" aria-hidden /> : <RotateCcwIcon aria-hidden />}
+          <span className="hidden sm:inline">{t("reload")}</span>
         </Button>
       )}
     </Toolbar>
   );
 
-  return inline ? <div className="h-10 shrink-0">{toolbar}</div> : toolbar;
+  return toolbar;
 };
 
 FormPage.Collapsible = function FormPageCollapsible(

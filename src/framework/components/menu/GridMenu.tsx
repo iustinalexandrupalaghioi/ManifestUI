@@ -1,10 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 import type { MenuSection } from "./types";
+import { LiveNumber } from "./LiveNumber";
+import LiveTile from "./LiveTile";
 
 const GridMenu = ({ menuItems }: { menuItems: MenuSection[] }) => {
   return (
-    <div className="flex flex-col flex-wrap items-center justify-start gap-2 space-y-4 p-0 md:flex-row md:items-start md:gap-4 md:px-4">
+    <div className="flex flex-col flex-wrap items-center justify-start gap-2 space-y-4 px-4 py-6 md:flex-row md:items-start md:gap-4 md:px-6">
       {menuItems.map((section, i) => (
         <Card key={i}>
           <CardContent>
@@ -18,16 +20,18 @@ const GridMenu = ({ menuItems }: { menuItems: MenuSection[] }) => {
               <div className="grid grid-cols-2 gap-3">
                 {section.links.map((link) => {
                   if (link.type === "live") {
-                    const LiveComponent = link.component;
-
                     return (
-                      <LiveComponent
-                        key={link.name}
-                        name={link.name}
-                        path={link.path}
-                        title={link.title}
-                        icon={link.icon}
-                      />
+                      <LiveNumber key={link.name} use={link.useLiveNumber}>
+                        {(value) => (
+                          <LiveTile
+                            name={link.name}
+                            path={link.path}
+                            title={link.title}
+                            icon={link.icon}
+                            liveNumber={value}
+                          />
+                        )}
+                      </LiveNumber>
                     );
                   }
 

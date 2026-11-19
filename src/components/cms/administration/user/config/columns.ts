@@ -35,7 +35,7 @@ export const userColumns: ColumnConfig[] = [
 export const userListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "text", hidden: true },
   {
-    field: "fullName",
+    field: "fullName", cardTitle: true,
     label: { en: "Full name", ro: "Nume complet" },
     type: "text",
     group: "user",

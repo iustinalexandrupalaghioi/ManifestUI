@@ -7,5 +7,10 @@
   "add": "Adaugă",
   "refresh": "Reîmprospătează",
   "actions": "Acțiuni",
-  "back": "Înapoi"
+  "back": "Înapoi",
+  "delete": "Șterge",
+  "save": "Salvează",
+  "reload": "Reîncarcă",
+  "unsaved": "Modificări nesalvate",
+  "recordActions": "Acțiuni înregistrare"
 }

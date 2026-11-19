@@ -16,5 +16,13 @@
   "selectedCount": "{count} selectate",
   "itemsCount": "{count} elemente",
   "listView": "Vizualizare listă",
-  "tableView": "Vizualizare tabel"
+  "tableView": "Vizualizare tabel",
+  "selectedOfTotal": "{selected} selectate · {total} în total",
+  "cards": "Carduri",
+  "table": "Tabel",
+  "viewMode": "Vizualizare",
+  "toolbar": "Acțiuni listă",
+  "search": "Caută",
+  "clearSearch": "Șterge căutarea",
+  "openShort": "Deschide"
 }
