@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { ArrowRightIcon, MenuIcon, XIcon } from "lucide-react";
+import { ArrowRightIcon, MenuIcon, ShieldIcon, XIcon } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { Link } from "@/i18n/navigation";
 import type { Theme } from "@/contexts/ThemeContext";
@@ -46,12 +46,17 @@ export function MobileNav({
   labels: MobileNavLabels;
   items: NavItem[];
   studioHref: string;
-  /** "Profile" for signed-in users, "Log in" for visitors (picked from the browser session). */
-  accounts: { signedIn: NavItem; signedOut: NavItem };
+  /**
+   * "Profile" for signed-in users, "Log in" for visitors (picked from the browser session),
+   * and the CMS link for signed-in users who may open it.
+   */
+  accounts: { signedIn: NavItem; signedOut: NavItem; cms?: NavItem };
   /** The logo (or name) shown at the top of the open menu. */
   brand: ReactNode;
 }) {
-  const account = useSiteSession() ? accounts.signedIn : accounts.signedOut;
+  const session = useSiteSession();
+  const account = session ? accounts.signedIn : accounts.signedOut;
+  const cms = session?.canAccessCms ? accounts.cms : undefined;
   const arrow = <ArrowRightIcon aria-hidden className="size-4.5 text-muted-foreground" />;
   return (
     <DialogPrimitive.Root>
@@ -130,6 +135,17 @@ export function MobileNav({
                 <ArrowRightIcon aria-hidden className="size-4.5" />
               </Link>
             </DialogPrimitive.Close>
+            {cms && (
+              <DialogPrimitive.Close asChild>
+                <Link
+                  href={cms.href}
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl border text-[15px] font-semibold text-foreground no-underline"
+                >
+                  <ShieldIcon aria-hidden className="size-4.5 text-muted-foreground" />
+                  {cms.label}
+                </Link>
+              </DialogPrimitive.Close>
+            )}
             <DialogPrimitive.Close asChild>
               <Link
                 href={account.href}
