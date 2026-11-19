@@ -121,7 +121,11 @@ export const siteHeader = defineSection({
               brand={c.logo.src ? brand : <span className="font-display text-lg font-semibold">{c.brand}</span>}
               items={items}
               studioHref={c.cta.href}
-              accounts={{ signedIn: { label: tSite("profile"), href: "/profile" }, signedOut: { label: t("login"), href: "/auth/login" } }}
+              accounts={{
+                signedIn: { label: tSite("profile"), href: "/profile" },
+                signedOut: { label: t("login"), href: "/auth/login" },
+                cms: { label: tSite("adminPanel"), href: "/cms" },
+              }}
               labels={{
                 menu: tNav("menu"),
                 close: tNav("closeMenu"),
