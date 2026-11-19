@@ -1,19 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/framework/lib/utils";
-import { ChevronLeftIcon, ExternalLinkIcon, Loader2Icon, MoreHorizontal, PlusIcon, Trash2Icon } from "lucide-react";
+import { ChevronLeftIcon, ExternalLinkIcon, Loader2Icon, Maximize2Icon, PlusIcon, RotateCcwIcon, Trash2Icon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import ToolbarActions from "./ToolbarActions";
 import { FilterInput } from "../data-view/features/filtering";
 import { useOptionalDataViewCore } from "../data-view/core/stores/DataViewProvider";
+import { useBrowserNavigation } from "../screen/stores/useBrowserNavigationStore";
 import { EditControls } from "../data-view/features/editing/ui/EditControls";
-import { ToolbarMenuItems } from "./parts/ToolbarMenuItems";
 import { ToolbarActionsMenu } from "./parts/ToolbarActionsMenu";
-import { useIsNarrow } from "./parts/useIsNarrow";
 import { ToolbarCollapseButton } from "./parts/ToolbarCollapse";
 
 export interface TableAction<TData> {
@@ -27,7 +25,7 @@ export interface TableAction<TData> {
 /**
  * - `overview`: a list page's toolbar, in the page under the view row.
  * - `detail`: a record page's toolbar (its Save and Reload come in as `children`).
- * - `nav`: an embedded list's compact toolbar, everything in a "More" menu.
+ * - `nav`: an embedded list's compact toolbar of small icon buttons.
  */
 export type ToolbarVariant = "overview" | "nav" | "detail";
 
@@ -64,8 +62,8 @@ interface ToolbarProps<TData> {
 export const TOOLBAR_BUTTON = "h-10 sm:h-8";
 
 /**
- * A data view's or record's toolbar: Back, then the actions as labelled
- * buttons (Add, Open, Edit, Delete, Actions ▾) and ⋯ for the rest.
+ * A data view's or record's toolbar: Back, then the actions as buttons
+ * (Add, Open, Edit, Delete, Refresh, Pop out, Actions ▾), labelled from `sm` up.
  * Each button shows only when its feature and permission allow it.
  */
 export function Toolbar<TData>(props: ToolbarProps<TData>) {
@@ -114,19 +112,35 @@ function BackButton({ onBack }: { onBack?: () => void }) {
   );
 }
 
-function AddButton({ addPath, onAdd }: { addPath?: string; onAdd?: () => void }) {
+function AddButton({
+  addPath,
+  onAdd,
+  compact,
+  iconOnly,
+  className,
+}: {
+  addPath?: string;
+  onAdd?: () => void;
+  /** Icon only on phones (record toolbars, where Save is the main button). */
+  compact?: boolean;
+  iconOnly?: boolean;
+  className?: string;
+}) {
   const t = useTranslations("Toolbar");
   const router = useTransitionRouter();
   return (
     <Button
       type="button"
       size="sm"
-      className={TOOLBAR_BUTTON}
+      variant={compact || iconOnly ? "outline" : "default"}
+      aria-label={t("add")}
+      title={t("add")}
+      className={className ?? TOOLBAR_BUTTON}
       disabled={router.isPending}
       onClick={() => (onAdd ? onAdd() : addPath && router.push(addPath))}
     >
       {router.isPending ? <Loader2Icon className="animate-spin" aria-hidden /> : <PlusIcon aria-hidden />}
-      {t("add")}
+      <span className={iconOnly ? "sr-only" : compact ? "hidden sm:inline" : undefined}>{t("add")}</span>
     </Button>
   );
 }
@@ -135,10 +149,14 @@ function DeleteButton<TData>({
   selectedRows,
   onDelete,
   isDeleteEligible,
+  iconOnly,
+  className,
 }: {
   selectedRows: TData[];
   onDelete: (rows: TData[]) => void;
   isDeleteEligible?: (row: TData) => boolean;
+  iconOnly?: boolean;
+  className?: string;
 }) {
   const t = useTranslations("Toolbar");
   const eligible = isDeleteEligible ? selectedRows.filter(isDeleteEligible) : selectedRows;
@@ -148,12 +166,13 @@ function DeleteButton<TData>({
       variant="outline"
       size="sm"
       aria-label={t("delete")}
+      title={t("delete")}
       disabled={eligible.length === 0}
       onClick={() => onDelete(eligible)}
-      className={cn(TOOLBAR_BUTTON, "text-destructive hover:text-destructive")}
+      className={cn(className ?? TOOLBAR_BUTTON, "text-destructive hover:text-destructive")}
     >
       <Trash2Icon aria-hidden />
-      <span className="hidden sm:inline">{t("delete")}</span>
+      <span className={iconOnly ? "sr-only" : "hidden sm:inline"}>{t("delete")}</span>
       {selectedRows.length > 1 && (
         <span className="text-xs tabular-nums opacity-80">
           {eligible.length}/{selectedRows.length}
@@ -163,18 +182,122 @@ function DeleteButton<TData>({
   );
 }
 
-function MoreMenu({ children, label, className }: { children: React.ReactNode; label: string; className?: string }) {
+/** Small icon buttons for an embedded list's nav toolbar. */
+const NAV_BUTTON = "h-7 px-2";
+
+function RefreshButton({
+  onRefresh,
+  isRefreshing,
+  isRefetching,
+  iconOnly,
+  className,
+}: {
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  isRefetching: boolean;
+  iconOnly?: boolean;
+  className?: string;
+}) {
+  const t = useTranslations("Toolbar");
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" size="icon-sm" aria-label={label} title={label} className={cn("size-10 sm:size-8", className)}>
-          <MoreHorizontal aria-hidden />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent onCloseAutoFocus={(e) => e.preventDefault()} className="w-fit" align="end">
-        {children}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      aria-label={t("refresh")}
+      title={t("refresh")}
+      className={className ?? TOOLBAR_BUTTON}
+      disabled={isRefreshing}
+      onClick={onRefresh}
+    >
+      {isRefetching ? <Loader2Icon className="animate-spin" aria-hidden /> : <RotateCcwIcon aria-hidden />}
+      <span className={iconOnly ? "sr-only" : "hidden sm:inline"}>{t("refresh")}</span>
+    </Button>
+  );
+}
+
+/** Opens the list or record on its own page (shown where it's embedded). */
+function PopoutButton({
+  popOutUrl,
+  preFilters,
+  iconOnly,
+  className,
+}: {
+  popOutUrl: string;
+  preFilters?: FilterInput[];
+  iconOnly?: boolean;
+  className?: string;
+}) {
+  const t = useTranslations("Toolbar");
+  const { navigateTo } = useBrowserNavigation();
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      aria-label={t("popout")}
+      title={t("popout")}
+      className={className ?? TOOLBAR_BUTTON}
+      onClick={() => navigateTo(popOutUrl, preFilters && preFilters.length > 0 ? preFilters : undefined)}
+    >
+      <Maximize2Icon aria-hidden />
+      <span className={iconOnly ? "sr-only" : "hidden sm:inline"}>{t("popout")}</span>
+    </Button>
+  );
+}
+
+function OpenButton<TData>({
+  selectedRows,
+  selectedCount,
+  onOpen,
+  getRowUrl,
+  iconOnly,
+  className,
+}: {
+  selectedRows: TData[];
+  selectedCount: number;
+  onOpen: (rows: TData[]) => void;
+  getRowUrl?: (row: TData) => string;
+  iconOnly?: boolean;
+  className?: string;
+}) {
+  const t = useTranslations("Toolbar");
+  const openUrl = selectedCount === 1 && getRowUrl ? getRowUrl(selectedRows[0]) : undefined;
+  const open = (event: React.MouseEvent) => {
+    // A modified click on the link opens the record in a new tab.
+    if (openUrl && (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0)) return;
+    event.preventDefault();
+    onOpen(selectedRows);
+  };
+  const label = <span className={iconOnly ? "sr-only" : "hidden sm:inline"}>{t("open")}</span>;
+
+  if (openUrl) {
+    return (
+      <Button asChild variant="outline" size="sm" className={className ?? TOOLBAR_BUTTON}>
+        <Link href={openUrl} onClick={open} aria-label={t("open")} title={t("open")}>
+          <ExternalLinkIcon aria-hidden />
+          {label}
+        </Link>
+      </Button>
+    );
+  }
+  // Several selected: they open one after another (the record page steps through them).
+  const title = selectedCount > 1 ? t("openSelectedCount", { count: selectedCount }) : t("open");
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      aria-label={title}
+      title={title}
+      className={className ?? TOOLBAR_BUTTON}
+      disabled={selectedCount === 0}
+      onClick={open}
+    >
+      <ExternalLinkIcon aria-hidden />
+      {label}
+      {selectedCount > 1 && <span className="text-xs tabular-nums opacity-80">{selectedCount}</span>}
+    </Button>
   );
 }
 
@@ -197,17 +320,7 @@ function OverviewToolbar<TData>({
   preFilters,
 }: ToolbarProps<TData>) {
   const t = useTranslations("Toolbar");
-  const isNarrow = useIsNarrow();
   const dataView = useOptionalDataViewCore();
-  const hasMore = !!(onRefresh || popOutUrl);
-
-  const openUrl = selectedCount === 1 && getRowUrl ? getRowUrl(selectedRows[0]) : undefined;
-  const open = (event: React.MouseEvent) => {
-    // A modified click on the link opens the record in a new tab.
-    if (openUrl && (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0)) return;
-    event.preventDefault();
-    onOpen?.(selectedRows);
-  };
 
   const items = (
     <>
@@ -219,56 +332,17 @@ function OverviewToolbar<TData>({
         </>
       )}
       {(addPath || onAdd) && <AddButton addPath={addPath} onAdd={onAdd} />}
-      {onOpen &&
-        (openUrl ? (
-          <Button asChild variant="outline" size="sm" className={TOOLBAR_BUTTON}>
-            <Link href={openUrl} onClick={open} aria-label={t("open")}>
-              <ExternalLinkIcon aria-hidden />
-              <span className="hidden sm:inline">{t("open")}</span>
-            </Link>
-          </Button>
-        ) : (
-          // Several selected: they open one after another (the record page steps through them).
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-label={selectedCount > 1 ? t("openSelectedCount", { count: selectedCount }) : t("open")}
-            title={selectedCount > 1 ? t("openSelectedCount", { count: selectedCount }) : t("open")}
-            className={TOOLBAR_BUTTON}
-            disabled={selectedCount === 0}
-            onClick={open}
-          >
-            <ExternalLinkIcon aria-hidden />
-            <span className="hidden sm:inline">{t("open")}</span>
-            {selectedCount > 1 && <span className="text-xs tabular-nums opacity-80">{selectedCount}</span>}
-          </Button>
-        ))}
+      {onOpen && (
+        <OpenButton selectedRows={selectedRows} selectedCount={selectedCount} onOpen={onOpen} getRowUrl={getRowUrl} />
+      )}
       {dataView?.featureIds.has("edit") && <EditControls />}
       {onDelete && <DeleteButton selectedRows={selectedRows} onDelete={onDelete} isDeleteEligible={isDeleteEligible} />}
+      {onRefresh && <RefreshButton onRefresh={onRefresh} isRefreshing={isRefreshing} isRefetching={isRefetching} />}
+      {popOutUrl && <PopoutButton popOutUrl={popOutUrl} preFilters={preFilters} />}
       {children}
       {!!actions?.length && <ToolbarActionsMenu actions={actions} selectedRows={selectedRows} />}
-      {/* ⋯ and, in a list on phones, the chevron that opens the rest of the bar, at the end of the row. */}
-      {(hasMore || dataView) && (
-        <div className="ml-auto flex items-center gap-1.5 empty:hidden sm:ml-0 sm:gap-2">
-          {hasMore && (
-            <MoreMenu label={t("more")}>
-              <ToolbarMenuItems
-                selectedRows={selectedRows}
-                selectedCount={selectedCount}
-                popOutUrl={popOutUrl}
-                preFilters={preFilters}
-                onRefresh={onRefresh}
-                isRefreshing={isRefreshing}
-                isRefetching={isRefetching}
-                isNarrow={isNarrow}
-                separateActions={false}
-              />
-            </MoreMenu>
-          )}
-          {dataView && <ToolbarCollapseButton />}
-        </div>
-      )}
+      {/* In a list on phones, the chevron that opens the rest of the bar, at the end of the row. */}
+      {dataView && <ToolbarCollapseButton className="ml-auto" />}
     </>
   );
 
@@ -278,7 +352,6 @@ function OverviewToolbar<TData>({
 
 function DetailToolbar<TData>({
   selectedRows,
-  selectedCount,
   actions,
   onDelete,
   isDeleteEligible,
@@ -294,40 +367,18 @@ function DetailToolbar<TData>({
   preFilters,
 }: ToolbarProps<TData>) {
   const t = useTranslations("Toolbar");
-  const isNarrow = useIsNarrow();
-  const hasAdd = !!(addPath || onAdd);
-  // Phones: Add and Delete go into ⋯ to leave room for Save.
-  const moreHasItems = !!(onRefresh || popOutUrl || (isNarrow && (hasAdd || onDelete)));
 
   const items = (
     <>
       <BackButton onBack={onBack} />
       <Divider />
       {children}
-      {!isNarrow && hasAdd && <AddButton addPath={addPath} onAdd={onAdd} />}
-      {!isNarrow && onDelete && (
-        <DeleteButton selectedRows={selectedRows} onDelete={onDelete} isDeleteEligible={isDeleteEligible} />
-      )}
-      {!!actions?.length && <ToolbarActionsMenu actions={actions} selectedRows={selectedRows} />}
-      {moreHasItems && (
-        <MoreMenu label={t("more")}>
-          <ToolbarMenuItems
-            selectedRows={selectedRows}
-            selectedCount={selectedCount}
-            popOutUrl={popOutUrl}
-            preFilters={preFilters}
-            addPath={isNarrow ? addPath : undefined}
-            onAdd={isNarrow ? onAdd : undefined}
-            onRefresh={onRefresh}
-            isRefreshing={isRefreshing}
-            isRefetching={isRefetching}
-            isNarrow={isNarrow}
-            onDelete={isNarrow ? onDelete : undefined}
-            isDeleteEligible={isDeleteEligible}
-            separateActions={false}
-          />
-        </MoreMenu>
-      )}
+      {/* Icons on phones, so Save keeps its label. */}
+      {(addPath || onAdd) && <AddButton addPath={addPath} onAdd={onAdd} compact />}
+      {onDelete && <DeleteButton selectedRows={selectedRows} onDelete={onDelete} isDeleteEligible={isDeleteEligible} />}
+      {onRefresh && <RefreshButton onRefresh={onRefresh} isRefreshing={isRefreshing} isRefetching={isRefetching} />}
+      {popOutUrl && <PopoutButton popOutUrl={popOutUrl} preFilters={preFilters} />}
+      {!!actions?.length && <ToolbarActionsMenu actions={actions} selectedRows={selectedRows} compact />}
       {trailing && <div className="flex basis-full items-center sm:ml-auto sm:basis-auto">{trailing}</div>}
     </>
   );
@@ -336,7 +387,7 @@ function DetailToolbar<TData>({
   return <Bar label={t("recordActions")}>{items}</Bar>;
 }
 
-/** Embedded lists: everything in one "More" menu. */
+/** Embedded lists: the actions as small icon buttons, Actions ▾ last. */
 function NavToolbar<TData>({
   selectedRows,
   selectedCount,
@@ -354,55 +405,38 @@ function NavToolbar<TData>({
   popOutUrl,
   preFilters,
 }: ToolbarProps<TData>) {
-  const t = useTranslations("Toolbar");
-  const isNarrow = useIsNarrow();
-
   if (!actions?.length && !onDelete && !addPath && !onAdd && !onOpen && !onRefresh && !children && slotId !== undefined) {
     return null;
   }
 
-  const hasPrimaryItems = !!(onOpen || addPath || onAdd || onRefresh || onDelete);
-  const menuHasContent = hasPrimaryItems || !!actions?.length;
-
   const content = (
     <div className="flex h-full w-full items-center gap-1 px-0">
       {children}
-
       <div className="ml-auto flex items-center gap-1">
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" type="button" className="h-7 gap-1 px-2" disabled={!menuHasContent}>
-              <MoreHorizontal className="size-3" />
-              {t("more")}
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent
-            onCloseAutoFocus={(e) => e.preventDefault()}
-            className="w-fit"
-            align="start"
-            sideOffset={2}
-            alignOffset={-4}
-          >
-            <ToolbarMenuItems
-              selectedRows={selectedRows}
-              selectedCount={selectedCount}
-              popOutUrl={popOutUrl}
-              preFilters={preFilters}
-              addPath={addPath}
-              onAdd={onAdd}
-              onRefresh={onRefresh}
-              isRefreshing={isRefreshing}
-              isRefetching={isRefetching}
-              actions={actions}
-              isNarrow={isNarrow}
-              onDelete={onDelete}
-              isDeleteEligible={isDeleteEligible}
-              onOpen={onOpen}
-              separateActions={hasPrimaryItems}
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {(addPath || onAdd) && <AddButton addPath={addPath} onAdd={onAdd} iconOnly className={NAV_BUTTON} />}
+        {onOpen && (
+          <OpenButton selectedRows={selectedRows} selectedCount={selectedCount} onOpen={onOpen} iconOnly className={NAV_BUTTON} />
+        )}
+        {onDelete && (
+          <DeleteButton
+            selectedRows={selectedRows}
+            onDelete={onDelete}
+            isDeleteEligible={isDeleteEligible}
+            iconOnly
+            className={NAV_BUTTON}
+          />
+        )}
+        {onRefresh && (
+          <RefreshButton
+            onRefresh={onRefresh}
+            isRefreshing={isRefreshing}
+            isRefetching={isRefetching}
+            iconOnly
+            className={NAV_BUTTON}
+          />
+        )}
+        {popOutUrl && <PopoutButton popOutUrl={popOutUrl} preFilters={preFilters} iconOnly className={NAV_BUTTON} />}
+        {!!actions?.length && <ToolbarActionsMenu actions={actions} selectedRows={selectedRows} className={NAV_BUTTON} />}
       </div>
     </div>
   );
