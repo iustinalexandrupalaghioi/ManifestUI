@@ -1,7 +1,15 @@
 "use client";
 
 import { useBrowserNavigation } from "@/framework/components/screen/stores/useBrowserNavigationStore";
-import { type RefObject, useMemo } from "react";
+import { type ReactNode, type RefObject, useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { DataListModeToggle } from "../../data-list/ui/DataListModeToggle";
+import { TotalsBar } from "../../features/aggregates/ui/TotalsBar";
+import { ColumnManagerButton } from "../../features/columnManager/ui/ColumnManagerButton";
+import { FilterBar } from "../../features/filtering/ui/FilterBar";
+import { GroupByBar } from "../../features/grouping/ui/GroupByBar";
+import { QuickSearchField } from "../../features/quickSearch/ui/QuickSearchField";
+import { SortBar } from "../../features/sorting/ui/SortBar";
 import type { DataViewFeature } from "../../core/contracts";
 import { DataViewFilterProvider } from "../../core/stores/DataViewFilterContext";
 import {
@@ -44,6 +52,11 @@ interface DataViewLayoutProps {
   isAggregatesFetching?: boolean;
   groupAggregateRows?: GroupAggregateRow[];
   isGroupAggregatesFetching?: boolean;
+  /**
+   * The page's action toolbar (Back, Add, Open…). Given, the list's tools join it in
+   * one bar under the view row; without it (pickups, embedded lists) they keep their rows.
+   */
+  toolbar?: ReactNode;
 }
 
 export function DataViewLayout({
@@ -64,7 +77,9 @@ export function DataViewLayout({
   isAggregatesFetching,
   groupAggregateRows,
   isGroupAggregatesFetching,
+  toolbar,
 }: DataViewLayoutProps) {
+  const t = useTranslations("DataView");
   const {
     table,
     tableId,
@@ -130,7 +145,47 @@ export function DataViewLayout({
   return (
     <DataViewFilterProvider value={{ enrichedPreFilters, filterableColumns }}>
       <div id={tableId} className="w-full overflow-hidden ps-2">
-        {/* ── Row 1: ViewBar + popout | counter ── */}
+        {toolbar ? (
+          <>
+            {/* ── Row A: the view (name, save, reset) ── */}
+            <div className="mb-2 flex min-w-0 items-center gap-2">
+              <ViewBar />
+              {features.map((f) => f.id !== "edit" && f.Toolbar && <f.Toolbar key={f.id} />)}
+            </div>
+
+            {/* ── Row B: the toolbar. Its parts are flex items of one bar: one line from `sm`
+                 up; on phones it wraps into rows: actions · search · filters, sort, group,
+                 totals (wrapping) · count and Cards | Table. ── */}
+            <div
+              role="toolbar"
+              aria-label={t("toolbar")}
+              className="mb-2 flex flex-wrap items-center gap-2 rounded-[10px] border bg-toolbar p-2"
+            >
+              {toolbar}
+              <span aria-hidden className="order-3 hidden h-6 w-px shrink-0 bg-border sm:block" />
+              {quickSearchEnabled && featureIds.has("quickSearch") && (
+                <QuickSearchField className="order-3 w-full min-w-0 sm:w-56" />
+              )}
+              {/* 40px touch targets on phones, like the action buttons. */}
+              <div className="order-4 flex w-full min-w-0 flex-wrap items-center gap-2 max-sm:[&_button]:h-10 sm:w-auto">
+                {featureIds.has("filtering") && <FilterBar />}
+                {featureIds.has("sorting") && <SortBar />}
+                {featureIds.has("grouping") && <GroupByBar />}
+                {!isList && featureIds.has("aggregates") && <TotalsBar />}
+                {isList && featureIds.has("columnManager") && <ColumnManagerButton type="list" />}
+              </div>
+              <div className="order-8 flex w-full items-center justify-between gap-2 sm:ml-auto sm:w-auto sm:justify-end">
+                {featureIds.has("selection") && (
+                  <SelectionToolbar tableId={tableId} totalCount={totalCount} />
+                )}
+                {featureIds.has("viewModeToggle") && (
+                  <DataListModeToggle tableId={tableId} hasList={hasTable && hasList} labeled />
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+        /* ── Row 1: ViewBar + popout | counter ── */
         <div className="mb-2 flex items-start justify-between  gap-2">
           <div className="flex min-w-0 items-start gap-2">
             <ViewBar />
@@ -145,6 +200,7 @@ export function DataViewLayout({
             </div>
           )}
         </div>
+        )}
 
         {isList ? (
           <ListViewLayout
@@ -169,6 +225,7 @@ export function DataViewLayout({
             isAggregatesFetching={isAggregatesFetching}
             groupAggregateRows={groupAggregateRows}
             isGroupAggregatesFetching={isGroupAggregatesFetching}
+            toolsInToolbar={!!toolbar}
           />
         ) : (
           <TableViewLayout
@@ -192,6 +249,7 @@ export function DataViewLayout({
             isAggregatesFetching={isAggregatesFetching}
             groupAggregateRows={groupAggregateRows}
             isGroupAggregatesFetching={isGroupAggregatesFetching}
+            toolsInToolbar={!!toolbar}
           />
         )}
       </div>

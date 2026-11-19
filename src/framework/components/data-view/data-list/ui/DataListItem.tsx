@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/framework/lib/utils";
 import { flexRender, type Column, type Row } from "@tanstack/react-table";
-import { ChevronDown, ChevronRight, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useDataViewCore } from "../../core/stores/DataViewProvider";
@@ -72,11 +72,9 @@ export function DataListItem<TData>({
   isActive,
 }: DataListItemProps<TData>) {
   const t = useTranslations("DataView");
-  const tc = useTranslations("Common");
   const { featureIds } = useDataViewCore();
   const selectionEnabled = featureIds.has("selection");
   const [pendingActions, setPendingActions] = useState<Set<number>>(new Set());
-  const [deletePending, setDeletePending] = useState(false);
   const [visibleCount, setVisibleCount] = useState<number>(MAX_VISIBLE_ACTIONS);
   const stripRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -88,15 +86,8 @@ export function DataListItem<TData>({
 
   const onOpen = actionsMeta?.onOpen;
   const onSelect = selectMeta?.onSelect ?? actionsMeta?.onSelect;
-  const onDelete = actionsMeta?.onDelete;
-  const isDeleteEligible = actionsMeta?.isDeleteEligible;
+  // Deleting is done from the toolbar (select, then Delete) or the context menu, not per card.
   const rawActions = actionsMeta?.actions?.() ?? [];
-
-  const eligibleForDelete = onDelete
-    ? isDeleteEligible
-      ? [row].filter(isDeleteEligible)
-      : [row]
-    : [];
 
   const resolvedActions = rawActions.map((action, i) => {
     const eligible = action.isEligible
@@ -121,9 +112,8 @@ export function DataListItem<TData>({
   });
 
   const eligibleActions = resolvedActions.filter((a) => !a.disabled);
-  const hasDelete = !!onDelete && eligibleForDelete.length > 0;
   const isPickup = !!onSelect;
-  const hasBottomStrip = !isPickup && (eligibleActions.length > 0 || hasDelete);
+  const hasBottomStrip = !isPickup && eligibleActions.length > 0;
 
   const columnGroups = useMemo(
     () => buildColumnGroups(visibleListColumns),
@@ -133,8 +123,7 @@ export function DataListItem<TData>({
   const computeVisibleCount = useCallback(() => {
     if (!stripRef.current) return;
     const stripWidth = stripRef.current.offsetWidth;
-    const deleteWidth = hasDelete ? 80 : 0;
-    const available = stripWidth - deleteWidth - 8;
+    const available = stripWidth - 8;
 
     let used = 0;
     let count = 0;
@@ -158,7 +147,7 @@ export function DataListItem<TData>({
     }
 
     setVisibleCount(count);
-  }, [eligibleActions.length, hasDelete]);
+  }, [eligibleActions.length]);
 
   useEffect(() => {
     if (!stripRef.current) return;
@@ -171,13 +160,44 @@ export function DataListItem<TData>({
   const visibleActions = eligibleActions.slice(0, visibleCount);
   const overflowActions = eligibleActions.slice(visibleCount);
 
+  const renderCells = (columns: Column<TData>[]) => {
+    const cells = columns
+      .map((col) => row.getAllCells().find((c) => c.column.id === col.id))
+      .filter((cell): cell is NonNullable<typeof cell> => {
+        if (!cell) return false;
+        const value = cell.getValue();
+        return value !== null && value !== undefined && value !== "";
+      });
+    if (cells.length === 0) return null;
+    return cells.map((cell, i) => {
+      const meta = cell.column.columnDef.meta;
+      return (
+        <span key={cell.column.id} className="flex min-w-0 max-w-full items-center gap-1">
+          {meta?.prefix && <span className="shrink-0 text-muted-foreground">{meta.prefix}</span>}
+          <span className="min-w-0 truncate">{flexRender(cell.column.columnDef.cell, cell.getContext())}</span>
+          {meta?.suffix && <span className="shrink-0 text-muted-foreground">{meta.suffix}</span>}
+          {/* Badges (toned options) sit side by side; plain values are separated by a dot. */}
+          {i < cells.length - 1 && !meta?.selectOptions?.some((option) => option.tone) && (
+            <span className="mx-0.5 shrink-0 text-muted-foreground">·</span>
+          )}
+        </span>
+      );
+    });
+  };
+
+  // Laid out by the list columns' config: `cardTitle` columns head the card, the rest
+  // form a two-column label/value grid (`cardWide` fields span both columns).
+  const isTitle = (group: ColumnGroup<TData>) => group.columns.some((col) => col.columnDef.meta?.cardTitle);
+  const headingGroups = columnGroups.filter(isTitle);
+  const fieldGroups = columnGroups.filter((group) => !isTitle(group));
+  const highlighted = !isPickup && (row.getIsSelected() || isActive);
+
   return (
     <div
       data-state={row.getIsSelected() ? "selected" : undefined}
       className={cn(
         "flex flex-col overflow-hidden rounded-lg border bg-card text-sm transition-colors hover:bg-accent/50",
-        !isPickup && row.getIsSelected() && "border-primary bg-primary/5",
-        !isPickup && isActive && "border-primary bg-primary/5",
+        highlighted && "border-link bg-selected ring-1 ring-link hover:bg-selected",
       )}
       onDoubleClick={() => isPickup && onSelect?.([row])}
     >
@@ -192,96 +212,72 @@ export function DataListItem<TData>({
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
-        {!onSelect && onOpen && (
-          <button
-            onClick={() => onOpen([row])}
-            className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch border-r bg-muted/30 transition-colors hover:bg-primary/10"
-            aria-label={t("openRecord")}
-            type="button"
-          >
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </button>
-        )}
 
         <div
-          className="flex min-w-0 flex-1 flex-col gap-2 p-3 px-2"
+          className="flex min-w-0 flex-1 flex-col gap-3 p-3"
           onClick={(e) => onRowClick?.(e, row)}
         >
+          {/* ── header: checkbox · #id · Open › ── */}
           <div className="flex items-center gap-2">
             {!isPickup && selectionEnabled && (
-              <div
-                className="relative overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="relative flex" onClick={(e) => e.stopPropagation()}>
                 <Checkbox
-                  className="shrink-0 bg-muted"
+                  className="shrink-0 bg-background"
                   checked={row.getIsSelected()}
                   onCheckedChange={() => row.toggleSelected()}
                   aria-label={t("selectRow")}
                 />
               </div>
             )}
-            <span className="text-xs font-medium text-muted-foreground">
-              #{row.id}
-            </span>
+            <span className="text-xs font-medium text-muted-foreground tabular-nums">#{row.id}</span>
+            {!onSelect && onOpen && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen([row]);
+                }}
+                className="-my-1 ml-auto inline-flex h-8 items-center gap-0.5 rounded-md px-2 text-xs font-medium text-link outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                {t("openShort")}
+                <ChevronRight aria-hidden className="size-3.5" />
+              </button>
+            )}
           </div>
 
-          {columnGroups.map(({ key, label, columns }) => {
-            const cells = columns
-              .map((col) =>
-                row.getAllCells().find((c) => c.column.id === col.id),
-              )
-              .filter((cell): cell is NonNullable<typeof cell> => {
-                if (!cell) return false;
-                const value = cell.getValue();
-                return value !== null && value !== undefined && value !== "";
-              });
-
-            if (cells.length === 0) return null;
-
+          {/* ── heading: the first column ── */}
+          {headingGroups.map(({ key, label, columns }) => {
+            const value = renderCells(columns);
+            if (!value) return null;
             return (
               <div key={key} className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-                  {label}
-                </span>
-                <span className="flex min-w-0 flex-wrap items-center gap-1 text-xs">
-                  {cells.map((cell, i) => {
-                    const meta = cell.column.columnDef.meta;
-                    const isLast = i === cells.length - 1;
-
-                    return (
-                      <span
-                        key={cell.column.id}
-                        className="flex min-w-0 max-w-full items-center gap-1"
-                      >
-                        {meta?.prefix && (
-                          <span className="shrink-0 text-muted-foreground">
-                            {meta.prefix}
-                          </span>
-                        )}
-                        <span className="min-w-0 truncate">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </span>
-                        {meta?.suffix && (
-                          <span className="shrink-0 text-muted-foreground">
-                            {meta.suffix}
-                          </span>
-                        )}
-                        {!isLast && (
-                          <span className="mx-0.5 shrink-0 text-muted-foreground">
-                            ·
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </span>
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <span className="flex min-w-0 flex-wrap items-center gap-1 text-base font-semibold">{value}</span>
               </div>
             );
           })}
+
+          {/* ── the other fields ── */}
+          {fieldGroups.length > 0 && (
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {fieldGroups.map(({ key, label, columns }) => {
+                const value = renderCells(columns);
+                if (!value) return null;
+                return (
+                  <div
+                    key={key}
+                    className={cn(
+                      "flex min-w-0 flex-col gap-0.5",
+                      columns.some((col) => col.columnDef.meta?.cardWide) && "col-span-2",
+                    )}
+                  >
+                    <dt className="truncate text-xs text-muted-foreground">{label}</dt>
+                    <dd className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm">{value}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          )}
 
           {hasBottomStrip && (
             <div
@@ -332,24 +328,6 @@ export function DataListItem<TData>({
                 </DropdownMenu>
               )}
 
-              {hasDelete && (
-                <Button
-                  variant="destructive"
-                  type="button"
-                  size="sm"
-                  disabled={deletePending}
-                  onClick={() => {
-                    setDeletePending(true);
-                    Promise.resolve(onDelete!(eligibleForDelete)).finally(() =>
-                      setDeletePending(false),
-                    );
-                  }}
-                  className="ml-auto"
-                >
-                  <Trash2 className="mr-1 h-3 w-3" />
-                  {tc("delete")}
-                </Button>
-              )}
             </div>
           )}
         </div>

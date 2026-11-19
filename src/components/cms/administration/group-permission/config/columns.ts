@@ -1,6 +1,85 @@
 import type { ColumnConfig } from "@/framework/components/data-view/core/ui/createColumnsFromConfig";
 import { describeGrantResource, isGrantableAction } from "@/app/[locale]/cms/grantablePermissions";
 
+// ✓ / ✕ badges for the permission flags (grid and cards), shown only where the flag applies
+// (record permissions for a resource, "Allowed" for an action), and the type as a badge.
+type Row = Parameters<NonNullable<ColumnConfig["accessorFn"]>>[0];
+
+/** ✓ granted (green) / ✕ not granted (grey), named by the permission. */
+const grantBadges = (en: string, ro: string): ColumnConfig["selectOptions"] => (locale) => {
+  const name = locale === "ro" ? ro : en;
+  return [
+    { value: "true", label: `✓ ${name}`, tone: "success" },
+    { value: "false", label: `✕ ${name}`, tone: "neutral" },
+  ];
+};
+
+/** A permission flag on the card, shown only where it applies (empty values are left out). */
+const permissionCard = (
+  field: string,
+  key: "canRead" | "canAdd" | "canUpdate" | "canDelete" | "allowed",
+  en: string,
+  ro: string,
+  appliesTo: "resource" | "action",
+  first = false,
+): ColumnConfig => ({
+  field,
+  label: { en, ro },
+  type: "boolean",
+  sortable: false,
+  filterable: false,
+  accessorFn: (row: Row) =>
+    grantType(row) === appliesTo ? !!row[key] : null,
+  selectOptions: grantBadges(en, ro),
+  group: "permissions",
+  cardWide: true,
+  ...(first ? { groupLabel: { en: "Permissions", ro: "Permisiuni" } } : {}),
+});
+
+/** ✓ Yes (green) / ✕ No (grey), for the grid, where the column header names the permission. */
+const yesNoBadges: ColumnConfig["selectOptions"] = (locale) => [
+  { value: "true", label: locale === "ro" ? "✓ Da" : "✓ Yes", tone: "success" },
+  { value: "false", label: locale === "ro" ? "✕ Nu" : "✕ No", tone: "neutral" },
+];
+
+/** Which grant a row is: an action (allowed or not) or a resource (read/add/modify/delete). */
+const grantType = (row: Row) => (isGrantableAction(row.resourceId) ? "action" : "resource");
+
+const typeBadges: ColumnConfig["selectOptions"] = (locale) => [
+  { value: "resource", label: locale === "ro" ? "Resursă" : "Resource", tone: "info" },
+  { value: "action", label: locale === "ro" ? "Acțiune" : "Action", tone: "warning" },
+];
+
+/** The form field a permission column edits (the form is keyed in snake_case). */
+const FORM_FIELD = {
+  canRead: "can_read",
+  canAdd: "can_add",
+  canUpdate: "can_update",
+  canDelete: "can_delete",
+  allowed: "allowed",
+} as const;
+
+/**
+ * A grid permission column: a badge where the flag applies, empty where it doesn't. In edit
+ * mode it edits its form field like a plain boolean column; the badge reads an unsaved edit
+ * (keyed by the form field) before the saved value.
+ */
+const permissionColumn = (
+  field: keyof typeof FORM_FIELD,
+  en: string,
+  ro: string,
+  appliesTo: "resource" | "action",
+): ColumnConfig => ({
+  field,
+  label: { en, ro },
+  type: "boolean",
+  size: 110,
+  editingField: FORM_FIELD[field],
+  accessorFn: (row: Row) =>
+    grantType(row) === appliesTo ? !!(row[FORM_FIELD[field]] ?? row[field]) : null,
+  selectOptions: yesNoBadges,
+});
+
 export const groupPermissionColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", size: 70 },
   // Not shown — exists only so the groups→permissions relation tab can
@@ -34,45 +113,22 @@ export const groupPermissionColumns: ColumnConfig[] = [
   {
     field: "resourceType",
     label: { en: "Type", ro: "Tip" },
-    type: "text",
-    size: 110,
-    accessorFn: (row) =>
-      isGrantableAction(row.resourceId) ? "action" : "resource",
+    type: "select",
+    size: 120,
+    accessorFn: grantType,
+    selectOptions: typeBadges,
   },
-  {
-    field: "canRead",
-    label: { en: "Read", ro: "Citire" },
-    type: "boolean",
-    size: 90,
-  },
-  {
-    field: "canAdd",
-    label: { en: "Add", ro: "Adăugare" },
-    type: "boolean",
-    size: 90,
-  },
-  {
-    field: "canUpdate",
-    label: { en: "Modify", ro: "Modificare" },
-    type: "boolean",
-    size: 90,
-  },
-  {
-    field: "canDelete",
-    label: { en: "Delete", ro: "Ștergere" },
-    type: "boolean",
-    size: 90,
-  },
-  {
-    field: "allowed",
-    label: { en: "Allowed", ro: "Permis" },
-    type: "boolean",
-    size: 90,
-  },
+  permissionColumn("canRead", "Read", "Citire", "resource"),
+  permissionColumn("canAdd", "Add", "Adăugare", "resource"),
+  permissionColumn("canUpdate", "Modify", "Modificare", "resource"),
+  permissionColumn("canDelete", "Delete", "Ștergere", "resource"),
+  permissionColumn("allowed", "Allowed", "Permis", "action"),
 ];
 
-// List/card presentation — mirrors the table fields, grouped and labeled
-// for the card layout.
+// Card presentation: the resource as the heading, its type as a badge, and the permissions
+// that apply to it (record permissions for a resource, "Allowed" for an action) as a row of
+// ✓ / ✕ badges. Card-only columns (card*) have their own ids: a column shared with the grid
+// keeps the grid's cell renderer, and these render as badges.
 export const groupPermissionListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
   {
@@ -92,54 +148,23 @@ export const groupPermissionListColumns: ColumnConfig[] = [
   },
   {
     field: "resourceLabel",
+    cardTitle: true,
     label: { en: "Resource", ro: "Resursă" },
     type: "text",
     accessorFn: (row, locale) => describeGrantResource(row.resourceId, locale),
-    group: "resource",
-    groupLabel: { en: "Resource", ro: "Resursă" },
   },
   {
-    field: "resourceType",
+    field: "cardType",
     label: { en: "Type", ro: "Tip" },
-    type: "text",
-    accessorFn: (row) =>
-      isGrantableAction(row.resourceId) ? "action" : "resource",
-    group: "resource",
+    type: "select",
+    sortable: false,
+    filterable: false,
+    accessorFn: grantType,
+    selectOptions: typeBadges,
   },
-  {
-    field: "canRead",
-    label: { en: "Read", ro: "Citire" },
-    type: "boolean",
-    group: "permissions",
-    groupLabel: { en: "Permissions", ro: "Permisiuni" },
-    prefix: { en: "Read:", ro: "Citire:" },
-  },
-  {
-    field: "canAdd",
-    label: { en: "Add", ro: "Adăugare" },
-    type: "boolean",
-    group: "permissions",
-    prefix: { en: "Add:", ro: "Adăugare:" },
-  },
-  {
-    field: "canUpdate",
-    label: { en: "Modify", ro: "Modificare" },
-    type: "boolean",
-    group: "permissions",
-    prefix: { en: "Modify:", ro: "Modificare:" },
-  },
-  {
-    field: "canDelete",
-    label: { en: "Delete", ro: "Ștergere" },
-    type: "boolean",
-    group: "permissions",
-    prefix: { en: "Delete:", ro: "Ștergere:" },
-  },
-  {
-    field: "allowed",
-    label: { en: "Allowed", ro: "Permis" },
-    type: "boolean",
-    group: "permissions",
-    prefix: { en: "Allowed:", ro: "Permis:" },
-  },
+  permissionCard("cardRead", "canRead", "Read", "Citire", "resource", true),
+  permissionCard("cardAdd", "canAdd", "Add", "Adăugare", "resource"),
+  permissionCard("cardUpdate", "canUpdate", "Modify", "Modificare", "resource"),
+  permissionCard("cardDelete", "canDelete", "Delete", "Ștergere", "resource"),
+  permissionCard("cardAllowed", "allowed", "Allowed", "Permis", "action"),
 ];

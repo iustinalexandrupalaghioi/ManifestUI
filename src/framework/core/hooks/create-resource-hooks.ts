@@ -32,7 +32,7 @@ export function createResourceHooks<
   const resolvedSplitConfig = { ...DEFAULT_SPLIT_CONFIG, ...splitConfig }
 
   const keys = createKeys(config)
-  const { useAddForm, useDetailForm, useDetailPageForm } = createFormHooks(
+  const { useAddForm, useDetailForm, useDetailPageForm, toFormValues } = createFormHooks(
     config,
     keys
   )
@@ -63,6 +63,7 @@ export function createResourceHooks<
     useAddForm,
     useDetailForm,
     useDetailPageForm,
+    toFormValues,
 
     actionForms: config.actionForms ?? [],
   }

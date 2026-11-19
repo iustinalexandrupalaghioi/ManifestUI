@@ -1,4 +1,5 @@
 import TableCellContent from "@/framework/components/data-view/core/ui/TableCellContent";
+import type { BadgeRule } from "./ValueBadge";
 import type { ColumnType } from "@/framework/components/data-view/features/filtering/filters";
 import type { AggregateFunction } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
@@ -38,6 +39,15 @@ export interface ColumnConfig {
   /** Card-only text shown before / after the value, e.g. "$" or "cm". */
   prefix?: TranslatableText;
   suffix?: TranslatableText;
+  /**
+   * Conditional badges: the first rule the row matches shows the cell as a badge in its tone
+   * (any column type). E.g. `{ field: "stock", op: "lt", value: 5, tone: "danger" }`.
+   */
+  badges?: BadgeRule<TranslatableText>[];
+  /** Cards: this column is the card's heading, above the other fields. */
+  cardTitle?: boolean;
+  /** Cards: the field spans both columns of the card's field grid. */
+  cardWide?: boolean;
 }
 
 const DEFAULT_SIZE_BY_TYPE: Record<ColumnType, number> = {
@@ -92,6 +102,11 @@ export function createColumnsFromConfig<TItem>(
           : undefined,
         prefix: col.prefix ? resolveLabel(col.prefix, locale) : undefined,
         suffix: col.suffix ? resolveLabel(col.suffix, locale) : undefined,
+        ...(col.badges?.length
+          ? { badges: col.badges.map((rule) => ({ ...rule, label: rule.label ? resolveLabel(rule.label, locale) : undefined })) }
+          : {}),
+        ...(col.cardTitle ? { cardTitle: true } : {}),
+        ...(col.cardWide ? { cardWide: true } : {}),
       },
     };
   });
@@ -126,7 +141,11 @@ export function mergeColumnsById<T extends { id?: string; meta?: object }>(table
     const listCol = c.id ? listById.get(c.id) : undefined;
     if (!listCol) return c;
     listById.delete(c.id);
-    return { ...c, meta: { ...c.meta, ...listCol.meta } };
+    // Badges stay per view: the grid keeps its own, the cards get the card column's
+    // (an explicit empty list when it has none, so the grid's don't show in cards).
+    const tableBadges = (c.meta as { badges?: unknown } | undefined)?.badges;
+    const cardBadges = (listCol.meta as { badges?: unknown } | undefined)?.badges ?? [];
+    return { ...c, meta: { ...c.meta, ...listCol.meta, badges: tableBadges, cardBadges } };
   });
   return [...merged, ...listById.values()];
 }

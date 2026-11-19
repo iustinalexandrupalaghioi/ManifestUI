@@ -107,14 +107,14 @@ export const relationColumns: ColumnConfig[] = [
 export const relationListColumns: ColumnConfig[] = [
   { field: "id", label: { en: "Id", ro: "Id" }, type: "number", hidden: true },
   {
-    field: "first_name",
+    field: "first_name", cardTitle: true,
     label: { en: "First name", ro: "Prenume" },
     type: "text",
     group: "name",
     groupLabel: { en: "Name", ro: "Nume" },
   },
   {
-    field: "last_name",
+    field: "last_name", cardTitle: true,
     label: { en: "Last name", ro: "Nume" },
     type: "text",
     group: "name",

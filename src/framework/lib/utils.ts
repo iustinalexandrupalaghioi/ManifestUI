@@ -30,7 +30,9 @@ export const formatByType = (
   options?: Enum[],
 ): string => {
   if (value == null || value === "") return "";
-  if (type === "boolean") return value ? "Yes" : "No";
+  // A boolean column may name its values (selectOptions keyed "true" / "false").
+  if (type === "boolean")
+    return options?.find((o) => o.value === String(!!value))?.label ?? (value ? "Yes" : "No");
   if (type === "select")
     return options?.find((o) => o.value === value)?.label ?? String(value);
   if (type === "date") return format(new Date(value as string), "dd-MM-yyyy");

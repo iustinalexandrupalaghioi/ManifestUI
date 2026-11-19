@@ -14,6 +14,8 @@ import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
 import { useFormPageContext } from "../../page/FormPage";
 
 export interface FormHeaderProps {
+  /** The sticky header's background and spacing (a dialog passes its own surface). */
+  surfaceClassName?: string;
   children: ReactNode;
   className?: string;
   prevPath?: string;
@@ -29,6 +31,7 @@ export interface FormHeaderProps {
 export function FormHeader({
   children,
   className,
+  surfaceClassName,
   prevPath,
   nextPath,
   firstPath,
@@ -60,12 +63,14 @@ export function FormHeader({
   };
 
   return (
-    <div className="sticky top-0 z-20 mb-2 flex flex-col bg-background">
-      {toolbar && <div className="h-10 shrink-0">{toolbar}</div>}
+    // Sticky with its own top padding, so nothing scrolls into view above it.
+    <div className={cn("sticky top-0 z-20 mb-2 flex flex-col bg-background pt-3", surfaceClassName)}>
+      {toolbar && <div className="shrink-0 pb-2">{toolbar}</div>}
       <div
         className={cn(
-          "flex items-center justify-between bg-background py-1",
+          "flex items-center justify-between py-1",
           className,
+  surfaceClassName,
         )}
       >
         <h1 className="font-semibold text-primary">{children}</h1>

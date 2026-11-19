@@ -371,6 +371,24 @@ Steps to add a new one, say `projects`:
 `groupable`, `aggregatable` (with `defaultAggregate`), `selectOptions` for enums, `size`,
 `prefix`/`suffix`, and visibility flags `hidden`, `navigationHidden`, `pickupHidden`.
 
+An enum option can take a `tone` (`neutral`, `info`, `success`, `warning`, `danger`, or a custom
+colour as `#rrggbb`, drawn as a soft tint with readable text): the value
+then shows as a coloured badge in grid cells, cards and filter chips. A `boolean` column can name its
+values with `selectOptions` keyed `"true"` / `"false"` (site pages show a green "Published" or a grey
+"Draft"). Options without a tone stay plain text. An option's `label` can be written per language
+(`{ value: "true", label: { en: "Published", ro: "Publicată" }, tone: "success" }`).
+Any column can also take conditional `badges`: rules tested in order on the row, the first match
+showing the cell as a badge in its tone (`{ field: "stock", op: "lt", value: 5, tone: "danger" }`;
+without `field` the column's own value is tested, and `label` replaces the cell's text). Operators:
+`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `contains`, `set`, `empty`. The grid and the cards keep their own
+rules: a column in both uses its grid column's `badges` in the grid and its card column's in the cards.
+
+Card columns also lay out the card: `cardTitle: true` makes a column the card's heading (shown
+large at the top), the other columns form a two-column label/value grid, and `cardWide: true`
+lets a field span both columns. Columns sharing a `group` show as one field under `groupLabel`.
+A card has no delete button of its own: select cards and use the toolbar's **Delete** (or the
+context menu).
+
 `resource.tsx` → `dataView` places them:
 
 - **`overview`** — the resource's list page. `dataTableColumns` for the grid and
@@ -378,6 +396,19 @@ Steps to add a new one, say `projects`:
   by ID). `features` switches tools on or off (sorting, filtering, quickSearch, grouping,
   aggregates, saved views, the grid/cards toggle, card list, resizing, pinning, the column
   manager, selection, inline editing). `slots` adds components around the grid.
+
+  A list page has one toolbar in the page, under the view row (view name, save view, reset view):
+  Back · **Add**, Open, Edit (inline editing), Delete, Actions ▾, ⋯ · search, Filters, Sort ·
+  "N selected · M total" and the Cards | Table toggle (an embedded list, in a relation tab or a
+  layout `list`, has the same bar without Back). A record page's toolbar has Back · **Save**
+  (also Ctrl/⌘+S), Reload, Add, Delete, Actions ▾, ⋯ and "Unsaved changes". Each button shows only
+  when its feature and permission allow it. The navbar holds only the menu, the breadcrumb,
+  language, theme and the account menu. It's neutral by default; `NAVBAR_TONE = "teal"` in
+  `src/components/cms/constants.ts` makes it a dark teal bar with white text.
+  A link in `src/components/cms/MenuItems.tsx` can be live: `type: "live"` with
+  `useLiveNumber: () => useResourceCount("users")` shows the resource's row count on its tile in
+  the CMS home and beside it in the ☰ menu. It's counted by the resource's own aggregates action,
+  so only users who can read the resource see it, and it refreshes when rows change.
 - **`pickup`** — the dialog that opens from a relationship field to pick a record; its own
   columns, features and default view.
 - **Default views** are config, not code: `overview.defaultView`, `overview.navigationView`
@@ -406,6 +437,13 @@ Grouping and totals need server support: `data.fetchGroupAggregates` / `data.fet
 - **`free`** — a tree of nodes under `root`: containers (`grid`, `row`, `column`, `card`,
   `tabs`), fields, `list` (related records), `heading`, `text`, `divider`, `spacer`, `slot`,
   `button`/`buttons` and `pickupvalue`. ManifestUI Studio's Form Designer produces this layout.
+
+  Containers nest freely, so a record screen can be laid out entirely in the form: for example a
+  `grid` whose cells are a `card` of fields, a `card` holding `tabs` whose panes are related
+  `list`s, and another such card next to it. A tab pane made only of lists, text and containers
+  loads the first time it's opened; panes with fields stay mounted so their values survive.
+  Enter in a related list (search, filters, inline editing) never submits the record. The
+  classic screen (the form, then `detail.tabs` below it) works as before; use either, or both.
 
 Field types: `input` (`inputType` text/number/email/tel/password), `textarea`, `switch`,
 `select`, `combobox`, `date`, `time`, `datetime`, `readonly`, `json`, `file`, `custom`, plus

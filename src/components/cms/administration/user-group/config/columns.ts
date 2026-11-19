@@ -50,7 +50,7 @@ export const userGroupListColumns: ColumnConfig[] = [
   { field: "groupId", label: { en: "Group Id", ro: "Id grup" }, type: "number", hidden: true },
   { field: "userId", label: { en: "User Id", ro: "Id utilizator" }, type: "text", hidden: true },
   {
-    field: "userFullName",
+    field: "userFullName", cardTitle: true,
     label: { en: "Full name", ro: "Nume complet" },
     type: "text",
     columnName: "fullName",

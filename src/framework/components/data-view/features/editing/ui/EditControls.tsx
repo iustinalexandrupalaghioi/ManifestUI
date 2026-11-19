@@ -55,9 +55,28 @@ export function EditControls() {
 
   const handleDiscard = () => store.getState().discardAll();
 
+  // Edit is a toggle: on, cells are edited in the list; off again once the edits are saved or discarded.
+  const toggle = (
+    <Button
+      variant="outline"
+      size="sm"
+      type="button"
+      aria-pressed={editMode}
+      aria-label={t("edit")}
+      disabled={editMode && (isDirty || saving)}
+      onClick={() => store.getState().setEditMode(!editMode)}
+      title={editMode && isDirty ? t("finishEditing") : t("editHint")}
+      className="h-10 aria-pressed:border-link aria-pressed:bg-selected aria-pressed:text-link sm:h-8"
+    >
+      <PencilIcon />
+      <span className="hidden sm:inline">{t("edit")}</span>
+    </Button>
+  );
+
   if (editMode) {
     return (
       <div className="flex items-center gap-1">
+        {toggle}
         <Button
           variant="default"
           size="sm"
@@ -99,16 +118,5 @@ export function EditControls() {
     );
   }
 
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      type="button"
-      onClick={() => store.getState().setEditMode(true)}
-      title={t("edit")}
-    >
-      <PencilIcon />
-      {t("edit")}
-    </Button>
-  );
+  return toggle;
 }

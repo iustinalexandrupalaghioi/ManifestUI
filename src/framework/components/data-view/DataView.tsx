@@ -32,6 +32,7 @@ function DataView<TData, TValue>({
         openOnRowClick={props.openOnRowClick}
         quickSearchEnabled={props.quickSearchEnabled ?? true}
         slotId={props.slotId}
+        toolbar={props.toolbar}
         preFilters={props.preFilters ?? []}
         hasTable={props.initialColumnVisibility !== undefined}
         hasList={props.initialListColumnVisibility !== undefined}

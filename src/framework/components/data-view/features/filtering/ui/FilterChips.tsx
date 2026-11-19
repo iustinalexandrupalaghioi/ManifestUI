@@ -11,6 +11,7 @@ import { ChevronDown, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useDataViewCore } from "../../../core/stores/DataViewProvider"
 import { getOperatorDisplay, type FilterRule } from "../filters"
+import { findOption, ToneDot } from "../../../core/ui/ValueBadge"
 
 const MAX_VISIBLE = 2
 
@@ -43,7 +44,12 @@ function formatChipValue(
   const { showValue, valueWrap, fixedValue: rawFixedValue } = getOperatorDisplay(
     rule.operator,
   )
-  const fixedValue = translateFixedValue(rawFixedValue, t, tc)
+  // A boolean column with named values: its own labels instead of Yes / No.
+  const named =
+    rule.columnType === "boolean" && (rawFixedValue === "Yes" || rawFixedValue === "No")
+      ? findOption(rawFixedValue === "Yes", selectOptions)?.label
+      : undefined
+  const fixedValue = named ?? translateFixedValue(rawFixedValue, t, tc)
 
   if (showValue === false) return null
   if (fixedValue) return fixedValue
@@ -86,6 +92,14 @@ function FilterChip({
   const tc = useTranslations("Common")
   const { symbol } = getOperatorDisplay(rule.operator)
   const value = formatChipValue(rule, t, tc, selectOptions)
+  // One toned value (a select's value, or a boolean's is true / is false): its colour as a dot.
+  const { fixedValue } = getOperatorDisplay(rule.operator)
+  const toned =
+    rule.columnType === "boolean" && (fixedValue === "Yes" || fixedValue === "No")
+      ? findOption(fixedValue === "Yes", selectOptions)
+      : !Array.isArray(rule.value) || rule.value.length === 1
+        ? findOption(Array.isArray(rule.value) ? rule.value[0] : rule.value, selectOptions)
+        : undefined
 
   return (
     <Badge
@@ -98,6 +112,7 @@ function FilterChip({
     >
       <span className="font-medium">{rule.columnLabel}</span>
       <span className="text-primary">{symbol}</span>
+      {toned?.tone && <ToneDot tone={toned.tone} />}
       {value && <span className="max-w-30 truncate">{value}</span>}
       {!locked && (
         <button

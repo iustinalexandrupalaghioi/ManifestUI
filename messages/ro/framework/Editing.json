@@ -1,5 +1,7 @@
 {
   "edit": "Editare",
   "save": "Salvează",
-  "discard": "Renunță"
+  "discard": "Renunță",
+  "editHint": "Editează celulele din listă",
+  "finishEditing": "Salvează sau renunță mai întâi la modificări"
 }

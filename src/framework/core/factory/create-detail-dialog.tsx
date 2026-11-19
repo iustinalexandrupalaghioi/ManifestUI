@@ -35,7 +35,6 @@ export function createDetailDialog<
 
   const { idField, noun, labels, tabs, relations } = hooks;
 
-  const editingEnabled = config.dataView?.overview?.features?.edit !== false;
 
   return function DetailDialog({
     item,
@@ -56,7 +55,8 @@ export function createDetailDialog<
       gender: labels.gender,
     };
 
-    const canUpdate = resolvePermission(config.permissions?.update) && editingEnabled;
+    // `features.edit` is inline editing in the list; a record is editable with the update permission.
+    const canUpdate = resolvePermission(config.permissions?.update);
 
     const { updateAsync, isUpdating, error, clearError, resetMutation } =
       hooks.useMutations();
@@ -123,9 +123,9 @@ export function createDetailDialog<
               title={resolvedLabels.singular}
               isOpen={formOpen}
               setOpen={setFormOpen}
-              titleClassName="dark:bg-card"
+              // The dialog's own surface, and no page top padding.
+              headerSurfaceClassName="bg-popover pt-0"
               collapsibleClassName="px-4"
-              collapsibleTriggerClassName="dark:bg-card"
               plainWrapperClassName="px-4"
               formRowLeft={renderDetailSlot(config.detailSlots?.left, item)}
               formRowRight={renderDetailSlot(config.detailSlots?.right, item)}

@@ -19,7 +19,6 @@ import {
 } from "@/framework/components/data-view/features/views";
 import { BaseDialog } from "@/framework/components/dialog/BaseDialog";
 import { Button } from "@/components/ui/button";
-import ToolbarActions from "@/framework/components/toolbar/ToolbarActions";
 import { Loader2Icon, RotateCcwIcon } from "lucide-react";
 import {
   memo,
@@ -36,6 +35,7 @@ import type { ResourceComponentsConfig } from "../../types/resource-components-t
 import type { ResourceId } from "../../types/resource-hook-types";
 import type { ResourceHooks } from "../hooks/create-resource-hooks";
 import { getItemId } from "../resource-id";
+import { TOOLBAR_BUTTON } from "@/framework/components/toolbar/Toolbar";
 import { resolveViewDefaults } from "@/framework/components/data-view/features/views/viewDefaults";
 
 export function createPickupDialog<
@@ -80,7 +80,6 @@ export function createPickupDialog<
       : resolvedPlural;
 
     const tableId = `${overviewKey}-pickup`;
-    const toolbarSlotId = `${tableId}-toolbar`;
 
     const viewDefaults = useMemo(
       () =>
@@ -167,23 +166,6 @@ export function createPickupDialog<
         onClose={() => setOpen(false)}
         className="gap-2 bg-background md:max-w-5xl"
       >
-        <ToolbarActions slotId={toolbarSlotId}>
-          <Button
-            title={tt("refresh")}
-            variant="outline"
-            size="icon"
-            className="size-7"
-            type="button"
-            disabled={isFetching}
-            onClick={() => refetch()}
-          >
-            {isRefetching ? (
-              <Loader2Icon className="size-3 animate-spin" />
-            ) : (
-              <RotateCcwIcon className="size-3" />
-            )}
-          </Button>
-        </ToolbarActions>
 
         <div className="flex min-h-0 w-full flex-1 flex-col px-4">
           <DataView
@@ -192,7 +174,22 @@ export function createPickupDialog<
             isLoading={isLoading}
             defaultViewName={resolvedViewName}
             tableId={tableId}
-            slotId={toolbarSlotId}
+            toolbar={
+              // The same bar as a list page: its action is Refresh (a record is picked from its row).
+              <Button
+                title={tt("refresh")}
+                aria-label={tt("refresh")}
+                variant="outline"
+                size="sm"
+                className={TOOLBAR_BUTTON}
+                type="button"
+                disabled={isFetching}
+                onClick={() => refetch()}
+              >
+                {isRefetching ? <Loader2Icon className="animate-spin" aria-hidden /> : <RotateCcwIcon aria-hidden />}
+                <span className="hidden sm:inline">{tt("refresh")}</span>
+              </Button>
+            }
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}

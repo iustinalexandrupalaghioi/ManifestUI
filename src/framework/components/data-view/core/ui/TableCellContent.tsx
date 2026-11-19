@@ -6,13 +6,16 @@ import type { ColumnType } from "../../features/filtering/filters";
 import { getEditingStore } from "../../features/editing/editing.store";
 import { EditableCell } from "../../features/editing/ui/EditableCell";
 import { useDataViewCore } from "../stores/DataViewProvider";
+import { useActiveMode } from "../stores/ViewModeStore";
 import { CellValueDisplay } from "./CellValueDisplay";
+import { matchBadge, ValueBadge } from "./ValueBadge";
 
 const TableCellContent =
   (type: ColumnType, options?: Enum[], bucket?: string) =>
   (context: CellContext<any, unknown>) => {
     const { getValue, row, column, cell } = context;
     const { tableId } = useDataViewCore();
+    const mode = useActiveMode(tableId);
     const store = getEditingStore(tableId);
     const editMode = store((s) => s.editMode);
     const editingCell = store((s) => s.editingCell);
@@ -39,6 +42,8 @@ const TableCellContent =
       editingCell?.rowId === row.id &&
       editingCell?.columnId === column.id
     ) {
+      // A named yes/no with no value here (a flag that doesn't apply to this row): nothing to edit.
+      if (type === "boolean" && options?.length && value == null) return null;
       if (editableField) return <EditableCell cell={cell} />;
       // Clicked "Edit" on a column with no matching field — show it the
       // same way EditableCell shows a row-level readonly field, instead of
@@ -48,7 +53,14 @@ const TableCellContent =
       );
     }
 
-    const content = (
+    // A conditional badge (the first rule the row, with its unsaved edits, matches), with the
+    // rules of the view it's shown in: cards use the card column's when the column has both.
+    const meta = column.columnDef.meta;
+    const rules = mode === "list" && meta?.cardBadges ? meta.cardBadges : meta?.badges;
+    const rule = matchBadge(rules, { ...(row.original as Record<string, unknown>), ...pendingRow }, value);
+    const content = rule ? (
+      <ValueBadge option={{ value: String(value ?? ""), label: rule.label || label || String(value ?? ""), tone: rule.tone }} />
+    ) : (
       <CellValueDisplay value={value} type={type} options={options} bucket={bucket} />
     );
 

@@ -4,6 +4,7 @@ import { ActionFormDialog } from "@/framework/components/dialog/ActionFormDialog
 import { DeleteDialog } from "@/framework/components/dialog/DeleteDialog";
 import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { FormPage } from "@/framework/components/page/FormPage";
+import { recordTitle, usePublishRecordTitle } from "@/framework/components/page/recordTitle";
 import Loader from "@/framework/components/partials/Loader";
 import {
   RecordScreen,
@@ -46,7 +47,6 @@ export function createDetailPage<
   const Form = config.Form;
   if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
 
-  const editingEnabled = config.dataView?.overview?.features?.edit !== false;
   const deleteToolbarEnabled = resolveResourceAction(config.delete).toolbarEnabled;
   const addToolbarEnabled = resolveResourceAction(config.add).toolbarEnabled;
 
@@ -79,7 +79,8 @@ export function createDetailPage<
 
     usePermissions();
 
-    const canUpdate = resolvePermission(config.permissions?.update) && editingEnabled;
+    // `features.edit` is inline editing in the list; a record is editable with the update permission.
+    const canUpdate = resolvePermission(config.permissions?.update);
     const canDelete =
       resolvePermission(config.permissions?.delete) && deleteToolbarEnabled;
     const canAdd = resolvePermission(config.permissions?.add) && addToolbarEnabled;
@@ -164,6 +165,8 @@ export function createDetailPage<
       ? getItemId<TId>(item as Record<string, unknown>, idField)
       : undefined;
     const formId = item ? `${noun}-${itemId}` : "";
+    // The navbar's breadcrumb names the record (not in the split view, where the list stays the page).
+    usePublishRecordTitle(isEmbedded || !item ? null : recordTitle(item, itemId));
 
     const { registryRef, hasFileChanges, onSave, onReset } =
       useRecordSave<TFormValues>({
@@ -254,15 +257,14 @@ export function createDetailPage<
           onOpenActionForm={setActiveActionKey}
           className={isEmbedded ? "h-full px-4" : undefined}
         >
-          {!isEmbedded && toolbarElement}
-
           <RecordFormShell
             hasTabs={hasTabs}
             title={resolvedLabels.singular}
             isOpen={formOpen}
             setOpen={setFormOpen}
             navProps={navProps}
-            toolbar={isEmbedded ? toolbarElement : undefined}
+            // In the sticky header, so it stays in view while the record scrolls.
+            toolbar={toolbarElement}
             formRowLeft={renderDetailSlot(config.detailSlots?.left, item)}
             formRowRight={renderDetailSlot(config.detailSlots?.right, item)}
             beforeForm={renderDetailSlot(config.detailSlots?.beforeForm, item)}

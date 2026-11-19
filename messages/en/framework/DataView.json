@@ -16,5 +16,13 @@
   "selectedCount": "{count} selected",
   "itemsCount": "{count} items",
   "listView": "List view",
-  "tableView": "Table view"
+  "tableView": "Table view",
+  "selectedOfTotal": "{selected} selected · {total} total",
+  "cards": "Cards",
+  "table": "Table",
+  "viewMode": "View",
+  "toolbar": "List actions",
+  "search": "Search",
+  "clearSearch": "Clear the search",
+  "openShort": "Open"
 }

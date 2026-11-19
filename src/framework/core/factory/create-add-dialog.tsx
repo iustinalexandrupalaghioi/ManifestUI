@@ -115,10 +115,10 @@ export function createAddDialog<
               hasTabs={hasAddTabs}
               isAddScreen
               title={resolvedLabels.new}
-              titleBadge={<span className="text-muted"> {tr("newItemBadge")}</span>}
-              titleClassName="dark:bg-card"
+              titleBadge={<span className="text-muted-foreground"> {tr("newItemBadge")}</span>}
+              // The dialog's own surface, and no page top padding.
+              headerSurfaceClassName="bg-popover pt-0"
               collapsibleClassName="px-4"
-              collapsibleTriggerClassName="dark:bg-card"
               isOpen={formOpen}
               setOpen={setFormOpen}
               form={<Form layout="grid" readOnly={!canAdd} />}

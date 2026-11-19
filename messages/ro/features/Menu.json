@@ -23,5 +23,10 @@
   "siteSettings": "Setări site",
   "siteSettingsDescription": "Editează antetul și subsolul site-ului public",
   "services": "Servicii",
-  "servicesDescription": "Serviciile afișate pe site, de exemplu într-un carusel de servicii"
+  "servicesDescription": "Serviciile afișate pe site, de exemplu într-un carusel de servicii",
+  "menu": "Meniu",
+  "openMenu": "Deschide meniul",
+  "home": "Acasă",
+  "breadcrumb": "Cale de navigare",
+  "newRecord": "Nou"
 }

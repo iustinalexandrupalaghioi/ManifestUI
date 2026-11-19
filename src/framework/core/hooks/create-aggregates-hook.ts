@@ -19,12 +19,15 @@ export function createAggregatesHook<
   return function useAggregates(
     rules: AggregateRule[] | undefined,
     filters: FilterRule[],
+    /** `retry: false` for a request that may be refused (a menu count without read permission). */
+    options: { retry?: boolean | number } = {},
   ) {
     const safeRules = rules ?? [];
     return useQuery({
       queryKey: keys.aggregates(safeRules, filters),
       queryFn: () => fetchAggregates!(safeRules, filters).then(unwrapAction),
       enabled: !!fetchAggregates && safeRules.length > 0,
+      ...(options.retry !== undefined ? { retry: options.retry } : {}),
     });
   };
 }
