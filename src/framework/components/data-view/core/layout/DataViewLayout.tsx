@@ -147,13 +147,7 @@ export function DataViewLayout({
       <div id={tableId} className="w-full overflow-hidden ps-2">
         {toolbar ? (
           <>
-            {/* ── Row A: the view (name, save, reset) ── */}
-            <div className="mb-2 flex min-w-0 items-center gap-2">
-              <ViewBar />
-              {features.map((f) => f.id !== "edit" && f.Toolbar && <f.Toolbar key={f.id} />)}
-            </div>
-
-            {/* ── Row B: the toolbar. Its parts are flex items of one bar: one line from `sm`
+            {/* ── Row A: the toolbar, at the top. Its parts are flex items of one bar: one line from `sm`
                  up; on phones it wraps into rows: actions · search · filters, sort, group,
                  totals (wrapping) · count and Cards | Table. ── */}
             <div
@@ -182,6 +176,12 @@ export function DataViewLayout({
                   <DataListModeToggle tableId={tableId} hasList={hasTable && hasList} labeled />
                 )}
               </div>
+            </div>
+
+            {/* ── Row B: the view (name, save, reset), under the toolbar ── */}
+            <div className="mb-2 flex min-w-0 items-center gap-2">
+              <ViewBar />
+              {features.map((f) => f.id !== "edit" && f.Toolbar && <f.Toolbar key={f.id} />)}
             </div>
           </>
         ) : (
