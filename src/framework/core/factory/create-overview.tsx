@@ -13,6 +13,7 @@ import { preFilterToFormKey, type FilterInput } from "@/framework/components/dat
 import { flattenFormFields } from "@/framework/components/form/lib/flattenFormFields";
 import Loader from "@/framework/components/partials/Loader";
 import { useTransitionRouter } from "@/framework/hooks/useTransitionRouter";
+import { backTargetForList } from "@/framework/hooks/navigationTrail";
 import { ActionResultError } from "@/framework/lib/actionResult";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -268,7 +269,15 @@ export function createOverview<
         deleteToolbarEnabled={canDeleteToolbar}
         onOpen={canRead && openToolbarEnabled ? (rows) => handleOpen(rows) : undefined}
         onAdd={canAdd ? handleAdd : undefined}
-        onBack={slotId ? undefined : () => router.back()}
+        onBack={
+          slotId
+            ? undefined
+            : () => {
+                const target = backTargetForList(routes.list);
+                if (target === "history") router.back();
+                else router.push(target);
+              }
+        }
         setRowSelection={setRowSelection}
         preFilters={preFilters}
         popOutUrl={popOutUrl}
