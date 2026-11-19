@@ -36,6 +36,10 @@ declare module "@tanstack/react-table" {
     groupLabel?: string;
     prefix?: string;
     suffix?: string;
+    /** Conditional badges, labels resolved (see ColumnConfig.badges). */
+    badges?: import("./ui/ValueBadge").BadgeRule[];
+    /** A column in both views: the card column's badges (the grid keeps `badges`). */
+    cardBadges?: import("./ui/ValueBadge").BadgeRule[];
     /** Cards: the card's heading (see ColumnConfig.cardTitle). */
     cardTitle?: boolean;
     /** Cards: spans the field grid's two columns. */

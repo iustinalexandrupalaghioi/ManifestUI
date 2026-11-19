@@ -25,12 +25,22 @@ export function resolveLabel(
 // like `createEnum()`/`grantableResourceOptions()` resolve `{ en, ro }`
 // labels lazily, at the point where each render boundary already has
 // `locale` in scope (createColumnsFromConfig, renderFieldInput, etc).
-export type EnumOptions = Enum[] | ((locale: string) => Enum[]);
+/**
+ * An option written once with a label per language, e.g.
+ * `{ value: "true", label: { en: "Published", ro: "Publicată" }, tone: "success" }`:
+ * a plain literal (what Studio generates and reads back), resolved per locale.
+ */
+export type EnumOption = Omit<Enum, "label"> & { label: TranslatableText };
+
+export type EnumOptions = EnumOption[] | ((locale: string) => Enum[]);
 
 export function resolveOptions(
   options: EnumOptions | undefined,
   locale: string,
 ): Enum[] | undefined {
   if (!options) return options;
-  return typeof options === "function" ? options(locale) : options;
+  if (typeof options === "function") return options(locale);
+  return options.map((option) =>
+    typeof option.label === "string" ? (option as Enum) : { ...option, label: resolveLabel(option.label, locale) },
+  );
 }

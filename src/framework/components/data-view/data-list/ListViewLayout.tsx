@@ -148,7 +148,8 @@ export function ListViewLayout({
           "flex min-h-0",
           position === "left" || position === "right" ? "flex-row" : "flex-col",
         )}
-        style={{ height: wrapperHeight || height || undefined }}
+        // An explicit height (a preview, an embedded list) wins; otherwise the room left in the window.
+        style={{ height: height || wrapperHeight || undefined }}
       >
         {hasAggregates && (position === "left" || position === "top") && (
           <ListSummaryBar

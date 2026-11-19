@@ -20,11 +20,18 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-/** Publishes the shown record's title while the calling component is mounted. */
+/**
+ * Publishes the shown record's title while the calling component is mounted. `null`
+ * publishes nothing (a record panel inside a page leaves the page's title alone), and
+ * unmounting clears only a title this component published.
+ */
 export function usePublishRecordTitle(title: string | null | undefined) {
   useEffect(() => {
-    set(title ?? null);
-    return () => set(null);
+    if (!title) return;
+    set(title);
+    return () => {
+      if (current === title) set(null);
+    };
   }, [title]);
 }
 

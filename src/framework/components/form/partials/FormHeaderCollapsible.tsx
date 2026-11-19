@@ -24,6 +24,8 @@ export interface FormHeaderCollapsibleProps {
   children: ReactNode;
   className?: string;
   triggerClassName?: string;
+  /** The sticky header's background and spacing (a dialog passes its own surface). */
+  surfaceClassName?: string;
   isOpen: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   prevPath?: string;
@@ -42,6 +44,7 @@ export function FormHeaderCollapsible({
   children,
   className,
   triggerClassName,
+  surfaceClassName,
   isOpen,
   setOpen,
   prevPath,
@@ -84,18 +87,19 @@ export function FormHeaderCollapsible({
       onOpenChange={setOpen}
       className={cn("flex flex-col", className)}
     >
-      <div className="sticky top-0 z-20 mb-4 flex flex-col bg-background">
-        {toolbar && <div className="h-10 shrink-0">{toolbar}</div>}
+      <div className={cn("sticky top-0 z-20 mb-4 flex flex-col bg-background pt-3", surfaceClassName)}>
+        {toolbar && <div className="shrink-0 pb-2">{toolbar}</div>}
         <div
           className={cn(
-            "flex w-full items-center bg-background py-1",
+            "flex w-full items-center py-1",
             triggerClassName,
+  surfaceClassName,
           )}
         >
           <CollapsibleTrigger className="flex cursor-pointer items-center gap-2">
             <span className="font-semibold text-primary">{title}</span>
             {isAddScreen && (
-              <span className="text-muted">{tr("newItemBadge")}</span>
+              <span className="text-muted-foreground">{tr("newItemBadge")}</span>
             )}
             <ChevronDown
               className={cn(

@@ -91,13 +91,12 @@ export function createAddPage<
           onSave={onSave}
           onReset={() => onReset(reset)}
         >
-          <FormPage.Toolbar />
-
           <RecordFormShell
+            toolbar={<FormPage.Toolbar />}
             hasTabs={hasAddTabs}
             isAddScreen
             title={resolvedLabels.new}
-            titleBadge={<span className="text-accent"> {tr("newItemBadge")}</span>}
+            titleBadge={<span className="text-muted-foreground"> {tr("newItemBadge")}</span>}
             isOpen={formOpen}
             setOpen={setFormOpen}
             form={<Form layout="grid" readOnly={!canAdd} />}

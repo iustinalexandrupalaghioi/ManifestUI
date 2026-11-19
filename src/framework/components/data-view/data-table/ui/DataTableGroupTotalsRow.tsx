@@ -61,7 +61,8 @@ export function DataTableGroupTotalsRow<TData>({
   const aggregateRow = lookupGroupAggregate(groupAggregateLookup, path);
   const leafColumns = table.getVisibleLeafColumns();
   const lastLeafColumnId = leafColumns.at(-1)?.id;
-  const pinnedLeftIds = table.getState().columnPinning.left ?? [];
+  // Visible pinned columns only: a hidden one (the grouping column) has no size, so counting it would break every offset after it.
+  const pinnedLeftIds = table.getLeftVisibleLeafColumns().map((column) => column.id);
 
   return (
     <CustomTableRow

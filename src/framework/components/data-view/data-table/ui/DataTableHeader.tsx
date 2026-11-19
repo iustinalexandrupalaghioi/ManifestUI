@@ -52,7 +52,8 @@ export function DataTableHeader({
 
   const lastLeafColumnId = table.getVisibleLeafColumns().at(-1)?.id;
   const lockedColumnIds = new Set(preFilters.map((p) => p.columnId));
-  const pinnedLeftIds = table.getState().columnPinning.left ?? [];
+  // Visible pinned columns only: a hidden one (the grouping column) has no size, so counting it would break every offset after it.
+  const pinnedLeftIds = table.getLeftVisibleLeafColumns().map((column) => column.id);
 
   const dragStateRef = useRef<DragState | null>(null);
 

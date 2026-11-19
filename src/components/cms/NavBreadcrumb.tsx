@@ -1,9 +1,11 @@
 "use client";
 
 import { Fragment } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useRecordTitle } from "@/framework/components/page/recordTitle";
+import { resolveLabel } from "@/framework/lib/resolveLabel";
+import { resourceDescriptors } from "@/app/[locale]/cms/resourceDescriptors";
 import { useMenuItems } from "./MenuItems";
 
 interface Crumb {
@@ -12,7 +14,7 @@ interface Crumb {
 }
 
 /**
- * Where the page is: `Module / Screen` on a list, `Screen / Record` on a
+ * Where the page is: `Module / Screen` on a list, `Module / Screen / Record` on a
  * record (its title comes from the record page). On phones only the last
  * part is shown, as the page title.
  */
@@ -21,14 +23,24 @@ export function NavBreadcrumb() {
   const sections = useMenuItems();
   const pathname = usePathname();
   const recordTitle = useRecordTitle();
+  const locale = useLocale();
 
-  // The menu link this page belongs to: the longest path that prefixes it.
-  let match: { module: string; name: string; path: string } | undefined;
+  // The page this path belongs to: the longest matching menu link, else a resource that
+  // isn't in the menu (opened from a relation, popped out of a list), by its list route.
+  const inside = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+  let match: { module?: string; name: string; path: string } | undefined;
   for (const section of sections) {
     for (const link of section.links) {
-      const inside = pathname === link.path || pathname.startsWith(`${link.path}/`);
-      if (inside && (!match || link.path.length > match.path.length)) {
+      if (inside(link.path) && (!match || link.path.length > match.path.length)) {
         match = { module: section.module, name: link.name, path: link.path };
+      }
+    }
+  }
+  if (!match) {
+    for (const descriptor of resourceDescriptors) {
+      const path = descriptor.routes.list;
+      if (inside(path) && (!match || path.length > match.path.length)) {
+        match = { name: resolveLabel(descriptor.plural, locale), path };
       }
     }
   }
@@ -36,8 +48,10 @@ export function NavBreadcrumb() {
 
   const rest = pathname.slice(match.path.length).replace(/^\/+/, "");
   const crumbs: Crumb[] = !rest
-    ? [{ label: match.module }, { label: match.name }]
+    ? [...(match.module ? [{ label: match.module }] : []), { label: match.name }]
     : [
+        // The module stays on a record too: Administration / Groups / Restricted access.
+        ...(match.module ? [{ label: match.module }] : []),
         { label: match.name, href: match.path },
         { label: rest === "add" ? t("newRecord") : (recordTitle ?? "…") },
       ];

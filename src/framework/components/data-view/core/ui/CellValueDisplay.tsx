@@ -30,8 +30,12 @@ export function CellValueDisplay({
     type === "boolean" ? findOption(value == null ? undefined : !!value, options) : findOption(value, options);
   if (option?.tone) return <ValueBadge option={{ ...option, tone: option.tone }} />;
 
-  if (type === "boolean")
+  if (type === "boolean") {
+    // A column that names its values (selectOptions) has no value to name here (e.g. a
+    // flag that doesn't apply to this row): an empty cell, not "No".
+    if (options?.length && value == null) return null;
     return option ? <span title={label}>{label}</span> : <BooleanDisplay value={value as boolean} title={label} />;
+  }
 
   if (type === "file") {
     const path = String(value ?? "");

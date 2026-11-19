@@ -20,6 +20,8 @@ interface RecordFormShellProps {
   setOpen: Dispatch<SetStateAction<boolean>>;
   navProps?: RecordFormNavProps;
   titleClassName?: string;
+  /** The sticky header's background and spacing (dialogs pass their own surface). */
+  headerSurfaceClassName?: string;
   collapsibleClassName?: string;
   collapsibleTriggerClassName?: string;
   plainWrapperClassName?: string;
@@ -42,6 +44,7 @@ export function RecordFormShell({
   setOpen,
   navProps,
   titleClassName,
+  headerSurfaceClassName,
   collapsibleClassName,
   collapsibleTriggerClassName,
   plainWrapperClassName,
@@ -65,6 +68,7 @@ export function RecordFormShell({
           setOpen={setOpen}
           className={collapsibleClassName}
           triggerClassName={collapsibleTriggerClassName}
+          surfaceClassName={headerSurfaceClassName}
           toolbar={toolbar}
           {...navProps}
         >
@@ -83,6 +87,7 @@ export function RecordFormShell({
     <>
       <FormPage.Title
         className={titleClassName}
+        surfaceClassName={headerSurfaceClassName}
         toolbar={toolbar}
         {...navProps}
       >

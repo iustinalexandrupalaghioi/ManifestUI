@@ -210,8 +210,13 @@ function OverviewToolbar<TData>({
 
   const items = (
     <>
-      <BackButton onBack={onBack} />
-      <Divider />
+      {/* Back only where there's somewhere to go back from (not in an embedded list). */}
+      {onBack && (
+        <>
+          <BackButton onBack={onBack} />
+          <Divider />
+        </>
+      )}
       {(addPath || onAdd) && <AddButton addPath={addPath} onAdd={onAdd} />}
       {onOpen &&
         (openUrl ? (
@@ -222,20 +227,23 @@ function OverviewToolbar<TData>({
             </Link>
           </Button>
         ) : (
+          // Several selected: they open one after another (the record page steps through them).
           <Button
             type="button"
             variant="outline"
             size="sm"
-            aria-label={t("open")}
+            aria-label={selectedCount > 1 ? t("openSelectedCount", { count: selectedCount }) : t("open")}
+            title={selectedCount > 1 ? t("openSelectedCount", { count: selectedCount }) : t("open")}
             className={TOOLBAR_BUTTON}
-            disabled={selectedCount !== 1}
+            disabled={selectedCount === 0}
             onClick={open}
           >
             <ExternalLinkIcon aria-hidden />
             <span className="hidden sm:inline">{t("open")}</span>
+            {selectedCount > 1 && <span className="text-xs tabular-nums opacity-80">{selectedCount}</span>}
           </Button>
         ))}
-      {dataView?.featureIds.has("editing") && <EditControls />}
+      {dataView?.featureIds.has("edit") && <EditControls />}
       {onDelete && <DeleteButton selectedRows={selectedRows} onDelete={onDelete} isDeleteEligible={isDeleteEligible} />}
       {children}
       {!!actions?.length && <ToolbarActionsMenu actions={actions} selectedRows={selectedRows} />}
@@ -277,7 +285,6 @@ function DetailToolbar<TData>({
   trailing,
   popOutUrl,
   preFilters,
-  slotId,
 }: ToolbarProps<TData>) {
   const t = useTranslations("Toolbar");
   const isNarrow = useIsNarrow();
@@ -318,12 +325,8 @@ function DetailToolbar<TData>({
     </>
   );
 
-  // `false`: placed inside another bar (the split view's title bar).
-  return slotId === false ? (
-    <div className="flex flex-wrap items-center gap-1.5">{items}</div>
-  ) : (
-    <Bar label={t("recordActions")}>{items}</Bar>
-  );
+  // The same bar on a record page and in a record panel beside a list.
+  return <Bar label={t("recordActions")}>{items}</Bar>;
 }
 
 /** Embedded lists: everything in one "More" menu. */

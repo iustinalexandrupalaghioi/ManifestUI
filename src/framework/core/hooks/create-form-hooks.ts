@@ -58,13 +58,29 @@ export function createFormHooks<
       }),
     ) as TFormValues;
 
+  /**
+   * The record with each form field present: a form keyed in snake_case (`group_id`)
+   * over a query that selects camelCase (`groupId`, Drizzle's property names) takes the
+   * camelCase value when the record has no key of the field's own name.
+   */
+  const formKeys = Object.keys((schema as z.ZodObject<z.ZodRawShape>).shape ?? {});
+  const camel = (key: string) => key.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+  const withFormKeys = (item: TItem) => {
+    const record = { ...(item as Record<string, unknown>) };
+    for (const key of formKeys) {
+      if (!(key in record) && camel(key) in record) record[key] = record[camel(key)];
+    }
+    return record;
+  };
+
   const parseItem = (item: TItem) => {
+    const record = withFormKeys(item);
     try {
-      return schema.parse(coerceNulls(item as Record<string, unknown>));
+      return schema.parse(coerceNulls(record));
     } catch {
       return coerceNulls({
         ...(emptyValues as Record<string, unknown>),
-        ...(item as Record<string, unknown>),
+        ...record,
       });
     }
   };
@@ -170,5 +186,8 @@ export function createFormHooks<
     };
   }
 
-  return { useAddForm, useDetailForm, useDetailPageForm };
+  /** A record (or a grid row with its edits) as the form's values, keyed like the form. */
+  const toFormValues = (item: TItem) => parseItem(item) as TFormValues;
+
+  return { useAddForm, useDetailForm, useDetailPageForm, toFormValues };
 }

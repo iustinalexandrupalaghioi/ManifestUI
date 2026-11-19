@@ -150,7 +150,7 @@ export function DataViewLayout({
             {/* ── Row A: the view (name, save, reset) ── */}
             <div className="mb-2 flex min-w-0 items-center gap-2">
               <ViewBar />
-              {features.map((f) => f.id !== "editing" && f.Toolbar && <f.Toolbar key={f.id} />)}
+              {features.map((f) => f.id !== "edit" && f.Toolbar && <f.Toolbar key={f.id} />)}
             </div>
 
             {/* ── Row B: the toolbar. Its parts are flex items of one bar: one line from `sm`

@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { useId, useState, type CSSProperties } from "react";
 import { useLocale } from "next-intl";
 import { ChevronDownIcon } from "lucide-react";
 import { cn } from "@/framework/lib/utils";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
-import type { CardNode, FlexAlign, FlexJustify, GridContainerNode, StackContainerNode, TabsNode } from "../../types/types";
+import type { CardNode, FlexAlign, FlexJustify, GridContainerNode, LayoutNode, StackContainerNode, TabsNode } from "../../types/types";
 import { gapValue, type ParentInfo } from "../../lib/placement";
 import { breakpointIndex, resolveResp } from "../../lib/responsive";
-import { parseAreas } from "../../lib/walkLayout";
+import { parseAreas, walkLayout } from "../../lib/walkLayout";
 import { useLayoutBreakpoint } from "./LayoutContext";
 import { renderButtons, renderChildren } from "./renderLayoutNodes";
 
@@ -147,10 +147,33 @@ export function Card({ node }: { node: CardNode<any> }) {
   );
 }
 
+/**
+ * Node types that hold no form state, so a pane made only of them can mount the
+ * first time it's opened (a tab of related lists doesn't load until it's shown).
+ */
+const LAZY_PANE_TYPES = new Set(["list", "heading", "text", "divider", "spacer", "grid", "row", "column", "card", "tabs"]);
+
+function paneMountsLazily(children: LayoutNode<any>[]) {
+  let lazy = true;
+  for (const child of children) {
+    walkLayout(child, (node) => {
+      if (!LAZY_PANE_TYPES.has(node.type)) lazy = false;
+    });
+  }
+  return lazy;
+}
+
 export function Tabs({ node }: { node: TabsNode<any> }) {
   const locale = useLocale();
   const { ref, bp } = useLayoutBreakpoint();
   const [active, setActive] = useState(node.defaultTab ?? node.tabs[0]?.key);
+  // Panes opened so far: lazy panes stay mounted once shown (their lists keep their state).
+  const [opened, setOpened] = useState<Set<string | undefined>>(() => new Set([active]));
+  const open = (key: string) => {
+    setActive(key);
+    setOpened((current) => (current.has(key) ? current : new Set(current).add(key)));
+  };
+  const baseId = useId();
 
   return (
     <div ref={ref} className="flex flex-col gap-3">
@@ -158,10 +181,12 @@ export function Tabs({ node }: { node: TabsNode<any> }) {
         {node.tabs.map((t) => (
           <button
             key={t.key}
+            id={`${baseId}-tab-${t.key}`}
             type="button"
             role="tab"
             aria-selected={active === t.key}
-            onClick={() => setActive(t.key)}
+            aria-controls={`${baseId}-pane-${t.key}`}
+            onClick={() => open(t.key)}
             className={cn(
               "-mb-px border-b-2 px-3 py-1.5 text-sm transition-colors",
               active === t.key
@@ -173,15 +198,19 @@ export function Tabs({ node }: { node: TabsNode<any> }) {
           </button>
         ))}
       </div>
-      {/* Every pane stays mounted; inactive ones are only hidden. */}
+      {/* Panes with fields stay mounted (inactive ones are only hidden) so values and
+          validation survive; panes of lists and text mount when first opened. */}
       {node.tabs.map((t) => (
         <div
           key={t.key}
+          id={`${baseId}-pane-${t.key}`}
           role="tabpanel"
+          aria-labelledby={`${baseId}-tab-${t.key}`}
           className={cn("flex flex-col", active !== t.key && "hidden")}
           style={{ gap: gapValue(resolveResp(node.gap, bp), 4) }}
         >
-          {renderChildren(t.children, { kind: "flex", bp, direction: "column" })}
+          {(opened.has(t.key) || !paneMountsLazily(t.children)) &&
+            renderChildren(t.children, { kind: "flex", bp, direction: "column" })}
         </div>
       ))}
     </div>

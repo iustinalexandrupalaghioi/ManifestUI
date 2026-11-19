@@ -106,7 +106,7 @@ export function FormPage({
       <div
         className={cn(
           // The space under the CMS navbar (52px on phones, 48px from sm).
-          "scrollbar-thumb-rounded scrollbar-thin flex h-[calc(100dvh-52px)] flex-col gap-4 overflow-y-auto px-4 pt-3 scrollbar-thumb-primary scrollbar-track-muted/80 sm:h-[calc(100dvh-48px)]",
+          "scrollbar-thumb-rounded scrollbar-thin flex h-[calc(100dvh-52px)] flex-col gap-4 overflow-y-auto px-4 scrollbar-thumb-primary scrollbar-track-muted/80 sm:h-[calc(100dvh-48px)]",
           className,
         )}
       >

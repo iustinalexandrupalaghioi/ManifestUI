@@ -19,7 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import type { FieldValues } from "react-hook-form";
 
 import type { ResourceId } from "../../types/resource-hook-types";
@@ -174,6 +174,14 @@ export function createOverview<
       setNavigator,
     });
 
+    // The record open beside the list was deleted (or filtered out): close it rather than
+    // keep showing it, once the list has reloaded.
+    useEffect(() => {
+      if (!openingItem || list.isFetching || isLoading) return;
+      const openId = idOf(openingItem).toString();
+      if (!allItems.some((item) => idOf(item).toString() === openId)) setOpeningItem(null);
+    }, [openingItem, allItems, list.isFetching, isLoading]);
+
     const { handleAdd, handleOpen } = useOverviewNavigation<TItem>({
       canAdd,
       addMode,
@@ -243,10 +251,15 @@ export function createOverview<
 
     const activeRowId = isSplitDesktop && openingItem ? idOf(openingItem).toString() : undefined;
 
+    // The toolbar joins the list's own tools in one bar inside the data view, on a list page
+    // and in an embedded list (a relation tab, a layout `list`) alike; custom overviews place
+    // ToolbarNode themselves. An embedded list has no Back: it isn't a page.
+    const inPageToolbar = !config.renderOverview;
+
     const chromeNode = (
       <OverviewActionChrome
-        slotId={slotId}
-        variant={slotId ? "nav" : "overview"}
+        slotId={inPageToolbar ? undefined : slotId}
+        variant={inPageToolbar ? "overview" : slotId ? "nav" : "overview"}
         idField={idField}
         selectedRows={selectedRows}
         actions={actions}
@@ -283,15 +296,12 @@ export function createOverview<
       />
     );
 
-    // A list page's toolbar joins the list's own tools in one bar inside the data view;
-    // embedded lists portal theirs (slotId) and custom overviews place ToolbarNode themselves.
-    const inPageToolbar = !slotId && !config.renderOverview;
-
     // Grid editing: saves edited rows in one batch, and opens a row's detail form for pickups.
     const tableMeta = gridEditable
       ? {
           updateManyAsync: (items: { id: ResourceId; data: Record<string, unknown> }[]) =>
-            updateManyAsync(items.map((item) => ({ id: item.id, data: item.data as TFormValues }))),
+            // The row (with its edits) as form values: the row may be keyed differently (camelCase).
+            updateManyAsync(items.map((item) => ({ id: item.id, data: hooks.toFormValues(item.data as TItem) }))),
           getRecordId: (original: TItem) => idOf(original),
           useDetailForm: hooks.useDetailForm,
         }

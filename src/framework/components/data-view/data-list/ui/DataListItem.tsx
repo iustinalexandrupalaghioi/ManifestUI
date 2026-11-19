@@ -176,7 +176,10 @@ export function DataListItem<TData>({
           {meta?.prefix && <span className="shrink-0 text-muted-foreground">{meta.prefix}</span>}
           <span className="min-w-0 truncate">{flexRender(cell.column.columnDef.cell, cell.getContext())}</span>
           {meta?.suffix && <span className="shrink-0 text-muted-foreground">{meta.suffix}</span>}
-          {i < cells.length - 1 && <span className="mx-0.5 shrink-0 text-muted-foreground">·</span>}
+          {/* Badges (toned options) sit side by side; plain values are separated by a dot. */}
+          {i < cells.length - 1 && !meta?.selectOptions?.some((option) => option.tone) && (
+            <span className="mx-0.5 shrink-0 text-muted-foreground">·</span>
+          )}
         </span>
       );
     });
@@ -269,7 +272,7 @@ export function DataListItem<TData>({
                     )}
                   >
                     <dt className="truncate text-xs text-muted-foreground">{label}</dt>
-                    <dd className="flex min-w-0 flex-wrap items-center gap-1 text-sm">{value}</dd>
+                    <dd className="flex min-w-0 flex-wrap items-center gap-1.5 text-sm">{value}</dd>
                   </div>
                 );
               })}
