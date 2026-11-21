@@ -11,7 +11,11 @@ import type { SortRule } from "@/framework/components/data-view/core/tanstack-au
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
   buildAggregateSelection,
+  buildKeysetWhere,
+  buildOrderBy,
   buildWhereConditions,
+  extractCursor,
+  resolveSortColumns,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { FilterColumnMap } from "@/framework/components/data-view/features/filtering/drizzle-filters";
 import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
@@ -19,13 +23,23 @@ import type { GroupByRule } from "@/framework/components/data-view/features/grou
 import type { Cursor } from "@/framework/types/pagination";
 import { userGroupSchema, type UserGroupFormValues } from "./schema";
 
-const PAGE_SIZE = 200;
+const PAGE_SIZE = 100;
 
+/** Columns to filter and sort on; related tables' columns by "<origin>.<columnName>" (./columns.ts). */
 const filterColumns: FilterColumnMap = {
   userId: userGroup.userId,
   groupId: userGroup.groupId,
   createdAt: userGroup.createdAt,
+  "user.fullName": user.fullName,
+  "user.email": user.email,
+  "group.name": group.name,
 };
+
+/** Both key columns break ties: one user can be in several groups, so userId alone isn't unique. */
+const keyColumns = [
+  { key: "userId", column: userGroup.userId },
+  { key: "groupId", column: userGroup.groupId },
+];
 
 const selection = {
   id: sql<string>`${userGroup.userId} || '_' || ${userGroup.groupId}`,
@@ -73,12 +87,13 @@ export const {
   fetchUserGroupList: [
     "read",
     async (
-      _sorting: SortRule[],
+      sorting: SortRule[],
       filters: FilterRule[],
-      _cursor: Cursor | null,
+      cursor: Cursor | null,
       _groupBy: GroupByRule[],
     ) => {
       const where = buildWhereConditions(filters, filterColumns);
+      const sortColumns = resolveSortColumns(sorting, filterColumns, keyColumns);
 
       const [items, [{ count }]] = await Promise.all([
         db
@@ -86,19 +101,24 @@ export const {
           .from(userGroup)
           .innerJoin(group, eq(userGroup.groupId, group.id))
           .leftJoin(user, eq(userGroup.userId, user.id))
-          .where(where)
-          .orderBy(userGroup.createdAt)
+          .where(and(where, buildKeysetWhere(sortColumns, cursor)))
+          .orderBy(...buildOrderBy(sortColumns))
           .limit(PAGE_SIZE),
         db
           .select({ count: sql<number>`count(*)::int` })
           .from(userGroup)
+          .innerJoin(group, eq(userGroup.groupId, group.id))
+          .leftJoin(user, eq(userGroup.userId, user.id))
           .where(where),
       ]);
 
       return {
         items,
         total: count ?? 0,
-        nextCursor: null,
+        nextCursor:
+          items.length === PAGE_SIZE
+            ? extractCursor(items[items.length - 1], sortColumns)
+            : null,
       };
     },
   ],
@@ -110,7 +130,12 @@ export const {
       const selection = buildAggregateSelection(rules, filterColumns);
       if (Object.keys(selection).length === 0) return {};
 
-      const [row] = await db.select(selection).from(userGroup).where(where);
+      const [row] = await db
+        .select(selection)
+        .from(userGroup)
+        .innerJoin(group, eq(userGroup.groupId, group.id))
+        .leftJoin(user, eq(userGroup.userId, user.id))
+        .where(where);
       return row;
     },
   ],

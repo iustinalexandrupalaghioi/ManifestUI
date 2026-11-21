@@ -14,15 +14,24 @@ export interface StoredSection {
   content: unknown;
 }
 
-/** Parses stored sections, dropping unknown types and filling missing fields. */
+/**
+ * Parses stored sections, dropping unknown types and filling missing fields.
+ * Missing, empty or duplicate ids are replaced (deterministically, so the same
+ * stored value gives the same ids), so what opens always passes validateSections.
+ */
 export function parseSections(value: unknown): StoredSection[] {
   if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
   return value.flatMap((raw, index) => {
     const type = String(raw?.type ?? "");
     const def = getSection(type);
     if (!def) return [];
     const content = def.schema.parse(raw?.content ?? {});
-    return [{ id: String(raw?.id ?? `${type}-${index}`), type, hidden: !!raw?.hidden, content }];
+    const base = typeof raw?.id === "string" && raw.id ? raw.id : `${type}-${index}`;
+    let id = base;
+    for (let n = 1; seen.has(id); n++) id = `${base}-${index}-${n}`;
+    seen.add(id);
+    return [{ id, type, hidden: !!raw?.hidden, content }];
   });
 }
 

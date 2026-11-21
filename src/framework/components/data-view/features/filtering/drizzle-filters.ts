@@ -223,7 +223,8 @@ export interface SortColumn {
 export function resolveSortColumns(
   sorting: SortRule[],
   columns: FilterColumnMap,
-  id: { key: string; column: AnyColumn },
+  /** The row's key, the tiebreaker that makes the order unique: every column of a composite key. */
+  id: { key: string; column: AnyColumn } | readonly { key: string; column: AnyColumn }[],
 ): SortColumn[] {
   const sortColumns: SortColumn[] = [];
   const seen = new Set<string>();
@@ -237,8 +238,10 @@ export function resolveSortColumns(
     sortColumns.push({ key, column, direction: sort.desc ? "desc" : "asc" });
   }
 
-  if (!seen.has(id.key)) {
-    sortColumns.push({ key: id.key, column: id.column, direction: "asc" });
+  for (const part of Array.isArray(id) ? id : [id]) {
+    if (seen.has(part.key)) continue;
+    seen.add(part.key);
+    sortColumns.push({ key: part.key, column: part.column, direction: "asc" });
   }
 
   return sortColumns;
