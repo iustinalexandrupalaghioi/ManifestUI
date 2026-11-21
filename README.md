@@ -584,7 +584,7 @@ Every definition takes:
 
 ### 1. Define the component
 
-`src/components/extensions/RatingField.tsx`, a star rating bound to a numeric form value:
+For example, a star rating bound to a numeric form value, in `src/components/extensions/RatingField.tsx`:
 
 ```tsx
 "use client";
@@ -624,10 +624,10 @@ write in config type-checked against the registered components:
 
 ```ts
 import { registerExtensions } from "@/framework/extensions";
+import { frameworkExtensions } from "@/framework/extensions/builtin";
 import { ratingField } from "./RatingField";
-import { recordInfoBlock } from "./RecordInfoBlock";
 
-export const extensions = registerExtensions([ratingField, recordInfoBlock]);
+export const extensions = registerExtensions([...frameworkExtensions, ratingField]);
 
 declare module "@/framework/extensions/registry" {
   interface Register {
@@ -635,6 +635,16 @@ declare module "@/framework/extensions/registry" {
   }
 }
 ```
+
+`frameworkExtensions` are the components the framework ships (`src/framework/extensions/builtin/`):
+
+| Type | Kind | What it does |
+| --- | --- | --- |
+| `markdown` | field | Markdown editor with a toolbar and a live preview. The preview uses the renderer the project registers with `setMarkdownRenderer` (here the website's), else a plain one |
+| `pageAddress` | field | A slug input shown after its address prefix; lowercases and turns spaces into dashes |
+| `language` | field | A row's language: chosen when adding, read-only afterwards |
+| `ownRecordLockedSwitch` | field | A yes/no switch that's locked on the signed-in user's own record (pair it with a server check) |
+| `userAvatar` | block | The user's avatar; upload and delete only on your own record |
 
 `src/components/extensions/index.ts` is imported once on the client by the CMS providers
 (`src/app/[locale]/cms/providers.tsx`), so registered components are available on every CMS
@@ -650,7 +660,7 @@ get a typed `.with(props)` helper that builds the same reference.
 { type: "rating", name: "score", label: { en: "Score", ro: "Scor" }, props: { max: 5 } }
 
 // A block, as a form section.
-{ type: "recordInfo", props: { title: "Record", fields: "id,created_at" } }
+{ type: "userAvatar" }
 
 // A detail component in a detail slot (resource.tsx → detail.slots).
 detail: { slots: { afterForm: todoAttachmentsPanel.with({ height: 300 }) } }
@@ -666,8 +676,8 @@ dataView: { overview: { slots: { afterTable: myTotals.with() } } }
 Slots also accept a plain render function (for example `afterForm: (item) => <MyPanel item={item} />`)
 when a component only makes sense for one resource and doesn't need to be reusable or configurable.
 
-The template ships three examples: `ratingField` and `recordInfoBlock` in `src/components/extensions/`, and
-`todoAttachmentsPanel` (a detail component) in
+Besides the framework's components, the template's own examples are `siteImageField` and `sectionsEditor` in
+`src/components/extensions/`, and `todoAttachmentsPanel` (a detail component) in
 `src/components/cms/main/todo/config/attachmentsPanel.tsx`.
 
 ## Building the website

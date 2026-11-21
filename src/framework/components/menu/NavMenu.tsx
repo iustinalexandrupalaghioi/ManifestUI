@@ -15,14 +15,13 @@ import { LocaleSwitcher } from "@/framework/components/partials/LocaleSwitcher";
 import { ThemeSwitcher } from "@/framework/components/partials/ThemeSwitcher";
 import { cn } from "@/framework/lib/utils";
 import { formatLiveNumber, LiveNumber } from "@/framework/components/menu/LiveNumber";
-import { BASE_ROUTE } from "./constants";
-import { useMenuItems } from "./MenuItems";
+import type { MenuSection } from "./types";
+
 
 /** The ☰ menu: every module and its screens; on phones also language and theme. */
-export function NavMenu() {
+export function NavMenu({ sections, home }: { sections: MenuSection[]; home: string }) {
   const t = useTranslations("Menu");
   const tSite = useTranslations("Site");
-  const sections = useMenuItems();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -47,9 +46,9 @@ export function NavMenu() {
           </SheetHeader>
           <nav aria-label={t("menu")} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-3">
             <Link
-              href={BASE_ROUTE}
+              href={home}
               onClick={() => setOpen(false)}
-              aria-current={pathname === BASE_ROUTE ? "page" : undefined}
+              aria-current={pathname === home ? "page" : undefined}
               className="flex h-10 items-center gap-2 rounded-lg px-2 text-sm outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=page]:bg-selected aria-[current=page]:text-link"
             >
               <HomeIcon className="size-4 text-muted-foreground" />

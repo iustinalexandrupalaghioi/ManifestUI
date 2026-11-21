@@ -17,7 +17,7 @@ import { useLocale } from "next-intl";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { defineFieldComponent } from "@/framework/extensions";
-import { Markdown } from "@/components/site/learn/Markdown";
+import { MarkdownPreview } from "./markdownPreview";
 
 type Edit = (text: string, start: number, end: number) => { text: string; start: number; end: number };
 
@@ -77,7 +77,7 @@ const LABELS = {
 
 /**
  * Markdown body editor with a formatting toolbar and a live preview that uses
- * the site's own Markdown renderer, so what you see is what the page shows.
+ * the renderer the project registers (setMarkdownRenderer), so it matches the page.
  * Side by side on wide screens; Write / Preview tabs on narrow ones.
  */
 export const markdownField = defineFieldComponent({
@@ -179,7 +179,7 @@ export const markdownField = defineFieldComponent({
             )}
           >
             {text.trim() ? (
-              <Markdown source={text} />
+              <MarkdownPreview source={text} />
             ) : (
               <p className="py-6 text-sm text-muted-foreground">{l.empty}</p>
             )}

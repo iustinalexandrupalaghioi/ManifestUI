@@ -5,8 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useRecordTitle } from "@/framework/components/page/recordTitle";
 import { resolveLabel } from "@/framework/lib/resolveLabel";
-import { resourceDescriptors } from "@/app/[locale]/cms/resourceDescriptors";
-import { useMenuItems } from "./MenuItems";
+import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
+import type { MenuSection } from "./types";
 
 interface Crumb {
   label: string;
@@ -16,11 +16,10 @@ interface Crumb {
 /**
  * Where the page is: `Module / Screen` on a list, `Module / Screen / Record` on a
  * record (its title comes from the record page). On phones only the last
- * part is shown, as the page title.
+ * part is shown, as the page title. `resources` names the screens that aren't in the menu.
  */
-export function NavBreadcrumb() {
+export function NavBreadcrumb({ sections, resources }: { sections: MenuSection[]; resources: readonly ResourceDescriptor[] }) {
   const t = useTranslations("Menu");
-  const sections = useMenuItems();
   const pathname = usePathname();
   const recordTitle = useRecordTitle();
   const locale = useLocale();
@@ -37,7 +36,7 @@ export function NavBreadcrumb() {
     }
   }
   if (!match) {
-    for (const descriptor of resourceDescriptors) {
+    for (const descriptor of resources) {
       const path = descriptor.routes.list;
       if (inside(path) && (!match || path.length > match.path.length)) {
         match = { name: resolveLabel(descriptor.plural, locale), path };
