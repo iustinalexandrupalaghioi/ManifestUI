@@ -15,8 +15,10 @@
   "pages": {
     "updated": "Last updated {date}",
     "missingTitle": "This page isn’t set up yet",
-    "missingBody": "Create a sections page with the address \"{slug}\" in the CMS (Website › Site pages), then add sections to it (README › Building the website).",
+    "missingBody": "Create a blocks page with the address \"{slug}\" in the CMS (Content › Pages), add blocks, Save draft and Publish; or run pnpm db:seed:content to add the starter content.",
     "editPage": "Edit this page",
-    "editLesson": "Edit this lesson"
+    "editService": "Edit this service",
+    "allServices": "All services",
+    "fallbackNotice": "This hasn’t been translated yet, so it’s shown in English."
   }
 }

@@ -9,6 +9,8 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { signup } from "../actions/signup";
 import { loginWithGoogle } from "../actions/login-with-google";
+import { loginWithGitHub } from "../actions/login-with-github";
+import { GithubIcon } from "lucide-react";
 import { FormInput } from "@/framework/components/form/form-fields/FormInput";
 import { FormPasswordInput } from "@/framework/components/form/form-fields/FormPasswordInput";
 import {
@@ -145,6 +147,20 @@ export function SignUpForm(
             {t("continueWithGoogle")}
           </Button>
 
+          <Button
+            type="button"
+            variant="outline"
+            className={authSecondaryButton}
+            disabled={isPending}
+            onClick={() =>
+              startTransition(async () => {
+                await loginWithGitHub();
+              })
+            }
+          >
+            <GithubIcon />
+            {t("continueWithGitHub")}
+          </Button>
         </form>
       </FormProvider>
     </AuthCard>

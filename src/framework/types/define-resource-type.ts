@@ -101,6 +101,11 @@ export interface ResourceDetailConfig<TItem, TFormValues extends FieldValues> {
   defaultTab?: string;
   slots?: DetailSlots<TItem>;
   defaultFormOpen?: boolean;
+  /**
+   * Every field lives in `tabs` (`type: "fields"`): the record screen shows its
+   * title and toolbar, then the tabs, with no form section above them.
+   */
+  formInTabs?: boolean;
 }
 
 // ── Beyond plain CRUD ─────────────────────────────────────────────────────

@@ -22,7 +22,7 @@ export function resolveLabel(
 // SelectFieldConfig/ComboboxFieldConfig.options, DisplayField.options) are
 // authored once at module load, before any locale is known. Allowing them to
 // be a `(locale) => Enum[]` function instead of a plain array lets producers
-// like `createEnum()`/`grantableResourceOptions()` resolve `{ en, ro }`
+// like `createEnum()`/`grantOptions()` resolve `{ en, ro }`
 // labels lazily, at the point where each render boundary already has
 // `locale` in scope (createColumnsFromConfig, renderFieldInput, etc).
 /**

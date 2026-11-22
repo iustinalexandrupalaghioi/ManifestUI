@@ -1,5 +1,6 @@
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 import { BASE_ROUTE } from "@/components/cms/constants";
+
 const id = "site-pages";
 
 export const sitePagesDescriptor: ResourceDescriptor = {
@@ -19,4 +20,13 @@ export const sitePagesDescriptor: ResourceDescriptor = {
   },
   overviewKey: `${id}-overview`,
   defaultViewName: { en: "Site pages", ro: "Pagini de site" },
+  content: {
+    type: "page",
+    kind: "collection",
+    localized: true,
+    slugField: "slug",
+    titleField: "title",
+    url: "/{locale}/{slug}",
+    previewable: true,
+  },
 };

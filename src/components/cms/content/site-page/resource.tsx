@@ -1,36 +1,32 @@
 "use client";
 
 import { defineResource } from "@/framework/core/define-resource";
-import type { sitePage } from "@/db/schema";
-import {
-  fetchSitePageDetail,
-  fetchSitePageList,
-  fetchSitePageAggregates,
-  addSitePage,
-  updateSitePage,
-  deleteSitePages,
-} from "./config/api";
-import { sitePagesForm } from "./config/form";
-import { sitePageSchema, type SitePageFormValues } from "./config/schema";
-import { sitePageColumns, sitePageListColumns } from "./config/columns";
+import { fetchSitePageList, fetchSitePageDetail, addSitePage, updateSitePage, deleteSitePage, fetchSitePageAggregates } from "./config/api";
+import { sitePageColumns, sitePageListColumns, sitePagePickupColumns } from "./config/columns";
+import { sitePageForm } from "./config/form";
 import { sitePagesDescriptor } from "./config/descriptor";
+import { sitePageSchema, type SitePageFormValues } from "./config/schema";
+import type { SitePage } from "./config/api";
+import { contentHistoryRelation, contentHistoryTab } from "@/components/cms/content/history";
 
-/** Marketing-site pages (legal pages first), edited with a live Markdown preview. */
-export const sitePagesResource = defineResource<typeof sitePage.$inferSelect, SitePageFormValues>({
+export const sitePagesResource = defineResource<
+  SitePage,
+  SitePageFormValues,
+  number
+>({
   descriptor: sitePagesDescriptor,
-
-  presentation: {
-    open: "page",
-    add: "page",
-  },
-
+  idField: "id",
+  presentation: { open: "page", add: "page" },
   data: {
     fetchList: fetchSitePageList,
     fetchAggregates: fetchSitePageAggregates,
     fetchDetail: fetchSitePageDetail,
-    mutations: { add: addSitePage, update: updateSitePage, delete: deleteSitePages },
+    mutations: {
+      add: addSitePage,
+      update: updateSitePage,
+      delete: deleteSitePage,
+    },
   },
-
   form: {
     schema: sitePageSchema,
     emptyValues: {
@@ -38,34 +34,51 @@ export const sitePagesResource = defineResource<typeof sitePage.$inferSelect, Si
       locale: "en",
       title: "",
       description: "",
-      kind: "text",
       body: "",
-      sections: [],
-      published: false,
     },
-    layout: sitePagesForm,
+    layout: sitePageForm,
   },
-
+  detail: {
+    relations: [contentHistoryRelation<SitePage>("page")],
+    tabs: [
+      {
+        type: "fields",
+        value: "content",
+        label: { en: "Content", ro: "Conținut" },
+        formTab: "content",
+      },
+      {
+        type: "fields",
+        value: "info",
+        label: { en: "SEO / Info", ro: "SEO / Informații" },
+        formTab: "info",
+      },
+      contentHistoryTab,
+    ],
+    formInTabs: true,
+  },
   dataView: {
     overview: {
       dataTableColumns: sitePageColumns,
       dataListColumns: sitePageListColumns,
-      features: { grouping: false, aggregates: false },
+      features: { aggregates: false, grouping: false },
       defaultView: {
-        table: { sorting: [{ column: "slug" }, { column: "locale" }] },
-        list: { sorting: [{ column: "slug" }, { column: "locale" }] },
+        table: {
+          sorting: [{ column: "slug", desc: false }, { column: "locale", desc: false }],
+        },
+        list: {
+          sorting: [{ column: "slug", desc: false }, { column: "locale", desc: false }],
+        },
       },
     },
     pickup: {
-      dataTableColumns: sitePageColumns,
-      dataListColumns: sitePageListColumns,
-      features: { grouping: false, aggregates: false },
+      dataTableColumns: sitePagePickupColumns,
+      features: { aggregates: false, grouping: false },
     },
   },
 });
 
 export const { hooks: sitePageHooks, components: sitePageComponents } = sitePagesResource;
-
 export const {
   Overview: SitePageOverview,
   AddPage: SitePageAddPage,

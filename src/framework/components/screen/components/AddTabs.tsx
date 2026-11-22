@@ -54,7 +54,7 @@ export function AddTabs<TItem, TFormValues extends FieldValues>({
       </div>
       {addTabs.map((tab) => (
         <CustomTabsContent key={tab.value} value={tab.value} className="py-6">
-          <Form sections={tab.sections} readOnly={readOnly} />
+          <Form sections={tab.sections} pane={tab.formTab} readOnly={readOnly} />
         </CustomTabsContent>
       ))}
     </CustomTabs>

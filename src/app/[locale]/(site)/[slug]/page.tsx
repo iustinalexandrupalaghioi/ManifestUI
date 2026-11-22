@@ -3,23 +3,28 @@ import { notFound } from "next/navigation";
 import { redirect } from "@/i18n/navigation";
 import { getSitePage, HOME_SLUG } from "@/components/site/internal/pages/content";
 import { SitePageView } from "@/components/site/pages/SitePageView";
+import { listSlugs } from "@/framework/content/server/content.server";
+import { getSiteInfo } from "@/components/site/internal/siteInfo/content";
 
 /**
  * Pages managed in the CMS (Website > Site pages), served at /<locale>/<slug>.
- * Static routes such as /learn take precedence over this one; the "home"
+ * Static routes such as /services take precedence over this one; the "home"
  * page lives at /<locale>.
  */
-// Static: each page is rendered on its first visit and kept until it's saved in the CMS (see components/site/internal/cache.ts).
-export function generateStaticParams() {
-  return [];
+// Static: every published page is built ahead (its address in this locale); pages published later are
+// built on their first visit (dynamicParams) and refreshed when they are published again.
+export async function generateStaticParams({ params }: { params: { locale: string } }) {
+  return (await listSlugs("page")).filter((page) => page.locale === params.locale && page.slug !== HOME_SLUG).map(({ slug }) => ({ slug }));
 }
+
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
-  const page = slug === HOME_SLUG ? null : await getSitePage(locale, slug);
+  const [page, info] = await Promise.all([slug === HOME_SLUG ? null : getSitePage(locale, slug), getSiteInfo(locale)]);
   if (!page) return {};
   return {
-    title: page.title,
+    title: `${page.title} · ${info.siteName}`,
     description: page.description || undefined,
     alternates: {
       canonical: `/${locale}/${slug}`,

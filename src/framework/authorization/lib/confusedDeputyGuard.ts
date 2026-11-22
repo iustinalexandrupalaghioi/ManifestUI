@@ -31,7 +31,7 @@ export async function assertHasAllPermissions(
 // so a write to that table can be checked against `assertHasAllPermissions`
 // the same way a group assignment is. No DB lookup needed: `resourceId` is
 // already the code-level id being granted against (see
-// src/app/grantablePermissions.ts), not a row to resolve.
+// src/framework/authorization/grants.ts), not a row to resolve.
 export function permissionStringsForResourceGrant(
   resourceId: string,
   flags: {

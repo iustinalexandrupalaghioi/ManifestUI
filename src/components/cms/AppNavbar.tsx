@@ -7,8 +7,7 @@ import { LocaleSwitcher } from "@/framework/components/partials/LocaleSwitcher";
 import { UserMenu } from "@/components/site/UserMenu";
 import { Button } from "@/components/ui/button";
 import { BASE_ROUTE, NAVBAR_TONE } from "./constants";
-import { NavBreadcrumb } from "./NavBreadcrumb";
-import { NavMenu } from "./NavMenu";
+import { CmsNavBreadcrumb, CmsNavMenu } from "./CmsNav";
 
 /**
  * The CMS navbar: where you are (menu, home, breadcrumb) and who you are
@@ -34,14 +33,14 @@ export async function AppNavBar({
       data-tone={NAVBAR_TONE}
       className="cms-navbar sticky top-0 z-50 flex h-[52px] w-full shrink-0 items-center gap-2 border-b bg-sidebar px-2 text-sidebar-foreground sm:h-12 sm:px-3">
       <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
-        <NavMenu />
+        <CmsNavMenu />
         <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex">
           <Link href={BASE_ROUTE} aria-label={tMenu("home")} title={tMenu("home")}>
             <HomeIcon />
           </Link>
         </Button>
         <span aria-hidden className="mx-1 hidden h-5 w-px shrink-0 bg-border sm:block" />
-        <NavBreadcrumb />
+        <CmsNavBreadcrumb />
       </div>
 
       <div className="flex shrink-0 items-center gap-2">

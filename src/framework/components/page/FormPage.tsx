@@ -132,6 +132,12 @@ interface FormPageToolbarProps<T> {
    *  container (see FormHeader/FormHeaderCollapsible) so the two never need
    *  to coordinate sticky offsets. */
   inline?: boolean;
+  /** The Save button's label (content types: "Save draft"). */
+  saveLabel?: string;
+  /** More buttons after Save and Reload (content types: Publish, Discard, History…). */
+  extra?: ReactNode;
+  /** Shown at the end of the bar, before the unsaved-changes indicator (status, language switch). */
+  trailing?: ReactNode;
 }
 
 /**
@@ -147,6 +153,9 @@ FormPage.Toolbar = function FormPageToolbar<T>({
   onBack,
   popOutUrl,
   inline,
+  saveLabel,
+  extra,
+  trailing,
 }: FormPageToolbarProps<T>) {
   const form = useFormPageContext();
   const router = useTransitionRouter();
@@ -185,10 +194,15 @@ FormPage.Toolbar = function FormPageToolbar<T>({
       popOutUrl={popOutUrl}
       setRowSelection={() => {}}
       trailing={
-        form.isDirty && !form.readOnly ? (
-          <span role="status" className="flex items-center gap-1.5 text-sm text-warning">
-            <span aria-hidden className="size-2 rounded-full bg-warning" />
-            {t("unsaved")}
+        trailing || (form.isDirty && !form.readOnly) ? (
+          <span className="flex flex-wrap items-center gap-3">
+            {trailing}
+            {form.isDirty && !form.readOnly && (
+              <span role="status" className="flex items-center gap-1.5 text-sm text-warning">
+                <span aria-hidden className="size-2 rounded-full bg-warning" />
+                {t("unsaved")}
+              </span>
+            )}
           </span>
         ) : undefined
       }
@@ -199,12 +213,12 @@ FormPage.Toolbar = function FormPageToolbar<T>({
           size="sm"
           className={TOOLBAR_BUTTON}
           aria-keyshortcuts="Control+S Meta+S"
-          title={`${t("save")} (Ctrl+S)`}
+          title={`${saveLabel ?? t("save")} (Ctrl+S)`}
           disabled={!canSave}
           onClick={form.onSave}
         >
           {form.isSaving ? <Loader2Icon className="animate-spin" aria-hidden /> : <SaveIcon aria-hidden />}
-          {t("save")}
+          {saveLabel ?? t("save")}
         </Button>
       )}
 
@@ -223,6 +237,8 @@ FormPage.Toolbar = function FormPageToolbar<T>({
           <span className="hidden sm:inline">{t("reload")}</span>
         </Button>
       )}
+
+      {extra}
     </Toolbar>
   );
 

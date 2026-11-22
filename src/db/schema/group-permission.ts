@@ -22,7 +22,7 @@ export const groupPermission = pgTable(
     // A code-level id, not a DB foreign key — either a resourceDescriptors
     // id (e.g. "todos", meaningful with can_read/add/update/delete) or a
     // grantableActions id (e.g. "todos:complete-with-note", meaningful with
-    // `allowed`). See src/app/grantablePermissions.ts — the valid set lives
+    // `allowed`). See src/framework/authorization/grants.ts — the valid set lives
     // in code, not a database table, so there's nothing to foreign-key to.
     resourceId: text().notNull(),
     canRead: boolean().notNull().default(false),

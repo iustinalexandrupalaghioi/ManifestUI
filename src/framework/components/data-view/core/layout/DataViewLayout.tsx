@@ -1,5 +1,6 @@
 "use client";
 
+import { STICKY_IN_RECORD } from "@/framework/lib/sticky";
 import { useBrowserNavigation } from "@/framework/components/screen/stores/useBrowserNavigationStore";
 import { type ReactNode, type RefObject, useMemo } from "react";
 import { useTranslations } from "next-intl";
@@ -160,7 +161,8 @@ export function DataViewLayout({
 
   return (
     <DataViewFilterProvider value={{ enrichedPreFilters, filterableColumns }}>
-      <div id={tableId} className="w-full overflow-hidden ps-2">
+      {/* overflow-clip, not -hidden: it clips the same, but lets the toolbar stick to the page (STICKY_IN_RECORD). */}
+      <div id={tableId} className="w-full overflow-clip ps-2">
         {toolbar ? (
           <ToolbarCollapseProvider activeCount={activeToolCount}>
             {(expanded) => (
@@ -171,7 +173,7 @@ export function DataViewLayout({
             <div
               role="toolbar"
               aria-label={t("toolbar")}
-              className="mb-2 flex flex-wrap items-center gap-2 rounded-[10px] border bg-toolbar p-2"
+              className={cn("mb-2 flex flex-wrap items-center gap-2 rounded-[10px] border p-2", STICKY_IN_RECORD, "bg-toolbar")}
             >
               {toolbar}
               <span aria-hidden className="order-3 hidden h-6 w-px shrink-0 bg-border sm:block" />

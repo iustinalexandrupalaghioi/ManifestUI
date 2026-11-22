@@ -21,6 +21,7 @@ import {
 import { useAddSave } from "@/framework/components/screen/hooks/useAddSave";
 import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
 import { resolvePermission } from "@/framework/lib/resolvePermissions";
+import { useHydrated } from "@/framework/hooks/useHydrated";
 import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 
 export function createAddPage<
@@ -53,7 +54,9 @@ export function createAddPage<
       gender: labels.gender,
     };
 
-    const canAdd = resolvePermission(config.permissions?.add);
+    // As the server renders it until hydration is done (the permission cache is browser-only).
+    const hydrated = useHydrated();
+    const canAdd = hydrated && resolvePermission(config.permissions?.add);
 
     const { addAsync, updateAsync, isAdding, error, clearError } =
       hooks.useMutations();

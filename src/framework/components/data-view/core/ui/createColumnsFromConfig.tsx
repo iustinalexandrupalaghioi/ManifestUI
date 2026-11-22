@@ -1,4 +1,5 @@
 import TableCellContent from "@/framework/components/data-view/core/ui/TableCellContent";
+import { getColumnExtension, parseExtensionProps } from "@/framework/extensions/registry";
 import type { BadgeRule } from "./ValueBadge";
 import type { ColumnType } from "@/framework/components/data-view/features/filtering/filters";
 import type { AggregateFunction } from "@/framework/components/data-view/features/aggregates/aggregates";
@@ -19,6 +20,11 @@ export interface ColumnConfig {
   // columnName — e.g. an accessorFn display column derived from a raw id.
   editingField?: string;
   accessorFn?: (row: any, locale: string) => any;
+  /**
+   * A computed value from a registered column component (`defineColumnComponent`): its value
+   * and badges, instead of `accessorFn` / `selectOptions`.
+   */
+  compute?: { type: string; props?: Record<string, unknown> };
   type: ColumnType;
   size?: number;
   minSize?: number;
@@ -67,10 +73,18 @@ export function createColumnsFromConfig<TItem>(
   locale: string,
 ): ColumnDef<TItem>[] {
   return columns.map((col) => {
-    const selectOptions = resolveOptions(col.selectOptions, locale);
+    // A computed column: the registered component's value and badges.
+    const computed = col.compute ? getColumnExtension(col.compute.type) : undefined;
+    if (col.compute && !computed && process.env.NODE_ENV !== "production")
+      console.warn(`[columns] "${col.field}": no column component "${col.compute.type}" is registered.`);
+    const parsed = computed ? parseExtensionProps(computed, col.compute?.props) : undefined;
+    const context = { locale, props: parsed?.ok ? parsed.props : {} };
+    const selectOptions = computed?.options ? computed.options(context) : resolveOptions(col.selectOptions, locale);
     return {
       id: col.field,
-      ...(col.accessorFn
+      ...(computed
+        ? { accessorFn: (row: TItem) => computed.value(row, context) }
+        : col.accessorFn
         ? { accessorFn: (row: TItem) => col.accessorFn!(row, locale) }
         : { accessorKey: col.field }),
       header: undefined,

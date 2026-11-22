@@ -1,5 +1,6 @@
 import type {
   BlockComponentDef,
+  ColumnComponentDef,
   DetailComponentDef,
   FieldComponentDef,
   OverviewComponentDef,
@@ -31,6 +32,13 @@ export function defineDetailComponent<const TType extends string, S = undefined,
   def: WithoutKind<DetailComponentDef<TType, S, TItem>>,
 ): DetailComponentDef<TType, S, TItem> {
   return { ...def, kind: "detail", ...referable<TType, S>(def.type) };
+}
+
+/** A computed grid / card column: `compute: { type, props }` in a column config. */
+export function defineColumnComponent<const TType extends string, S = undefined, TItem = any>(
+  def: WithoutKind<ColumnComponentDef<TType, S, TItem>>,
+): ColumnComponentDef<TType, S, TItem> {
+  return { ...def, kind: "column", ...referable<TType, S>(def.type) };
 }
 
 /** Overview region: usable in `dataView.overview.slots`. */

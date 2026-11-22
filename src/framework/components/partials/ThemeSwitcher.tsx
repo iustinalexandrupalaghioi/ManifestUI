@@ -51,13 +51,19 @@ function ThemeRadioItems() {
   );
 }
 
-// Standalone trigger, used in the navbar when there's no UserMenu to nest
-// it under (logged-out state).
+// Standalone trigger, used as its own button in the site, CMS and studio
+// navbars.
 const ThemeSwitcher = ({
+  size = "sm",
   label,
+  variant = "outline",
+  className,
 }: {
+  size?: "sm" | "icon-sm" | "icon";
   /** Accessible name for the icon-only trigger. */
   label?: string;
+  variant?: "outline" | "ghost";
+  className?: string;
 } = {}) => {
   const [mounted, setMounted] = useState(false);
   const { theme } = useTheme();
@@ -68,13 +74,14 @@ const ThemeSwitcher = ({
   }, []);
 
   if (!mounted) {
-    return null;
+    // Keep the slot so the navbar does not shift once the theme is known.
+    return size === "sm" ? null : <span aria-hidden className={size === "icon" ? "size-8" : "size-7"} />;
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size={"sm"} aria-label={label} title={label}>
+        <Button variant={variant} size={size} aria-label={label} title={label} className={className}>
           <ThemeIcon theme={theme} />
         </Button>
       </DropdownMenuTrigger>
@@ -85,8 +92,8 @@ const ThemeSwitcher = ({
   );
 };
 
-// Nested submenu, used inside UserMenu's Preferences submenu (logged-in
-// state) instead of a standalone trigger in the navbar.
+// Nested submenu, for embedding inside another dropdown menu (currently
+// unused: the navbars show the standalone trigger).
 function ThemeMenuSub({ label }: { label: string }) {
   const { theme } = useTheme();
 

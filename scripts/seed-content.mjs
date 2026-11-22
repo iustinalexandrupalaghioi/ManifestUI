@@ -34,7 +34,8 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import postgres from "postgres";
-import { parseSections, validateSections } from "../src/components/site/internal/sections/model.ts";
+import { parseBlocks, validateBlocks } from "../src/framework/content/blocks.ts";
+import { allBlocks } from "../src/content/blocks/index.ts";
 import { siteSettingsContentSchema } from "../src/components/site/internal/settings/model.ts";
 
 const KINDS = ["site-pages", "learn-lessons", "services", "site-settings"];
@@ -139,8 +140,8 @@ for await (const { locale, slug, ext, source } of files(path.join(seedDir, "site
       invalid.push(`  ${file}: ${error.message}`);
       continue;
     }
-    for (const issue of validateSections(json.sections ?? [])) invalid.push(`  ${file}: sections.${issue.path.join(".")}: ${issue.message}`);
-    page = { kind: "sections", title: json.title ?? "", description: json.description ?? "", body: "", sections: parseSections(json.sections ?? []) };
+    for (const issue of validateBlocks(json.sections ?? [], allBlocks)) invalid.push(`  ${file}: sections.${issue.path.join(".")}: ${issue.message}`);
+    page = { kind: "sections", title: json.title ?? "", description: json.description ?? "", body: "", sections: parseBlocks(json.sections ?? [], allBlocks) };
   } else {
     const { meta, body } = frontMatter(source);
     page = { kind: "text", title: meta.title ?? "", description: meta.description ?? "", body, sections: [] };
@@ -248,55 +249,63 @@ const report = (rows, label) => {
 };
 
 async function writePage({ locale, slug, page }) {
-  const values = sql`(${slug}, ${locale}, ${page.title}, ${page.description}, ${page.kind}, ${page.body}, ${sql.json(page.sections)}, true)`;
+  // A new locale row joins the entry that already has this address (one entry_id per page).
+  const values = sql`(${slug}, ${locale}, ${page.title}, ${page.description}, ${page.kind}, ${page.body}, ${sql.json(page.sections)}, now(),
+    coalesce((select entry_id from site_page where slug = ${slug} limit 1), gen_random_uuid()))`;
   return force
     ? sql`
-        insert into site_page (slug, locale, title, description, kind, body, sections, published) values ${values}
+        insert into site_page (slug, locale, title, description, kind, body, sections, published_at, entry_id) values ${values}
         on conflict (slug, locale) do update
           set title = excluded.title, description = excluded.description, kind = excluded.kind,
               body = excluded.body, sections = excluded.sections, updated_at = now()
         returning id`
     : sql`
-        insert into site_page (slug, locale, title, description, kind, body, sections, published) values ${values}
+        insert into site_page (slug, locale, title, description, kind, body, sections, published_at, entry_id) values ${values}
         on conflict (slug, locale) do nothing returning id`;
 }
 
 async function writeLesson({ locale, slug, lesson }) {
-  const values = sql`(${slug}, ${locale}, ${lesson.position}, ${lesson.numbered}, ${lesson.title}, ${lesson.summary}, ${lesson.minutes}, ${lesson.body}, true)`;
+  const values = sql`(${slug}, ${locale}, ${lesson.position}, ${lesson.numbered}, ${lesson.title}, ${lesson.summary}, ${lesson.minutes}, ${lesson.body}, now(),
+    coalesce((select entry_id from learn_lesson where slug = ${slug} limit 1), gen_random_uuid()))`;
   return force
     ? sql`
-        insert into learn_lesson (slug, locale, position, numbered, title, summary, minutes, body, published) values ${values}
+        insert into learn_lesson (slug, locale, position, numbered, title, summary, minutes, body, published_at, entry_id) values ${values}
         on conflict (slug, locale) do update
           set position = excluded.position, numbered = excluded.numbered, title = excluded.title,
               summary = excluded.summary, minutes = excluded.minutes, body = excluded.body, updated_at = now()
         returning id`
     : sql`
-        insert into learn_lesson (slug, locale, position, numbered, title, summary, minutes, body, published) values ${values}
+        insert into learn_lesson (slug, locale, position, numbered, title, summary, minutes, body, published_at, entry_id) values ${values}
         on conflict (slug, locale) do nothing returning id`;
 }
 
 async function writeService({ locale, service }) {
-  const values = sql`(${service.slug}, ${locale}, ${service.title}, ${service.summary ?? ""}, ${service.body ?? ""}, ${Number(service.position ?? 0)}, ${service.published !== false})`;
+  // Live unless the file says `"published": false`; the locales of one slug share an entry.
+  const live = service.published !== false;
+  const values = sql`(${service.slug}, ${locale}, ${service.title}, ${service.summary ?? ""}, ${service.body ?? ""}, ${Number(service.position ?? 0)},
+    ${live ? sql`now()` : null}, coalesce((select entry_id from service where slug = ${service.slug} limit 1), gen_random_uuid()))`;
   return force
     ? sql`
-        insert into service (slug, locale, title, summary, body, position, published) values ${values}
+        insert into service (slug, locale, title, summary, body, position, published_at, entry_id) values ${values}
         on conflict (slug, locale) do update
           set title = excluded.title, summary = excluded.summary, body = excluded.body,
-              position = excluded.position, published = excluded.published, updated_at = now()
+              position = excluded.position, published_at = excluded.published_at, updated_at = now()
         returning id`
     : sql`
-        insert into service (slug, locale, title, summary, body, position, published) values ${values}
+        insert into service (slug, locale, title, summary, body, position, published_at, entry_id) values ${values}
         on conflict (slug, locale) do nothing returning id`;
 }
 
 async function writeSettings({ locale, content }) {
   return force
     ? sql`
-        insert into site_settings (locale, content) values (${locale}, ${sql.json(content)})
+        insert into site_settings (locale, content, published_at, entry_id)
+        values (${locale}, ${sql.json(content)}, now(), coalesce((select entry_id from site_settings limit 1), gen_random_uuid()))
         on conflict (locale) do update set content = excluded.content, updated_at = now()
         returning id`
     : sql`
-        insert into site_settings (locale, content) values (${locale}, ${sql.json(content)})
+        insert into site_settings (locale, content, published_at, entry_id)
+        values (${locale}, ${sql.json(content)}, now(), coalesce((select entry_id from site_settings limit 1), gen_random_uuid()))
         on conflict (locale) do nothing returning id`;
 }
 

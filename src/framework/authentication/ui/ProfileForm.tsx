@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { toastSuccess, toastError } from "@/framework/lib/toast";
 import { updateProfile } from "../actions/update-profile";
 import { resolveAvatarUrl } from "@/framework/authentication/lib/resolveAvatarUrl";
+import { notifyAuthChanged } from "@/framework/authentication/lib/authEvents";
 import { FormInput } from "@/framework/components/form/form-fields/FormInput";
 import type { FullUserProfile } from "../types";
 import { AuthCard, authPrimaryButton, authSecondaryButton } from "./AuthCard";
@@ -142,12 +143,16 @@ export function ProfileForm({
 
       if (pendingAvatarFile) {
         uploadAvatar(pendingAvatarFile)
-          .then(() => router.refresh())
+          .then(() => {
+            router.refresh();
+            notifyAuthChanged();
+          })
           .catch((err: Error) => toastError(err.message));
       }
 
       setIsEditing(false);
       router.refresh();
+      notifyAuthChanged();
     });
   };
 

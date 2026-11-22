@@ -10,10 +10,12 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
+    "db:push": "drizzle-kit push --verbose --strict",
     "db:studio": "drizzle-kit studio",
     "manifest": "node scripts/manifest.mjs",
-    "db:seed:content": "tsx --env-file=.env scripts/seed-content.mjs"
+    "db:seed:content": "tsx --env-file=.env scripts/seed-content.mjs",
+    "content:migrate": "tsx --env-file=.env scripts/content-migrate.mjs",
+    "content:drop-published": "node --env-file=.env scripts/content-drop-published.mjs"
   },
   "dependencies": {
     "@dnd-kit/dom": "^0.5.0",

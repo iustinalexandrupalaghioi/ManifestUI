@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
 import {
   getMyPermissions,
   getMyCanAccessCms,
@@ -8,14 +9,14 @@ import { fetchUserProfile } from "@/app/[locale]/(site)/data/currentUserProfile"
 import { resolveAvatarUrl } from "@/framework/authentication/lib/resolveAvatarUrl";
 import { AppNavBar } from "@/components/cms/AppNavbar";
 import { Providers } from "./providers";
-import { checkLocale, localeParams, RootDocument, rootMetadata } from "../_root/RootDocument";
+import { localeParams, RootDocument, rootMetadata, checkLocale } from "../_root/RootDocument";
 import "./globals.css";
 
 export const generateStaticParams = localeParams;
 
 export const metadata: Metadata = {
   ...rootMetadata,
-  title: "ManifestUI Admin",
+  title: "Admin",
   description: "Full-stack admin panel",
 };
 
@@ -37,6 +38,7 @@ export default async function CmsLayout({
 
   return (
     <RootDocument locale={locale}>
+    <NextIntlClientProvider>
     <div className="flex h-screen w-full flex-col">
       <Providers
         initialPermissions={initialPermissions}
@@ -53,6 +55,7 @@ export default async function CmsLayout({
         {children}
       </Providers>
     </div>
+    </NextIntlClientProvider>
     </RootDocument>
   );
 }

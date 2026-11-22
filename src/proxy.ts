@@ -24,11 +24,15 @@ export async function proxy(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
+        // Keep Supabase's cookie options (path "/", maxAge, sameSite): without
+        // them a refreshed token is saved as a browser-session cookie scoped to
+        // the current folder (e.g. /en/cms), while the old, now-revoked token
+        // stays at "/" and signs the user out on the next request.
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value);
-          });
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
         },
       },
     },

@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { login } from "../actions/login";
 import { loginWithGoogle } from "../actions/login-with-google";
+import { loginWithGitHub } from "../actions/login-with-github";
+import { GithubIcon } from "lucide-react";
 import { FormPasswordInput } from "@/framework/components/form/form-fields/FormPasswordInput";
 import { FormInput } from "@/framework/components/form/form-fields/FormInput";
 import {
@@ -180,6 +182,20 @@ export function LoginForm(
             {t("continueWithGoogle")}
           </Button>
 
+          <Button
+            type="button"
+            variant="outline"
+            className={authSecondaryButton}
+            disabled={!legalAccepted || isPending}
+            onClick={() =>
+              startTransition(async () => {
+                await loginWithGitHub(next);
+              })
+            }
+          >
+            <GithubIcon />
+            {t("continueWithGitHub")}
+          </Button>
         </form>
       </FormProvider>
     </AuthCard>

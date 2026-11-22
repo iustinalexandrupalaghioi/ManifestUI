@@ -25,5 +25,12 @@
   "typeTime": "oră",
   "recordNotFound": "Înregistrarea nu a putut fi găsită sau nu aveți permisiunea de a o accesa.",
   "fieldNotInDatabase": "Un câmp din acest formular nu există în baza de date.",
-  "unexpectedError": "A apărut o eroare neașteptată."
+  "unexpectedError": "A apărut o eroare neașteptată.",
+  "contentNotFound": "Această intrare sau versiune nu mai există. Reîncarcă pentru a vedea starea actuală.",
+  "contentNotLocalized": "Acest tip de conținut are o singură versiune pentru toate limbile.",
+  "contentUnknownLocale": "Limba aleasă nu este una dintre limbile site-ului.",
+  "contentTranslationExists": "Această intrare are deja o versiune în limba aleasă.",
+  "contentNotPreviewable": "Acest tip de conținut nu are previzualizare.",
+  "contentPreviewNotConfigured": "Previzualizarea nu este configurată: adaugă PREVIEW_SECRET (orice text lung, aleatoriu) în mediul serverului.",
+  "contentOneVersionPerEntry": "Alege o singură versiune pentru fiecare intrare: din două versiuni ale aceleiași intrări s-ar păstra doar una."
 }

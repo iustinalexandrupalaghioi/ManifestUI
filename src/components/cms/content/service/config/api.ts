@@ -1,13 +1,15 @@
 "use server";
+
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { service } from "@/db/schema";
+import { contentDraft, contentRevision, service } from "@/db/schema";
+import { forgetContentRow } from "@/framework/content/server/forgetRow";
+import { afterContentDelete, saveContentFromForm, withContentDraft, withContentStatuses } from "@/framework/content/server/index.server";
 import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
-  buildAggregateSelection,
   buildKeysetWhere,
   buildOrderBy,
   buildWhereConditions,
@@ -15,86 +17,98 @@ import {
   resolveSortColumns,
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
-import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
 import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
+import { buildAggregateSelection } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+
 import type { Cursor } from "@/framework/types/pagination";
 import { serviceSchema, type ServiceFormValues } from "./schema";
 
-const PAGE_SIZE = 50;
+export type Service = typeof service.$inferSelect;
 
+const PAGE_SIZE = 100;
 const filterColumns: FilterColumnMap = {
   id: service.id,
-  title: service.title,
-  summary: service.summary,
   slug: service.slug,
   locale: service.locale,
   position: service.position,
-  published: service.published,
+  title: service.title,
+  summary: service.summary,
+  body: service.body,
   updatedAt: service.updatedAt,
+  entryId: service.entryId,
+  publishedAt: service.publishedAt,
+  publishedBy: service.publishedBy,
 };
-
-// Pages showing the "services" collection refresh once a save commits (createResourceActions).
 const crud = createResourceActions("services");
 
 export const {
-  fetchServiceList,
+  fetchServiceList, fetchServiceDetail, addService, updateService, deleteService,
   fetchServiceAggregates,
-  fetchServiceDetail,
-  addService,
-  updateService,
-  deleteServices,
 } = defineResourceActions("services", {
   fetchServiceList: [
     "read",
     async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null, _groupBy: GroupByRule[]) => {
       const where = buildWhereConditions(filters, filterColumns);
-      const sortColumns = resolveSortColumns(sorting, filterColumns, { key: "id", column: service.id });
+      const sortColumns = resolveSortColumns(sorting, filterColumns, {
+        key: "id",
+        column: service.id,
+      });
+
       const [items, [{ count }]] = await Promise.all([
-        db
-          .select()
-          .from(service)
+        db.select().from(service)
           .where(and(where, buildKeysetWhere(sortColumns, cursor)))
           .orderBy(...buildOrderBy(sortColumns))
           .limit(PAGE_SIZE),
         db.select({ count: sql<number>`count(*)::int` }).from(service).where(where),
       ]);
-      const nextCursor = items.length === PAGE_SIZE ? extractCursor(items[items.length - 1], sortColumns) : null;
-      return { items, total: count ?? 0, nextCursor };
+      return {
+        items: await withContentStatuses("service", items),
+        total: count ?? 0,
+        nextCursor: items.length === PAGE_SIZE
+          ? extractCursor(items[items.length - 1], sortColumns)
+          : null,
+      };
     },
   ],
-
   fetchServiceAggregates: [
     "read",
     async (rules: AggregateRule[], filters: FilterRule[]) => {
-      const selection = buildAggregateSelection(rules, filterColumns);
-      if (Object.keys(selection).length === 0) return {};
-      const [row] = await db.select(selection).from(service).where(buildWhereConditions(filters, filterColumns));
+      const where = buildWhereConditions(filters, filterColumns);
+      const totals = buildAggregateSelection(rules, filterColumns);
+      if (Object.keys(totals).length === 0) return {};
+      const [row] = await db.select(totals).from(service).where(where);
       return row;
     },
   ],
 
   fetchServiceDetail: [
     "read",
-    async (id: number): Promise<typeof service.$inferSelect> => {
-      const [row] = await db.select().from(service).where(eq(service.id, id)).limit(1);
+    async (id: number) => {
+      const [row] = await db.select().from(service)
+        .where(eq(service.id, id))
+        .limit(1);
       if (!row) throw new Error(`Service ${id} not found`);
-      return row;
+      // The editor opens the draft when there is one.
+      return withContentDraft("service", id, row);
     },
   ],
-
   addService: crud.add(async (tx, data: ServiceFormValues) => {
     const parsed = serviceSchema.parse(data);
-    const [result] = await tx.insert(service).values(parsed).returning({ id: service.id });
-    return result.id;
+    // Not live until published; a new language row joins the entry with this address.
+    const [row] = await tx.insert(service).values({ ...parsed, entryId: sql`coalesce((select ${service.entryId} from ${service} where ${service.slug} = ${parsed.slug} limit 1), gen_random_uuid())`, publishedAt: null }).returning({ id: service.id });
+    return row.id;
   }),
-
-  updateService: crud.update(async (tx, id: number, data: ServiceFormValues) => {
-    const parsed = serviceSchema.parse(data);
-    await tx
-      .update(service)
-      .set({ ...parsed, updatedAt: sql`now()` })
-      .where(eq(service.id, id));
-  }),
-
-  deleteServices: crud.delete((tx, id: number) => tx.delete(service).where(eq(service.id, id))),
+  // Save draft: to the row while it isn't live, else to its draft (Publish makes it live).
+  updateService: [
+    "update",
+    async (id: number, data: ServiceFormValues) => {
+      await saveContentFromForm("service", id, serviceSchema.parse(data));
+    },
+  ],
+  // The row's draft and versions go with it; once committed, content.onChange hears of it.
+  deleteService: afterContentDelete("service", crud.delete(async (tx, id: number) => {
+    await forgetContentRow(tx, { draft: contentDraft, revision: contentRevision }, "service", id);
+    return tx.delete(service).where(eq(service.id, id));
+  })),
 });

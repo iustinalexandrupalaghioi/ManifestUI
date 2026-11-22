@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/framework/lib/utils";
 import { ActionFormDialog } from "@/framework/components/dialog/ActionFormDialog";
 import { DeleteDialog } from "@/framework/components/dialog/DeleteDialog";
 import { ResultDialog } from "@/framework/components/dialog/ResultDialog";
@@ -35,6 +36,16 @@ import { usePermissions } from "@/framework/authorization/hooks/usePermissions";
 import { BulkActionResult } from "@/framework/lib/actionResult";
 import { resolveResourceAction } from "../resource-action-config";
 import { renderDetailSlot } from "@/framework/extensions/renderers";
+import { ContentStatusBar, contentStateKey, useContentActionsMenu } from "@/framework/content/ui/ContentControls";
+import { useQueryClient } from "@tanstack/react-query";
+import { EntryLocaleContext } from "@/framework/content/ui/context";
+import { recordActions, tabForField } from "@/framework/content/recordRules";
+import { PreviewPane } from "@/framework/content/ui/PreviewPane";
+import { revealField } from "@/framework/content/ui/revealField";
+import { MonitorIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TOOLBAR_BUTTON } from "@/framework/components/toolbar/Toolbar";
+import { useHydrated } from "@/framework/hooks/useHydrated";
 
 export function createDetailPage<
   TItem,
@@ -47,8 +58,11 @@ export function createDetailPage<
   const Form = config.Form;
   if (!Form) throw new Error(`No Form component provided for ${hooks.noun}`);
 
-  const deleteToolbarEnabled = resolveResourceAction(config.delete).toolbarEnabled;
-  const addToolbarEnabled = resolveResourceAction(config.add).toolbarEnabled;
+  // A singleton is one entry per locale: no Add, no Delete.
+  const content = config.content;
+  const contentRules = recordActions(content);
+  const deleteToolbarEnabled = resolveResourceAction(config.delete).toolbarEnabled && contentRules.allowDelete;
+  const addToolbarEnabled = resolveResourceAction(config.add).toolbarEnabled && contentRules.allowAdd;
 
   const {
     idField,
@@ -80,10 +94,12 @@ export function createDetailPage<
     usePermissions();
 
     // `features.edit` is inline editing in the list; a record is editable with the update permission.
-    const canUpdate = resolvePermission(config.permissions?.update);
+    // As the server renders it until hydration is done (the permission cache is browser-only).
+    const hydrated = useHydrated();
+    const canUpdate = hydrated && resolvePermission(config.permissions?.update);
     const canDelete =
-      resolvePermission(config.permissions?.delete) && deleteToolbarEnabled;
-    const canAdd = resolvePermission(config.permissions?.add) && addToolbarEnabled;
+      hydrated && resolvePermission(config.permissions?.delete) && deleteToolbarEnabled;
+    const canAdd = hydrated && resolvePermission(config.permissions?.add) && addToolbarEnabled;
 
     const ids = useNavigatorStore(
       (s) => s.byKey[overviewKey] ?? EMPTY_NAVIGATOR_IDS,
@@ -103,6 +119,10 @@ export function createDetailPage<
     const router = useTransitionRouter();
     const locale = useLocale();
     const tr = useTranslations("Resource");
+    const tContent = useTranslations("Content");
+    // The live preview beside the tabs (previewable types with an address, every field in a tab).
+    const canPreview = !!(content?.previewable && content.url && config.formInTabs);
+    const [previewOpen, setPreviewOpen] = useState(false);
     const resolvedLabels = {
       singular: resolveLabel(labels.singular, locale),
       plural: resolveLabel(labels.plural, locale),
@@ -218,18 +238,57 @@ export function createDetailPage<
       (a) => a.key === activeActionKey,
     );
 
+    // Content types: Publish, Unpublish, Discard draft and Add translation join the Actions menu.
+    const queryClient = useQueryClient();
+    const recordRowId = itemId === undefined ? undefined : String(itemId);
+    const openRow = (rowId: string) => (onNavigate ? onNavigate(rowId) : router.push(routes.detail(rowId)));
+    const contentMenu = useContentActionsMenu({
+      resourceId: config.id,
+      options: content,
+      rowId: recordRowId,
+      isDirty: isDirty || hasFileChanges,
+      refetch: () => void refetch(),
+      openRow,
+    });
+    // The status, draft and history follow the record: refresh them whenever it reloads (after a save too).
+    useEffect(() => {
+      if (content && recordRowId) void queryClient.invalidateQueries({ queryKey: contentStateKey(content.type, recordRowId) });
+    }, [dataUpdatedAt, recordRowId]);
+
     const toolbarElement = (
       <FormPage.Toolbar
         inline={isEmbedded}
         onBack={isEmbedded ? onClose : () => router.back()}
         popOutUrl={isEmbedded ? routes.detail(id!) : undefined}
         selectedRows={item ? [item] : []}
-        mutations={[...bulkActions, ...actionFormMutations]}
+        mutations={[...bulkActions, ...actionFormMutations, ...(contentMenu.actions as typeof bulkActions)]}
         isDeleteEligible={canDelete ? isDeleteEligible : undefined}
         onDelete={canDelete ? () => setDeleteOpen(true) : undefined}
         onAdd={canAdd ? () => router.push(routes.add) : undefined}
+        {...(content && {
+          saveLabel: tContent("saveDraft"),
+          extra: canPreview ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className={cn(TOOLBAR_BUTTON, "max-lg:hidden", previewOpen && "border-primary text-primary")}
+              aria-pressed={previewOpen}
+              onClick={() => setPreviewOpen((open) => !open)}
+            >
+              <MonitorIcon aria-hidden />
+              {tContent("preview.button")}
+            </Button>
+          ) : undefined,
+          trailing: (
+            <ContentStatusBar resourceId={config.id} options={content} rowId={recordRowId} refetch={() => void refetch()} openRow={openRow} />
+          ),
+        })}
       />
     );
+
+    // Content types: the form knows its entry's locale (new blocks' defaults, pickers).
+    const entryLocale = content && item ? String((item as Record<string, unknown>).locale ?? "") || null : null;
 
     return (
       <FormRelationsProvider value={{ relations: relations ?? [], idField: String(idField) }}>
@@ -255,8 +314,10 @@ export function createDetailPage<
             label: a.label,
           }))}
           onOpenActionForm={setActiveActionKey}
-          className={isEmbedded ? "h-full px-4" : undefined}
+          // Every field in a tab: the page doesn't scroll, the active tab's content does.
+          className={cn(isEmbedded && "h-full px-4", config.formInTabs && "overflow-hidden")}
         >
+          <EntryLocaleContext value={entryLocale}>
           <RecordFormShell
             hasTabs={hasTabs}
             title={resolvedLabels.singular}
@@ -270,8 +331,12 @@ export function createDetailPage<
             beforeForm={renderDetailSlot(config.detailSlots?.beforeForm, item)}
             afterForm={renderDetailSlot(config.detailSlots?.afterForm, item)}
             afterTabs={renderDetailSlot(config.detailSlots?.afterTabs, item)}
+            formInTabs={config.formInTabs}
             form={
-              item ? (
+              config.formInTabs ? (
+                // The fields are in the tabs; only the loading state shows here.
+                item ? null : <Loader className="items-center" />
+              ) : item ? (
                 <Form
                   key={`${itemId}-${dataUpdatedAt}`}
                   item={item}
@@ -283,21 +348,60 @@ export function createDetailPage<
               )
             }
             tabs={
-              item && (
-                <RecordTabs
-                  tabs={tabs}
-                  relations={relations}
-                  activeTab={activeTab}
-                  setActiveTab={setActiveTab}
-                  item={item}
-                  idField={idField}
-                  Form={Form}
-                  formOpen={formOpen}
-                  readOnly={!canUpdate}
-                />
-              )
+              config.formInTabs
+                ? // The title bar joins the tabs' sticky header (alone while the record loads).
+                  (header: React.ReactNode) =>
+                    item ? (
+                      <RecordTabs
+                        tabs={tabs}
+                        relations={relations}
+                        activeTab={activeTab}
+                        setActiveTab={setActiveTab}
+                        item={item}
+                        idField={idField}
+                        Form={Form}
+                        // No form section above the tabs: a list in a tab gets the available height.
+                        formOpen={false}
+                        readOnly={!canUpdate}
+                        header={header}
+                        aside={
+                          canPreview && previewOpen && recordRowId ? (
+                            <PreviewPane
+                              options={content!}
+                              rowId={recordRowId}
+                              entryId={String((item as Record<string, unknown>).entryId ?? "")}
+                              locale={String((item as Record<string, unknown>).locale ?? "")}
+                              version={dataUpdatedAt}
+                              onClose={() => setPreviewOpen(false)}
+                              onSelectField={(name) => {
+                                // Clicked in the preview: show its tab, then the field (opening its block).
+                                const tab = tabForField(tabs as never, name, (config.detailFormConfig ?? config.formConfig)?.layout);
+                                if (tab) setActiveTab(tab);
+                                revealField(name);
+                              }}
+                            />
+                          ) : undefined
+                        }
+                      />
+                    ) : (
+                      header
+                    )
+                : item && (
+                    <RecordTabs
+                      tabs={tabs}
+                      relations={relations}
+                      activeTab={activeTab}
+                      setActiveTab={setActiveTab}
+                      item={item}
+                      idField={idField}
+                      Form={Form}
+                      formOpen={formOpen}
+                      readOnly={!canUpdate}
+                    />
+                  )
             }
           />
+          </EntryLocaleContext>
 
           {isError && (
             <p className="text-sm text-destructive">
@@ -340,6 +444,7 @@ export function createDetailPage<
           />
 
           {confirmDialog}
+          {contentMenu.dialogs}
         </FormPage>
       </RecordScreen>
       </FormRelationsProvider>

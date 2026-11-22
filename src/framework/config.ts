@@ -1,6 +1,9 @@
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import type { DbClient } from "./lib/dbClient";
 import type { ResourceDescriptor } from "./types/resource-descriptor-type";
+import type { AnyContentType } from "./content/define";
+import type { ContentTables } from "./content/server/drizzleStore";
+import type { ContentChange } from "./content/server/service";
 
 export type OAuthProvider = "google" | "github";
 
@@ -9,7 +12,7 @@ export type OAuthProvider = "google" | "github";
  * so framework code gets full column types without importing project code:
  *
  *   declare module "@/framework/config" {
- *     interface Register { authTables: typeof authTables }
+ *     interface Register { authTables: typeof authTables; contentTypes: typeof contentTypes }
  *   }
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -50,6 +53,13 @@ export interface ManifestConfig {
   resources: readonly ResourceDescriptor[];
   /** The project's user and access tables (src/db/schema), which authentication and authorization query. */
   authTables: AuthTables;
+  /** Headless content: the shared draft/revision tables and the project's content types (src/content). */
+  content?: {
+    tables: ContentTables;
+    types: readonly AnyContentType[];
+    /** After a content change commits (publish, unpublish…): refresh the project's own caches. */
+    onChange?: (change: ContentChange) => void | Promise<void>;
+  };
   auth?: {
     /** Runs on the server just before an OAuth sign-in redirects to the provider. */
     beforeOAuthSignIn?: (provider: OAuthProvider) => void | Promise<void>;

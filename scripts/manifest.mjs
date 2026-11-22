@@ -10,8 +10,8 @@
  *   pnpm manifest doctor           check that everything is in place
  *
  * Website builder:
- *   pnpm manifest site             tables, seed content (src/db/seed), registered sections
- *   pnpm manifest section <name>   create a page section (e.g. `testimonials`) and register it
+ *   pnpm manifest site             tables, seed content (src/db/seed), registered blocks
+ *   pnpm manifest block <name>     create a block (e.g. `testimonials`): its fields and its renderer
  *
  * Every command is safe to run again. No dependencies beyond the project's own.
  */
@@ -28,8 +28,10 @@ const ROOT = process.cwd();
 const ENV_FILE = resolve(ROOT, ".env");
 const SYNC_SQL = resolve(ROOT, "src/db/sql/auth-user-sync.sql");
 const TRIGGER = "manifestui_sync_auth_user";
-const SECTIONS_DIR = resolve(ROOT, "src/components/extensions/sections");
-const SECTIONS_INDEX = resolve(SECTIONS_DIR, "index.ts");
+const BLOCKS_DIR = resolve(ROOT, "src/content/blocks");
+const BLOCKS_INDEX = resolve(BLOCKS_DIR, "index.ts");
+const RENDERERS_DIR = resolve(ROOT, "src/components/site/blocks");
+const RENDERERS_INDEX = resolve(RENDERERS_DIR, "index.ts");
 // The learning path's lessons table only exists in projects that have it.
 const SITE_TABLES = [
   "site_page",
@@ -294,6 +296,10 @@ async function doctorCommand() {
 
   const required = [...ENV_FIELDS.map((field) => field.key), "NEXT_PUBLIC_BASE_URL"];
   for (const key of required) check(!!env[key], `${key} is set`, `${key} is missing (pnpm manifest env)`);
+  // Only the ManifestUI Studio app needs a GitHub App.
+  if (existsSync(resolve(ROOT, "src/components/studio")) && !env.GITHUB_APP_SLUG) {
+    warn("GITHUB_APP_SLUG is not set (needed for the studio's GitHub sign-in)");
+  }
 
   for (const key of ["DATABASE_URL", "DIRECT_DATABASE_URL"]) {
     if (!env[key]) continue;
@@ -329,7 +335,7 @@ async function doctorCommand() {
         }
 
         // The website builder; `check` counts the problems.
-        if (existsSync(SECTIONS_INDEX)) await siteDatabaseChecks(sql, check);
+        if (existsSync(BLOCKS_INDEX)) await siteDatabaseChecks(sql, check);
       });
     } catch (error) {
       if (!(error instanceof CliError)) {
@@ -392,20 +398,20 @@ async function siteDatabaseChecks(sql, check) {
   }
   report(!broken.length, "Website read policies have their conditions", `Read policies without their condition on ${broken.join(", ")} (pnpm manifest db)`);
 
-  const homes = (await sql`select locale from site_page where slug = 'home' and published`).map((row) => row.locale);
+  const homes = (await sql`select locale from site_page where slug = 'home' and published_at is not null`).map((row) => row.locale);
   const noHome = locales.filter((locale) => !homes.includes(locale));
-  // Not a setup problem: a new site has no pages until you add sections and create them.
-  if (noHome.length) warn(`No published home page for ${noHome.join(", ")} yet: create one with the address "home" in Website › Site pages (guide: Building the website)`);
+  // Not a setup problem: a new site has no pages until you create and publish them.
+  if (noHome.length) warn(`No published home page for ${noHome.join(", ")} yet: create one with the address "home" in Content › Pages and publish it (guide: README › Content and the website)`);
   else check(true, `Home page is published for ${locales.join(", ")}`);
   return problems;
 }
 
-/** Loads the real section registry with tsx, which also proves the section files compile. */
-function listSections(env) {
-  const result = spawnSync("pnpm", ["exec", "tsx", "scripts/lib/list-sections.mjs"], { encoding: "utf8", shell: true, env });
+/** Loads the real blocks and renderers with tsx, which also proves their files compile. */
+function listBlocks(env) {
+  const result = spawnSync("pnpm", ["exec", "tsx", "scripts/lib/list-blocks.mjs"], { encoding: "utf8", shell: true, env });
   if (result.status !== 0) {
     const output = (result.stderr || result.stdout).trim().split("\n").slice(-12).join("\n");
-    throw new CliError(`Could not load the sections:\n${output}`);
+    throw new CliError(`Could not load the blocks:\n${output}`);
   }
   return JSON.parse(result.stdout.trim().split("\n").pop());
 }
@@ -430,14 +436,14 @@ async function siteCommand() {
   const seed = spawnSync("pnpm", ["db:seed:content"], { stdio: "inherit", shell: true, env });
   if (seed.status !== 0) throw new CliError("Seeding failed. Fix the error above and run `pnpm manifest site` again.");
 
-  const { sections, chrome } = listSections(env);
-  ok(`${sections.length} page section(s): ${sections.map((section) => section.type).join(", ")}`);
-  ok(`Site parts: ${chrome.map((part) => part.type).join(", ")}`);
+  const { blocks, withoutRenderer } = listBlocks(env);
+  ok(`${blocks.length} block(s): ${blocks.map((block) => block.type).join(", ")}`);
+  if (withoutRenderer.length) warn(`Blocks without a renderer in src/components/site/blocks (not shown on the site): ${withoutRenderer.join(", ")}`);
 
   const problems = await withDb(env, (sql) => siteDatabaseChecks(sql, (passed, good, bad) => (passed ? ok(good) : fail(bad))));
   if (!problems) {
-    console.log(`\n${green("Website ready.")} Run ${bold("pnpm dev")}, open ${bold("/en")}, and edit it under ${bold("CMS › Website")}.`);
-    console.log(dim("  New section: pnpm manifest section <name>. Guide: README › Building the website."));
+    console.log(`\n${green("Website ready.")} Run ${bold("pnpm dev")}, open ${bold("/en")}, and edit it under ${bold('CMS › Content › Pages')}.`);
+    console.log(dim("  New block: pnpm manifest block <name>. Guide: README › Content and the website."));
   }
   return problems;
 }
@@ -447,23 +453,21 @@ const toCamel = (name) =>
 const toPascal = (name) => toCamel(name).replace(/^[a-z]/, (c) => c.toUpperCase());
 const toWords = (name) => toCamel(name).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
 
-function sectionTemplate({ type, exportName, label }) {
-  const tick = "`";
+function blockTemplate({ type, exportName, label }) {
   return `import { z } from "zod";
-import { AddItem, defineSection, list, List, RemoveItem, Text, text } from "@/framework/site";
-import { Band, SectionHeading } from "@/components/site/sections/blocks";
+import { defineBlock, list, text } from "@/framework/content";
 import { eyebrowField, L, titleField } from "./fields";
 
 /**
- * ${label}: a heading and a list of cards. Change the schema and the markup
- * freely; keep texts in <Text>, lists in <List> and use <RemoveItem>/<AddItem>
- * so the section stays editable on the page. Guide: README › Building the website.
+ * ${label}: a heading and a list of cards. Its fields are what editors fill
+ * in (the CMS form follows them); its renderer is in src/components/site/blocks.
+ * Guide: README › Content and the website.
  */
-export const ${exportName} = defineSection({
+export const ${exportName} = defineBlock({
   type: "${type}",
   // TODO(i18n): translate the Romanian label and defaults.
   label: L("${label}", "${label}"),
-  schema: z.object({
+  fields: z.object({
     eyebrow: eyebrowField(),
     title: titleField(),
     intro: text({ label: L("Intro", "Introducere"), multiline: true }),
@@ -479,67 +483,88 @@ export const ${exportName} = defineSection({
     en: { title: "${label}", items: [{ title: "First item", body: "" }] },
     ro: { title: "${label}", items: [{ title: "Primul element", body: "" }] },
   },
-  component: ({ id, content }) => (
-    <Band labelledBy={${tick}\${id}-title${tick}}>
-      <SectionHeading titleId={${tick}\${id}-title${tick}} introPath="intro" />
-      <ul className="m-0 grid list-none gap-6 p-0 md:grid-cols-3">
-        <List path="items" items={content.items}>
-          {() => (
-            <li className="relative flex flex-col gap-2 rounded-2xl border bg-card p-6">
-              <RemoveItem className="absolute top-2 right-2" />
-              <Text path="title" as="h3" className="m-0 font-display text-lg font-semibold" />
-              <Text path="body" as="p" optional multiline className="m-0 text-base leading-relaxed text-muted-foreground" />
-            </li>
-          )}
-        </List>
-      </ul>
-      <AddItem path="items" label={L("Add item", "Adaugă un element")} className="self-start" />
-    </Band>
-  ),
 });
 `;
 }
 
-async function sectionCommand(nameArg) {
-  heading("New page section");
-  const name = (nameArg || (await ask("Section name (e.g. testimonials, pricing-table)"))).trim();
+function rendererTemplate({ pascal, type, exportName }) {
+  const tick = "`";
+  return `import type { BlockProps } from "@/framework/content/ui/RenderBlocks";
+import type { ${exportName} } from "@/content/blocks/${type}";
+import { Band, SectionHeading } from "@/components/site/sections/blocks";
+
+/** Plain React over the block content; field(...) marks texts for the click-to-edit of the CMS preview. */
+export function ${pascal}({ id, content, field }: BlockProps<typeof ${exportName}>) {
+  return (
+    <Band labelledBy={${tick}\${id}-title${tick}}>
+      <SectionHeading titleId={${tick}\${id}-title${tick}} eyebrow={content.eyebrow} title={content.title} intro={content.intro} field={field} />
+      <ul className="m-0 grid list-none gap-6 p-0 md:grid-cols-3">
+        {content.items.map((item, i) => (
+          <li key={i} className="flex flex-col gap-2 rounded-2xl border bg-card p-6">
+            <h3 className="m-0 font-display text-lg font-semibold" {...field("items", i, "title")}>
+              {item.title}
+            </h3>
+            {item.body && (
+              <p className="m-0 text-base leading-relaxed text-muted-foreground" {...field("items", i, "body")}>
+                {item.body}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Band>
+  );
+}
+`;
+}
+
+/** Adds an import after the last one and an entry before the closing of the array or object the pattern finds. */
+function register(file, pattern, importLine, entry) {
+  const text = readFileSync(file, "utf8");
+  const eol = text.includes("\r\n") ? "\r\n" : "\n";
+  const list = text.match(pattern);
+  const lastImport = [...text.matchAll(/^import .*$/gm)].pop();
+  if (!list || !lastImport) throw new CliError(`Could not find where to register it in ${relative(ROOT, file)}.`);
+  const body = list[2].replace(/\s+$/, "");
+  const indent = body.match(/\n([ \t]+)\S/)?.[1] ?? "  ";
+  const comma = !body.trim() || body.trim().endsWith(",") ? "" : ",";
+  const afterImports = lastImport.index + lastImport[0].length;
+  const updated =
+    text.slice(0, afterImports) +
+    eol + importLine +
+    text.slice(afterImports, list.index) +
+    list[1] + body + comma + eol + indent + entry + "," + eol + list[3] +
+    text.slice(list.index + list[0].length);
+  writeFileSync(file, updated);
+}
+
+async function blockCommand(nameArg) {
+  heading("New block");
+  const name = (nameArg || (await ask("Block name (e.g. testimonials, pricing-table)"))).trim();
   if (!/^[a-zA-Z][a-zA-Z0-9-_ ]*$/.test(name)) {
-    throw new CliError("Use letters, digits and dashes, e.g. `pnpm manifest section pricing-table`.");
+    throw new CliError("Use letters, digits and dashes, e.g. `pnpm manifest block pricing-table`.");
   }
   const type = toCamel(name);
   const pascal = toPascal(name);
-  const exportName = `${type}Section`;
+  const exportName = `${type}Block`;
   const label = toWords(name);
-  const file = resolve(SECTIONS_DIR, `${pascal}Section.tsx`);
+  const blockFile = resolve(BLOCKS_DIR, `${type}.ts`);
+  const rendererFile = resolve(RENDERERS_DIR, `${pascal}.tsx`);
 
-  if (existsSync(file)) throw new CliError(`${relative(ROOT, file)} already exists.`);
-  const taken = ["src/components/extensions/sections", "src/components/extensions/site"].some(
-    (dir) => spawnSync("git", ["grep", "-q", `type: "${type}"`, "--", dir], { cwd: ROOT }).status === 0,
-  );
-  if (taken) throw new CliError(`A section with type "${type}" already exists. Pick another name.`);
+  for (const file of [blockFile, rendererFile]) if (existsSync(file)) throw new CliError(`${relative(ROOT, file)} already exists.`);
+  if (spawnSync("git", ["grep", "-q", `type: "${type}"`, "--", "src/content/blocks"], { cwd: ROOT }).status === 0)
+    throw new CliError(`A block with type "${type}" already exists. Pick another name.`);
 
-  const index = readFileSync(SECTIONS_INDEX, "utf8");
-  const eol = index.includes("\r\n") ? "\r\n" : "\n";
-  const list = index.match(/registerSections\(\[([\s\S]*?)\]\)/);
-  const lastImport = [...index.matchAll(/^import .*$/gm)].pop();
-  if (!list || !lastImport) throw new CliError(`Could not find the registerSections([...]) list in ${relative(ROOT, SECTIONS_INDEX)}.`);
-  const items = list[1].replace(/\s+$/, "");
-  const indent = items.match(/\n([ \t]+)\S/)?.[1] ?? "  ";
-  const comma = !items.trim() || items.trim().endsWith(",") ? "" : ",";
-  const afterImports = lastImport.index + lastImport[0].length;
-  const updated =
-    index.slice(0, afterImports) +
-    `${eol}import { ${exportName} } from "./${pascal}Section";` +
-    index.slice(afterImports, list.index) +
-    `registerSections([${items}${comma}${eol}${indent}${exportName},${eol}])` +
-    index.slice(list.index + list[0].length);
-
-  writeFileSync(file, sectionTemplate({ type, exportName, label }).replace(/\n/g, eol));
-  writeFileSync(SECTIONS_INDEX, updated);
-  ok(`Created ${relative(ROOT, file)}`);
-  ok(`Registered ${exportName} in ${relative(ROOT, SECTIONS_INDEX)}`);
-  console.log(`\nNext: run ${bold("pnpm dev")}, open a sections page in ${bold("CMS › Website › Site pages")} and use ${bold(`Add section › ${label}`)}.`);
-  console.log(dim("  Then shape the schema and markup in the new file; the editor follows automatically."));
+  const eolOf = (file) => (readFileSync(file, "utf8").includes("\r\n") ? "\r\n" : "\n");
+  writeFileSync(blockFile, blockTemplate({ type, exportName, label }).replace(/\n/g, eolOf(BLOCKS_INDEX)));
+  writeFileSync(rendererFile, rendererTemplate({ pascal, type, exportName }).replace(/\n/g, eolOf(RENDERERS_INDEX)));
+  register(BLOCKS_INDEX, /(export const allBlocks = \[)([\s\S]*?)(\] as const)/, `import { ${exportName} } from "./${type}";`, exportName);
+  register(RENDERERS_INDEX, /(export const blockComponents = \{)([\s\S]*?)(\} satisfies BlockComponents)/, `import { ${pascal} } from "./${pascal}";`, `${type}: ${pascal}`);
+  ok(`Created ${relative(ROOT, blockFile)} (what editors fill in)`);
+  ok(`Created ${relative(ROOT, rendererFile)} (how it looks)`);
+  ok("Registered both (allBlocks, blockComponents)");
+  console.log(`\nNext: run ${bold('pnpm dev')}, open a page in ${bold('CMS › Content › Pages')} and use ${bold(`Add block › ${label}`)}.`);
+  console.log(dim("  Then shape the fields and the markup; the CMS form follows the fields automatically."));
 }
 
 async function setupCommand() {
@@ -561,7 +586,9 @@ const COMMANDS = {
   admin: adminCommand,
   doctor: doctorCommand,
   site: siteCommand,
-  section: sectionCommand,
+  block: blockCommand,
+  // The older name.
+  section: blockCommand,
 };
 
 const [name = "help", ...args] = process.argv.slice(2);

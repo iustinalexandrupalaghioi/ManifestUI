@@ -58,10 +58,21 @@ function resolveFilters(filters: DataViewDefaultFilter[] | undefined, columns: C
   });
 }
 
-const resolveSorting = (sorting: DataViewDefaultSort[] | undefined) =>
-  sorting?.length ? sorting.map((rule) => ({ id: rule.column, desc: !!rule.desc })) : undefined;
+/** Like the column header's sort: a related table's column carries `columnName` and `origin`, which the server keys on. */
+function resolveSorting(sorting: DataViewDefaultSort[] | undefined, columns: ColumnDef<any, any>[]) {
+  if (!sorting?.length) return undefined;
+  return sorting.map((rule) => {
+    const meta = columns.find((candidate) => candidate.id === rule.column)?.meta;
+    return {
+      id: rule.column,
+      desc: !!rule.desc,
+      columnName: meta?.columnName ?? rule.column,
+      ...(meta?.origin ? { origin: meta.origin } : {}),
+    };
+  });
+}
 
-/** Turns config defaults into view-store state; filters need column meta for labels and types. */
+/** Turns config defaults into view-store state; filters and sorts need column meta (labels, types, related columns). */
 export function resolveViewDefaults(
   defaults: DataViewDefaults | undefined,
   columns: ColumnDef<any, any>[],
@@ -70,14 +81,14 @@ export function resolveViewDefaults(
   const { table, list } = defaults;
   return {
     table: table && {
-      sorting: resolveSorting(table.sorting),
+      sorting: resolveSorting(table.sorting, columns),
       filters: resolveFilters(table.filters, columns),
       columnSizing: table.columnSizing,
       columnOrder: table.columnOrder,
       columnPinning: table.pinned?.length ? { left: table.pinned } : undefined,
     },
     list: list && {
-      sorting: resolveSorting(list.sorting),
+      sorting: resolveSorting(list.sorting, columns),
       filters: resolveFilters(list.filters, columns),
       listColumnOrder: list.columnOrder,
     },

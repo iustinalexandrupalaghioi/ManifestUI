@@ -187,6 +187,25 @@ export function renderErrorDetails(
   return renderer ? renderer(error.meta, t) : null;
 }
 
+const MAX_VALIDATION_ISSUES = 10;
+
+/** Server-side zod failures (see withPermission): which fields were refused, and why. */
+registerErrorDetails("validation", (meta) => {
+  const issues = (meta.issues as { path: string; message: string }[] | undefined) ?? [];
+  if (issues.length === 0) return null;
+  return (
+    <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
+      {issues.slice(0, MAX_VALIDATION_ISSUES).map((issue, index) => (
+        <li key={index}>
+          {issue.path && <code className="mr-1.5 rounded bg-muted px-1 py-0.5 text-foreground">{issue.path}</code>}
+          {issue.message}
+        </li>
+      ))}
+      {issues.length > MAX_VALIDATION_ISSUES && <li>+{issues.length - MAX_VALIDATION_ISSUES}</li>}
+    </ul>
+  );
+});
+
 interface FkReference {
   id: string;
   label: string;

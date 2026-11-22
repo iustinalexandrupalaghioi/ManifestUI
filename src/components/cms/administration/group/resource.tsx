@@ -1,89 +1,73 @@
 "use client";
 
 import { defineResource } from "@/framework/core/define-resource";
-import type { group } from "@/db/schema";
-import {
-  fetchGroupDetail,
-  fetchGroupList,
-  fetchGroupAggregates,
-  addGroup,
-  updateGroup,
-  deleteGroups,
-} from "./config/api";
-import { groupsForm } from "./config/form";
-import { groupSchema, type GroupFormValues } from "./config/schema";
-import { groupColumns, groupListColumns } from "./config/columns";
-import { groupsTabs } from "./config/tabs";
-import { groupsRelations } from "./config/relations";
+import { fetchGroupList, fetchGroupDetail, addGroup, updateGroup, deleteGroup, fetchGroupAggregates } from "./config/api";
+import { groupColumns, groupListColumns, groupPickupColumns } from "./config/columns";
+import { groupForm } from "./config/form";
 import { groupsDescriptor } from "./config/descriptor";
+import { groupSchema, type GroupFormValues } from "./config/schema";
+import type { Group } from "./config/api";
+import { groupRelations } from "./config/relations";
 
 export const groupsResource = defineResource<
-  typeof group.$inferSelect,
-  GroupFormValues
+  Group,
+  GroupFormValues,
+  number
 >({
   descriptor: groupsDescriptor,
-
-  presentation: {
-    open: "page",
-    add: "dialog",
-  },
-
+  idField: "id",
+  presentation: { open: "page", add: "dialog" },
   data: {
     fetchList: fetchGroupList,
     fetchAggregates: fetchGroupAggregates,
     fetchDetail: fetchGroupDetail,
-    mutations: { add: addGroup, update: updateGroup, delete: deleteGroups },
+    mutations: {
+      add: addGroup,
+      update: updateGroup,
+      delete: deleteGroup,
+    },
   },
-
   form: {
     schema: groupSchema,
     emptyValues: {
       name: "",
       description: "",
     },
-    layout: groupsForm,
+    layout: groupForm,
   },
-
   detail: {
-    tabs: groupsTabs,
-    relations: groupsRelations,
+    relations: groupRelations,
+    tabs: [
+      {
+        type: "relation",
+        value: "permissions",
+        label: { en: "Permissions", ro: "Permisiuni" },
+        relationKey: "permissions",
+      },
+      {
+        type: "relation",
+        value: "users",
+        label: { en: "Users", ro: "Utilizatori" },
+        relationKey: "users",
+      },
+    ],
   },
-
   dataView: {
     overview: {
       dataTableColumns: groupColumns,
       dataListColumns: groupListColumns,
-      features: {
-        edit: false,
-        grouping: false,
-        aggregates: false,
-      },
+      features: { aggregates: false, grouping: false, edit: false },
     },
     pickup: {
-      dataTableColumns: groupColumns,
-      dataListColumns: groupListColumns,
-      features: {
-        edit: false,
-        grouping: false,
-        aggregates: false,
-      },
+      dataTableColumns: groupPickupColumns,
+      features: { aggregates: false, grouping: false, edit: false },
     },
   },
 });
 
-export const { hooks: groupHooks, components: groupComponents } =
-  groupsResource;
-
-export const groupKeys = groupHooks.keys;
-export const OVERVIEW_KEY = groupsDescriptor.overviewKey;
-export const useGroupsInfinite = groupHooks.useList;
-export const useGroup = groupHooks.useDetail;
-
+export const { hooks: groupHooks, components: groupComponents } = groupsResource;
 export const {
   Overview: GroupOverview,
-  AddDialog: GroupAddDialog,
-  DetailDialog: GroupDetailDialog,
   AddPage: GroupAddPage,
   DetailPage: GroupDetailPage,
-  PickupDialog: GroupPickupDialog,
 } = groupComponents;

@@ -17,6 +17,8 @@ interface ResourceFormProps<TFormValues> {
   slots?: Record<string, ReactNode | (() => ReactNode)>;
   layout?: "grid" | "stack";
   sections?: SectionConfig<TFormValues>[];
+  /** One pane (key) of a free layout's top-level tabs: a record tab showing that part of the form. */
+  pane?: string;
 }
 
 // ─── ResourceForm ─────────────────────────────────────────────────────────────
@@ -29,12 +31,19 @@ export function ResourceForm<TFormValues extends Record<string, any>>({
   slots,
   layout: layoutOverride,
   sections,
+  pane,
 }: ResourceFormProps<TFormValues>) {
   const className = config.className ?? "max-w-7xl";
 
-  const hasSections = !!sections;
-  const effectiveLayout =
-    layoutOverride === "stack" && config.layout.mode !== "free"
+  // A pane of the form's top-level tabs: its children, as a column (the record's tab is the pane).
+  const paneNode =
+    pane && config.layout.mode === "free" && config.layout.root.type === "tabs"
+      ? config.layout.root.tabs.find((item) => item.key === pane)
+      : undefined;
+  const hasSections = !!sections || !!paneNode;
+  const effectiveLayout = paneNode
+    ? ({ mode: "free", root: { type: "column", gap: config.layout.mode === "free" && config.layout.root.type === "tabs" ? (config.layout.root.gap ?? 4) : 4, children: paneNode.children } } as const)
+    : layoutOverride === "stack" && config.layout.mode !== "free"
       ? ({ mode: "stack", sections: flattenSections(config.layout) } as const)
       : config.layout;
 
@@ -46,7 +55,7 @@ export function ResourceForm<TFormValues extends Record<string, any>>({
   // max-width class when there are no regions.
   const bodyClassName = regions ? "" : className;
 
-  if (hasSections) {
+  if (sections) {
     body = (
       <StackLayout<TFormValues>
         sections={sections}

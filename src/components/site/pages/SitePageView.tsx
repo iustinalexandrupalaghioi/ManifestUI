@@ -1,14 +1,17 @@
 import { getTranslations } from "next-intl/server";
 import { Markdown } from "@/components/site/learn/Markdown";
 import { MotionProvider } from "@/components/site/landing/motion";
-import { RenderSections } from "@/framework/site";
-import { loadSectionData } from "@/components/extensions/sections/data";
+import { RenderBlocks } from "@/framework/content/ui/RenderBlocks";
+import { loadBlockData } from "@/components/site/blocks/data";
+import { blockComponents } from "@/components/site/blocks";
 import { SiteFooterSlot } from "@/components/site/SiteFooterSlot";
 import type { SitePageContent } from "../internal/pages/content";
 import { EditPageButton } from "./EditPageButton";
+import { LivePageSections } from "./LivePageSections";
+import { draftMode } from "next/headers";
 
 /**
- * Renders a CMS site page: sections for a sections page, Markdown for a text
+ * Renders a CMS site page: its blocks for a blocks page, Markdown for a text
  * page. `withFooter={false}` where the route's layout already adds one.
  */
 export async function SitePageView({
@@ -22,11 +25,18 @@ export async function SitePageView({
 }) {
   if (page.kind === "sections") {
     const visible = page.sections.filter((section) => !section.hidden).map((section) => section.type);
-    const data = await loadSectionData(visible, { locale });
+    // Draft mode (the CMS preview): every type's data, since the editor can add any block; the
+    // blocks render in the browser so the draft applies as the editor types.
+    const preview = (await draftMode()).isEnabled;
+    const data = preview ? await loadBlockData.all({ locale }) : await loadBlockData(visible, { locale });
     return (
       <MotionProvider>
         <main>
-          <RenderSections sections={page.sections} data={data} />
+          {preview ? (
+            <LivePageSections sections={page.sections} data={data} entryId={page.entryId} locale={page.locale} />
+          ) : (
+            <RenderBlocks blocks={page.sections} components={blockComponents} data={data} />
+          )}
         </main>
         {withFooter && <SiteFooterSlot />}
         <EditPageButton kind="page" id={page.id} />
@@ -53,7 +63,7 @@ export async function SitePageView({
   );
 }
 
-/** Shown when a required page (home, learn) hasn't been created in the CMS yet. */
+/** Shown when a required page (home) hasn't been created in the CMS yet. */
 export async function MissingPage({ slug, withFooter = false }: { slug: string; withFooter?: boolean }) {
   const t = await getTranslations("Landing.pages");
   return (

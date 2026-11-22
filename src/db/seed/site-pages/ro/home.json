@@ -1,0 +1,93 @@
+{
+  "title": "Compania ta",
+  "description": "Ce face compania ta, în una sau două propoziții.",
+  "sections": [
+    {
+      "id": "hero",
+      "type": "hero",
+      "content": {
+        "eyebrow": "Bun venit",
+        "title": "O promisiune clară, într-un rând.",
+        "text": "Înlocuiește textul în CMS (Conținut › Pagini › home): una sau două propoziții despre ce oferi și pentru cine.",
+        "primary": {
+          "label": "Contactează-ne",
+          "href": "/#contact"
+        },
+        "secondary": {
+          "label": "Serviciile noastre",
+          "href": "/#services"
+        },
+        "image": {
+          "src": "",
+          "width": 0,
+          "height": 0
+        },
+        "imageAlt": ""
+      }
+    },
+    {
+      "id": "features",
+      "type": "features",
+      "content": {
+        "eyebrow": "",
+        "title": "De ce să lucrezi cu noi",
+        "intro": "",
+        "items": [
+          {
+            "title": "Construit pentru datele tale",
+            "body": "Înregistrările stau în baza ta de date, gestionate din panoul de administrare."
+          },
+          {
+            "title": "Editat de echipa ta",
+            "body": "Paginile se scriu ca ciorne, se previzualizează și se publică din CMS, fără deploy."
+          },
+          {
+            "title": "Rapid pentru vizitatori",
+            "body": "Paginile sunt statice și se reîmprospătează la publicare."
+          }
+        ]
+      }
+    },
+    {
+      "id": "services",
+      "type": "services",
+      "content": {
+        "eyebrow": "",
+        "title": "Servicii",
+        "intro": "Toate serviciile publicate, în ordine. Alege câteva în bloc ca să le afișezi doar pe ele.",
+        "layout": "cards",
+        "entries": []
+      }
+    },
+    {
+      "id": "faq",
+      "type": "faq",
+      "content": {
+        "eyebrow": "Întrebări frecvente",
+        "title": "Întrebări",
+        "items": [
+          {
+            "q": "Cum schimb această pagină?",
+            "a": "Autentifică-te, deschide CMS-ul și mergi la Conținut › Pagini › home. Editează blocurile, salvează ciorna, verifică previzualizarea și publică."
+          },
+          {
+            "q": "De unde vin serviciile?",
+            "a": "Din Conținut › Servicii: fiecare are pagina lui la /services/<adresă>."
+          }
+        ]
+      }
+    },
+    {
+      "id": "call-to-action",
+      "type": "callToAction",
+      "content": {
+        "title": "Vrei să vorbim?",
+        "text": "Spune-ne de ce ai nevoie; răspundem în cel mult o zi.",
+        "button": {
+          "label": "Contactează-ne",
+          "href": "mailto:hello@example.com"
+        }
+      }
+    }
+  ]
+}

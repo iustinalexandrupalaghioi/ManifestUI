@@ -87,7 +87,15 @@ export function createOverview<
 
   return function Overview(props: OverviewProps = {}) {
     return (
-      <Suspense fallback={<Loader />}>
+      <Suspense
+        fallback={
+          // The screen's shape while it loads: the toolbar's (empty) bar first, the spinner under it.
+          <div className="my-2 flex w-full flex-col">
+            {!config.renderOverview && <div aria-hidden className="mb-2 h-[58px] rounded-[10px] border bg-toolbar sm:h-[50px]" />}
+            <Loader className="items-center" />
+          </div>
+        }
+      >
         <OverviewInner {...props} />
       </Suspense>
     );
@@ -122,7 +130,7 @@ export function createOverview<
           config.formConfig,
           tabs
             .filter((tab): tab is Extract<(typeof tabs)[number], { type: "fields" }> => tab.type === "fields")
-            .map((tab) => tab.sections),
+            .map((tab) => tab.sections ?? []),
         ),
       [],
     );

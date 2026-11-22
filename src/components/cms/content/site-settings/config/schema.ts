@@ -1,11 +1,10 @@
 import { z } from "zod";
-import { siteSettingsContentSchema } from "@/components/site/internal/settings/model";
-import { PageLocale } from "../../site-page/config/constants";
+import { strictSchema } from "@/framework/content";
+import { navigationType } from "@/content/types/navigation";
 
 export const siteSettingsSchema = z.object({
-  locale: z.enum(PageLocale.values),
-  /** Header and footer, checked in the form and again in the save action (src/components/site/internal/settings/model.ts). */
-  content: siteSettingsContentSchema,
+  locale: z.enum(["en", "ro"]),
+  content: strictSchema(navigationType.fields).optional(),
 });
 
 export type SiteSettingsFormValues = z.infer<typeof siteSettingsSchema>;
