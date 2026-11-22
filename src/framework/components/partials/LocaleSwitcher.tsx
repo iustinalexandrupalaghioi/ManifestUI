@@ -58,11 +58,13 @@ function LocaleRadioItems({
   );
 }
 
-// Standalone trigger, used in the navbar when there's no UserMenu to nest
-// it under (logged-out state).
+// Standalone trigger, used as its own button in the site, CMS and studio
+// navbars.
 export function LocaleSwitcher({
+  size = "sm",
   label,
 }: {
+  size?: "sm" | "icon-sm" | "icon";
   /** Accessible name for the icon-only trigger. */
   label?: string;
 } = {}) {
@@ -73,7 +75,13 @@ export function LocaleSwitcher({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" disabled={isPending} aria-label={label} title={label}>
+        <Button
+          variant="outline"
+          size={size}
+          disabled={isPending}
+          aria-label={label}
+          title={label}
+        >
           <Languages size={16} className="text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
@@ -84,8 +92,8 @@ export function LocaleSwitcher({
   );
 }
 
-// Nested submenu, used inside UserMenu's Preferences submenu (logged-in
-// state) instead of a standalone trigger in the navbar.
+// Nested submenu, for embedding inside another dropdown menu (currently
+// unused: the navbars show the standalone trigger).
 export function LocaleMenuSub({ label }: { label: string }) {
   const { locale, setLocale } = useLocaleSwitch();
 

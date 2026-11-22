@@ -2,12 +2,13 @@ import type { ComponentType } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 import type { TranslatableText } from "@/framework/types/i18n-types";
+import type { Enum } from "@/framework/types/global/Enum";
 
 /** Augment with `{ extensions: typeof extensions }` so config `type`/`props` are type-checked. */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Register {}
 
-export type ExtensionKind = "field" | "block" | "detail" | "overview";
+export type ExtensionKind = "field" | "block" | "detail" | "overview" | "column";
 
 type PropsSchema = z.ZodType<Record<string, unknown>>;
 type EmptyProps = Record<string, never>;
@@ -24,6 +25,11 @@ interface ExtensionMeta<TKind extends ExtensionKind, TType extends string, S> {
   icon?: ComponentType<{ className?: string }>;
   /** Validates `props` and describes its editor controls. */
   props?: S;
+  /**
+   * Database tables (e.g. "group_permission") whose screens it is made for: Studio offers it only
+   * there. Omitted, it is offered everywhere. Code can still place it anywhere.
+   */
+  tables?: readonly string[];
 }
 
 /** `{ type, props }` reference to a registered component. */
@@ -104,11 +110,31 @@ export interface OverviewComponentDef<TType extends string = string, S = any, TI
   component: ComponentType<OverviewComponentProps<TItem, PropsOf<S>>>;
 }
 
+// ── Column: a computed grid / card value ───────────────────────────────────
+
+export interface ColumnComponentContext<TProps = Record<string, unknown>> {
+  locale: string;
+  props: TProps;
+}
+
+/**
+ * A column whose value is computed from the row (a readable name, a derived type, a flag that
+ * only applies to some rows), with optional badges. Columns use it as `compute: { type, props }`.
+ */
+export interface ColumnComponentDef<TType extends string = string, S = any, TItem = any>
+  extends ExtensionMeta<"column", TType, S>, Referable<TType, S> {
+  /** What the cell shows (and the grid sorts and filters by in the browser). */
+  value: (row: TItem, context: ColumnComponentContext<PropsOf<S>>) => unknown;
+  /** Badges for the values: label per locale and tone. */
+  options?: (context: ColumnComponentContext<PropsOf<S>>) => Enum[];
+}
+
 export type AnyExtension =
   | FieldComponentDef<string, any, any>
   | BlockComponentDef<string, any>
   | DetailComponentDef<string, any, any>
-  | OverviewComponentDef<string, any, any>;
+  | OverviewComponentDef<string, any, any>
+  | ColumnComponentDef<string, any, any>;
 
 // ── Type-level registry ─────────────────────────────────────────────────────
 
@@ -127,6 +153,7 @@ export type FieldExtensionRef = RefOf<RegisteredFieldDef>;
 export type BlockExtensionRef = RefOf<RegisteredBlockDef>;
 export type DetailExtensionRef = RefOf<Extract<Registered, { kind: "detail" }>>;
 export type OverviewExtensionRef = RefOf<Extract<Registered, { kind: "overview" }>>;
+export type ColumnExtensionRef = RefOf<Extract<Registered, { kind: "column" }>>;
 
 // ── Runtime registry ────────────────────────────────────────────────────────
 
@@ -135,6 +162,7 @@ const registry: Record<ExtensionKind, Map<string, AnyExtension>> = {
   block: new Map(),
   detail: new Map(),
   overview: new Map(),
+  column: new Map(),
 };
 
 /** Built-in layout node types an extension must not shadow. */
@@ -168,11 +196,16 @@ export const getDetailExtension = (type: string) =>
   registry.detail.get(type) as DetailComponentDef | undefined;
 export const getOverviewExtension = (type: string) =>
   registry.overview.get(type) as OverviewComponentDef | undefined;
+export const getColumnExtension = (type: string) =>
+  registry.column.get(type) as ColumnComponentDef | undefined;
+/** A form or screen component (columns aren't layout nodes, see getColumnExtension). */
 export const getExtension = (type: string) =>
   getFieldExtension(type) ?? getBlockExtension(type) ?? getDetailExtension(type) ?? getOverviewExtension(type);
 
-export function listExtensions<K extends ExtensionKind>(kind: K) {
-  return [...registry[kind].values()] as Extract<AnyExtension, { kind: K }>[];
+export function listExtensions<K extends ExtensionKind>(kind: K, table?: string) {
+  const all = [...registry[kind].values()] as Extract<AnyExtension, { kind: K }>[];
+  // With a table: only the components made for every table or for that one.
+  return table === undefined ? all : all.filter((def) => !def.tables || def.tables.includes(table));
 }
 
 /** Parses `props` against the schema so components get defaults applied. */

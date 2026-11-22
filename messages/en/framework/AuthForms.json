@@ -1,6 +1,7 @@
 {
   "or": "or",
   "continueWithGoogle": "Continue with Google",
+  "continueWithGitHub": "Continue with GitHub",
   "legal": {
     "agreeTo": "I agree to the",
     "termsAndConditions": "Terms & Conditions",

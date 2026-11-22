@@ -5,7 +5,7 @@ import { DescribedActionError, type ActionError } from "./actionResult";
 import { ForbiddenError } from "@/framework/authorization/lib/ForbiddenError";
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 
-type Tx = Parameters<DbClient["transaction"]>[0] extends (tx: infer T) => any
+export type Tx = Parameters<DbClient["transaction"]>[0] extends (tx: infer T) => any
   ? T
   : never;
 

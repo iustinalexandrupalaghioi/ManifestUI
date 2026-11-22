@@ -6,6 +6,7 @@ import { getManifestConfig } from "../../runtime";
 const tables = () => getManifestConfig().authTables;
 import { ALL_PERMISSIONS } from "../constants";
 import { isAdministrator } from "./isAdministrator";
+import { derivedRevisionPermissions } from "@/framework/content/revisions";
 
 type PermissionRow = {
   resourceId: string;
@@ -16,7 +17,7 @@ type PermissionRow = {
   allowed: boolean | null;
 };
 
-// `resource_id` is a code-level id (see src/app/grantablePermissions.ts),
+// `resource_id` is a code-level id (see src/framework/authorization/grants.ts),
 // not a DB foreign key — it's either a resourceDescriptors id ("todos"),
 // expanded via the CRUD flags into "todos:read"/"todos:add"/etc., or an
 // already-full grantableActions permission string ("todos:complete-with-note",
@@ -83,7 +84,10 @@ export async function getUserPermissions(userId: string): Promise<string[]> {
     .from(userGroup)
     .where(eq(userGroup.userId, userId));
 
-  return getPermissionsForGroupIds(groupRows.map((row) => row.groupId));
+  const permissions = await getPermissionsForGroupIds(groupRows.map((row) => row.groupId));
+  // Versions of content follow the content types: reading any of them lets you read their versions.
+  const contentIds = getManifestConfig().resources.filter((descriptor) => descriptor.content).map((descriptor) => descriptor.id);
+  return [...permissions, ...derivedRevisionPermissions(permissions, contentIds)];
 }
 
 export async function hasServerPermission(

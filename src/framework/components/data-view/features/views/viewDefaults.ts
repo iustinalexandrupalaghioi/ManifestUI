@@ -72,7 +72,7 @@ function resolveSorting(sorting: DataViewDefaultSort[] | undefined, columns: Col
   });
 }
 
-/** Turns config defaults into view-store state; filters need column meta for labels and types. */
+/** Turns config defaults into view-store state; filters and sorts need column meta (labels, types, related columns). */
 export function resolveViewDefaults(
   defaults: DataViewDefaults | undefined,
   columns: ColumnDef<any, any>[],

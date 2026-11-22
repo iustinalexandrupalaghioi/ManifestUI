@@ -1,5 +1,6 @@
 export {
   defineBlockComponent,
+  defineColumnComponent,
   defineDetailComponent,
   defineFieldComponent,
   defineOverviewComponent,
@@ -7,6 +8,7 @@ export {
 export { registerExtensions } from "./registry";
 export type {
   BlockComponentProps,
+  ColumnComponentContext,
   DetailComponentProps,
   ExtensionRef,
   FieldComponentProps,

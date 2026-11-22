@@ -13,7 +13,7 @@ import { getItemId } from "@/framework/core/resource-id";
 import type { FormProps } from "@/framework/types/resource-components-types";
 import type { TabConfig } from "@/framework/types/tab-config-type";
 import type { RelationConfig } from "@/framework/types/relation-config-type";
-import type { ComponentType } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 import type { FieldValues } from "react-hook-form";
 import { usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
@@ -31,6 +31,13 @@ interface RecordTabsProps<TItem, TFormValues extends FieldValues> {
   formOpen: boolean;
   contentClassName?: string;
   readOnly?: boolean;
+  /**
+   * Shown above the tab list, and kept in view with it while the active tab's
+   * content scrolls (the record's title bar, when every field is in a tab).
+   */
+  header?: ReactNode;
+  /** Beside the tab content, the height of its scroll area (the live preview). With `header` only. */
+  aside?: ReactNode;
 }
 
 export function RecordTabs<TItem, TFormValues extends FieldValues>({
@@ -44,18 +51,34 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
   formOpen,
   contentClassName,
   readOnly,
+  header,
+  aside,
 }: RecordTabsProps<TItem, TFormValues>) {
   const pathname = usePathname();
   const locale = useLocale();
   const itemId = getItemId(item as Record<string, unknown>, idField);
   const formKey = `${itemId}-${JSON.stringify(item)}`;
+  // With a header (every field in a tab): the header and tab list stay put and only the active
+  // tab's content scrolls, in its own area filling the rest of the screen. A tab's own header
+  // row sticks to the top of that area (STICKY_IN_RECORD reads --record-sticky-top: 0).
+  const fixedHeader = header !== undefined;
+  // No padding on the scroll area itself (a sticky header would stick below it, with content
+  // showing through); the room under the tab line is on the content and scrolls away.
+  const scrollArea = fixedHeader ? "min-h-0 flex-1 overflow-y-auto py-0" : undefined;
+  const padded = (node: ReactNode) => (fixedHeader ? <div className="pt-4 pb-6">{node}</div> : node);
 
   return (
+    <div
+      style={fixedHeader ? ({ "--record-sticky-top": "0px" } as CSSProperties) : undefined}
+      className={fixedHeader ? "flex min-h-0 flex-1 flex-col" : "contents"}
+    >
     <CustomTabs
       value={activeTab}
       onValueChange={setActiveTab}
-      className="w-full gap-0"
+      className={cn("w-full gap-0", fixedHeader && "min-h-0 flex-1")}
     >
+      <div className={cn(fixedHeader && "shrink-0 bg-background")}>
+      {header}
       <div className="flex items-center gap-1 overflow-x-auto">
         <CustomTabsList>
           {tabs.map((tab, index) => {
@@ -74,20 +97,26 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
           })}
         </CustomTabsList>
       </div>
+      </div>
+      <div className={cn(fixedHeader && "flex min-h-0 flex-1 gap-3")}>
+      <div className={cn(fixedHeader && "flex min-h-0 min-w-0 flex-1 flex-col")}>
       {tabs.map((tab) => {
         if (tab.type === "fields") {
           return (
             <CustomTabsContent
               key={tab.value}
               value={tab.value}
-              className={cn("mt-0 py-6", contentClassName)}
+              className={cn("mt-0 py-6", contentClassName, scrollArea)}
             >
-              <Form
-                key={formKey}
-                item={item}
-                sections={tab.sections}
-                readOnly={readOnly}
-              />
+              {padded(
+                <Form
+                  key={formKey}
+                  item={item}
+                  sections={tab.sections}
+                  pane={tab.formTab}
+                  readOnly={readOnly}
+                />,
+              )}
             </CustomTabsContent>
           );
         }
@@ -104,7 +133,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
               <CustomTabsContent
                 key={tab.value}
                 value={tab.value}
-                className="mt-0 py-0"
+                className={cn("mt-0 py-0", scrollArea)}
               />
             );
           }
@@ -113,22 +142,24 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
             <CustomTabsContent
               key={tab.value}
               value={tab.value}
-              className="mt-0 py-0"
+              className={cn("mt-0 py-0", scrollArea)}
             >
-              <RelationList
-                relation={relation}
-                item={item}
-                slotId={`${tab.value}-${itemId}`}
-                height={tab.height ?? (formOpen ? 430 : undefined)}
-              />
+              {padded(
+                <RelationList
+                  relation={relation}
+                  item={item}
+                  slotId={`${tab.value}-${itemId}`}
+                  height={tab.height ?? (formOpen ? 430 : undefined)}
+                />,
+              )}
             </CustomTabsContent>
           );
         }
 
         if (tab.type === "extension") {
           return (
-            <CustomTabsContent key={tab.value} value={tab.value} className="mt-0 py-0">
-              {renderDetailExtension(tab.component, item, { formOpen, basePath: pathname })}
+            <CustomTabsContent key={tab.value} value={tab.value} className={cn("mt-0 py-0", scrollArea)}>
+              {padded(renderDetailExtension(tab.component, item, { formOpen, basePath: pathname }))}
             </CustomTabsContent>
           );
         }
@@ -137,7 +168,7 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
           <CustomTabsContent
             key={tab.value}
             value={tab.value}
-            className="mt-0 py-0"
+            className={cn("mt-0 py-0", scrollArea)}
           >
             {tab.render(item, {
               formOpen,
@@ -146,6 +177,11 @@ export function RecordTabs<TItem, TFormValues extends FieldValues>({
           </CustomTabsContent>
         );
       })}
+      </div>
+      {fixedHeader && aside}
+      </div>
     </CustomTabs>
+    </div>
   );
 }
+

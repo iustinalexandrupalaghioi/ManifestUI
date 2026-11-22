@@ -1,3 +1,4 @@
+import type { ContentOptions } from "@/framework/content/options";
 import type { TableAction } from "@/framework/components/toolbar/Toolbar";
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import type { ComponentType, ReactNode } from "react";
@@ -20,6 +21,8 @@ export interface FormProps<TItem, TFormValues> {
   readOnly?: boolean;
   layout?: "grid" | "stack";
   sections?: SectionConfig<TFormValues>[];
+  /** One pane of the form's top-level tabs container (a fields tab's `formTab`). */
+  pane?: string;
 }
 
 export interface ResourceColumnMeta<TItem> {
@@ -45,9 +48,15 @@ export interface ResourcePermissions {
 
 export interface ResourceComponentsConfig<TItem, TFormValues> {
   id: string;
+  /** The descriptor's content options: the record page gets drafts, publishing, locales and history. */
+  content?: ContentOptions;
+  /** Every field is in a fields tab: no form section above the tabs. */
+  formInTabs?: boolean;
   Form?: ComponentType<FormProps<TItem, TFormValues>>;
   AddForm?: ComponentType<FormProps<TItem, TFormValues>>;
   formConfig?: FormConfig<TFormValues>;
+  /** The record screen's form (`form.layout`), when it differs from the add form. */
+  detailFormConfig?: FormConfig<TFormValues>;
   createColumns?: (locale: string) => ColumnDef<TItem>[];
   createPickupColumns?: (
     onSelect: (item: TItem) => void,

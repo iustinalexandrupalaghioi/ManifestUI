@@ -39,12 +39,14 @@ export function defineResourceComponents<
           readOnly,
           layout,
           sections,
+          pane,
         }: {
           item?: TItem;
           disabled?: boolean;
           readOnly?: boolean;
           layout?: "grid" | "stack";
           sections?: SectionConfig<TFormValues>[];
+          pane?: string;
         }) => (
           <ResourceForm
             config={detailFormConfig}
@@ -53,6 +55,7 @@ export function defineResourceComponents<
             readOnly={readOnly}
             layout={layout}
             sections={sections}
+            pane={pane}
           />
         )
       : undefined);
@@ -66,12 +69,14 @@ export function defineResourceComponents<
           readOnly,
           layout,
           sections,
+          pane,
         }: {
           item?: TItem;
           disabled?: boolean;
           readOnly?: boolean;
           layout?: "grid" | "stack";
           sections?: SectionConfig<TFormValues>[];
+          pane?: string;
         }) => (
           <ResourceForm
             config={addFormConfig}
@@ -80,6 +85,7 @@ export function defineResourceComponents<
             readOnly={readOnly}
             layout={layout}
             sections={sections}
+            pane={pane}
           />
         )
       : undefined);
@@ -230,7 +236,9 @@ export function defineResourceComponents<
     createColumns,
     createPickupColumns,
     formConfig: addFormConfig,
+    detailFormConfig,
     overviewKey: config.descriptor.overviewKey,
+    content: config.descriptor.content,
     defaultViewName: config.descriptor.defaultViewName,
     getOverviewTitle: config.dataView.overview.title,
     dialog: {
@@ -247,6 +255,7 @@ export function defineResourceComponents<
     overviewSlots: config.dataView.overview.slots,
     renderOverview: config.dataView.overview.render,
     detailSlots: config.detail?.slots,
+    formInTabs: config.detail?.formInTabs,
     permissions,
     dataView: {
       overview: {

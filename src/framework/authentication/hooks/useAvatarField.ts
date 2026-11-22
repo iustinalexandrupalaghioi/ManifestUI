@@ -9,6 +9,7 @@ import {
   selectIsUploading,
 } from "@/framework/components/form/hooks/useUploadStore";
 import { resolveAvatarUrl } from "../lib/resolveAvatarUrl";
+import { notifyAuthChanged } from "../lib/authEvents";
 
 const FIELD_NAME = "avatar_path";
 
@@ -70,6 +71,7 @@ export function useAvatarField(
   const syncAfterCommit = () => {
     onCommitted?.();
     router.refresh();
+    notifyAuthChanged();
   };
 
   const handleOperation = async () => {

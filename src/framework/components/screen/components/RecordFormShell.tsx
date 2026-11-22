@@ -1,4 +1,5 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { cn } from "@/framework/lib/utils";
 import { FormPage } from "@/framework/components/page/FormPage";
 import { DetailFormRow } from "./DetailFormRow";
 
@@ -31,8 +32,11 @@ interface RecordFormShellProps {
   afterForm?: ReactNode;
   afterTabs?: ReactNode;
   form: ReactNode;
-  tabs?: ReactNode;
+  /** The tabs, or (with `formInTabs`) a function that puts the title bar in their sticky header. */
+  tabs?: ReactNode | ((header: ReactNode) => ReactNode);
   toolbar?: ReactNode;
+  /** Every field is in a tab: the title bar, then the tabs (no collapsible form section). */
+  formInTabs?: boolean;
 }
 
 export function RecordFormShell({
@@ -56,7 +60,36 @@ export function RecordFormShell({
   form,
   tabs,
   toolbar,
+  formInTabs,
 }: RecordFormShellProps) {
+  if (hasTabs && formInTabs) {
+    // The title bar and the tab list stay in view together; only the active tab scrolls.
+    const header = (
+      <FormPage.Title className={titleClassName} surfaceClassName={cn("static mb-0", headerSurfaceClassName)} toolbar={toolbar} {...navProps}>
+        {title}
+        {titleBadge}
+      </FormPage.Title>
+    );
+    // With a function the tabs draw the title bar (and toolbar) themselves, so `form` (here only
+    // the loading state) goes after them: above, it would show over the toolbar.
+    return typeof tabs === "function" ? (
+      <>
+        {beforeForm}
+        {tabs(header)}
+        {form}
+        {afterTabs}
+      </>
+    ) : (
+      <>
+        {header}
+        {beforeForm}
+        {form}
+        {tabs}
+        {afterTabs}
+      </>
+    );
+  }
+
   if (hasTabs) {
     return (
       <>
@@ -77,7 +110,7 @@ export function RecordFormShell({
             {afterForm}
           </DetailFormRow>
         </FormPage.Collapsible>
-        {tabs}
+        {tabs as ReactNode}
         {afterTabs}
       </>
     );

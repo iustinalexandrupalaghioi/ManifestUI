@@ -25,5 +25,12 @@
   "typeTime": "time",
   "recordNotFound": "The record could not be found or you do not have permission to access it.",
   "fieldNotInDatabase": "A field in this form doesn't exist in the database.",
-  "unexpectedError": "An unexpected error occurred."
+  "unexpectedError": "An unexpected error occurred.",
+  "contentNotFound": "This entry or version no longer exists. Reload to see the current state.",
+  "contentNotLocalized": "This content type has a single version for every language.",
+  "contentUnknownLocale": "That language isn't one of the site's languages.",
+  "contentTranslationExists": "This entry already has a version in that language.",
+  "contentNotPreviewable": "This content type has no preview.",
+  "contentPreviewNotConfigured": "Preview isn't set up: add PREVIEW_SECRET (any long random text) to the server's environment.",
+  "contentOneVersionPerEntry": "Choose one version per entry: restoring two versions of the same entry would keep only one."
 }

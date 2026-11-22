@@ -14,7 +14,16 @@ export interface FieldTabConfig<TFormValues extends FieldValues> {
   value: string
   label: TranslatableText
   icon?: ReactNode
-  sections: SectionConfig<TFormValues>[]
+  /**
+   * The sections the tab shows. Left out, it shows the resource's whole form as laid out
+   * (`form.layout`, any mode): with `detail.formInTabs`, a record screen that is just tabs.
+   */
+  sections?: SectionConfig<TFormValues>[]
+  /**
+   * One pane (its `key`) of the form's top-level tabs container (a free layout whose root is
+   * `type: "tabs"`): the record's tabs are then the form's own, as laid out in the Form Designer.
+   */
+  formTab?: string
 }
 
 export type TabConfig<TItem, TFormValues extends FieldValues> =
