@@ -3,7 +3,7 @@
 import { getCurrentUserId } from "@/framework/authorization/lib/getCurrentUserId";
 import { hasServerPermission } from "@/framework/authorization/lib/permissions";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { MEDIA_TYPES, type MediaKind } from "@/framework/site";
+import { MEDIA_TYPES, type MediaKind } from "@/framework/content/media";
 import { SITE_MEDIA_BUCKET } from "./types";
 
 type Result = { ok: true; path: string; token: string; publicUrl: string } | { ok: false; error: string };
@@ -24,7 +24,7 @@ export async function createSiteMediaUpload(input: {
 }): Promise<Result> {
   const userId = await getCurrentUserId();
   const resource = typeof input.resource === "string" && /^[a-z0-9-]{1,60}$/.test(input.resource) ? input.resource : null;
-  const allowed = ["site-pages:update", "learn-lessons:update", ...(resource ? [`${resource}:add`, `${resource}:update`] : [])];
+  const allowed = ["site-pages:update", "services:update", ...(resource ? [`${resource}:add`, `${resource}:update`] : [])];
   if (!(await hasServerPermission(userId, allowed))) {
     return { ok: false, error: "forbidden" };
   }

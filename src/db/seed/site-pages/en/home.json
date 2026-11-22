@@ -1,0 +1,93 @@
+{
+  "title": "Your company",
+  "description": "What your company does, in one or two sentences.",
+  "sections": [
+    {
+      "id": "hero",
+      "type": "hero",
+      "content": {
+        "eyebrow": "Welcome",
+        "title": "A clear promise in one line.",
+        "text": "Replace this text in the CMS (Content › Pages › home): one or two sentences on what you offer and who it is for.",
+        "primary": {
+          "label": "Contact us",
+          "href": "/#contact"
+        },
+        "secondary": {
+          "label": "Our services",
+          "href": "/#services"
+        },
+        "image": {
+          "src": "",
+          "width": 0,
+          "height": 0
+        },
+        "imageAlt": ""
+      }
+    },
+    {
+      "id": "features",
+      "type": "features",
+      "content": {
+        "eyebrow": "",
+        "title": "Why work with us",
+        "intro": "",
+        "items": [
+          {
+            "title": "Built for your data",
+            "body": "Your records live in your own database, managed through the admin."
+          },
+          {
+            "title": "Edited by your team",
+            "body": "Pages are drafted, previewed and published from the CMS, without a deploy."
+          },
+          {
+            "title": "Fast for visitors",
+            "body": "Pages are static and refresh when something is published."
+          }
+        ]
+      }
+    },
+    {
+      "id": "services",
+      "type": "services",
+      "content": {
+        "eyebrow": "",
+        "title": "Services",
+        "intro": "Every published service, in order. Pick some in the block to show only those.",
+        "layout": "cards",
+        "entries": []
+      }
+    },
+    {
+      "id": "faq",
+      "type": "faq",
+      "content": {
+        "eyebrow": "FAQ",
+        "title": "Questions",
+        "items": [
+          {
+            "q": "How do I change this page?",
+            "a": "Sign in, open the CMS and go to Content › Pages › home. Edit the blocks, Save draft, check the preview and Publish."
+          },
+          {
+            "q": "Where do the services come from?",
+            "a": "From Content › Services: each one has its own page at /services/<address>."
+          }
+        ]
+      }
+    },
+    {
+      "id": "call-to-action",
+      "type": "callToAction",
+      "content": {
+        "title": "Ready to talk?",
+        "text": "Tell us what you need; we answer within a day.",
+        "button": {
+          "label": "Contact us",
+          "href": "mailto:hello@example.com"
+        }
+      }
+    }
+  ]
+}

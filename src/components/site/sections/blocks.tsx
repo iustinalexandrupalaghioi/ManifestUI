@@ -1,12 +1,14 @@
 /**
  * Layout building blocks shared by the site's section components: page
  * container, section band, eyebrow, title and button styles. No "use client":
- * used on the server (public site) and in the editor frame.
+ * used on the server and in the browser (the CMS preview).
  */
 import type { ReactNode } from "react";
-import { Text } from "@/framework/site";
+import type { FieldMarker } from "@/framework/content/ui/RenderBlocks";
 import { cn } from "@/lib/utils";
 import { Reveal } from "../landing/motion";
+import { ArrowRightIcon } from "lucide-react";
+import { cmsHref, SiteLink } from "../SiteLink";
 
 export const ctaBase =
   "inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 text-base font-semibold no-underline transition-colors";
@@ -59,19 +61,73 @@ export function SectionTitle({ children, className, id }: { children: ReactNode;
   );
 }
 
+const none: FieldMarker = () => ({});
+
 /**
- * Eyebrow, title and optional intro of a section, from the `eyebrow`, `title`
- * and `introPath` fields; for sections built with defineSection.
+ * A block's eyebrow, title and optional intro (fields `eyebrow`, `title` and
+ * `introKey`, "intro" by default). Empty eyebrow and intro are left out.
  */
-export function SectionHeading({ titleId, introPath }: { titleId: string; introPath?: string }) {
+export function SectionHeading({
+  titleId,
+  eyebrow,
+  title,
+  intro,
+  introKey = "intro",
+  field = none,
+}: {
+  titleId: string;
+  eyebrow?: string;
+  title?: string;
+  intro?: string;
+  introKey?: string;
+  field?: FieldMarker;
+}) {
   return (
     <Reveal className="flex flex-col gap-4">
-      <Text path="eyebrow" as="p" optional className={eyebrowClass} />
-      <Text path="title" as="h2" id={titleId} className={sectionTitleClass} />
-      {introPath && (
-        <Text path={introPath} as="p" optional multiline className="m-0 max-w-160 text-lg leading-relaxed text-muted-foreground" />
+      {eyebrow && (
+        <p className={eyebrowClass} {...field("eyebrow")}>
+          {eyebrow}
+        </p>
+      )}
+      <h2 id={titleId} className={sectionTitleClass} {...field("title")}>
+        {title}
+      </h2>
+      {intro && (
+        <p className="m-0 max-w-160 text-lg leading-relaxed text-muted-foreground" {...field(introKey)}>
+          {intro}
+        </p>
       )}
     </Reveal>
   );
 }
 
+/** Up to two CMS links as buttons (link fields `primary` and `secondary`); an empty one is left out. */
+export function CallsToAction({
+  primary,
+  secondary,
+  locale,
+  field = none,
+}: {
+  primary?: { label: string; href: unknown };
+  secondary?: { label: string; href: unknown };
+  locale: string;
+  field?: FieldMarker;
+}) {
+  const show = (link?: { label: string; href: unknown }) => !!link?.label && !!cmsHref(link.href, locale);
+  if (!show(primary) && !show(secondary)) return null;
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row">
+      {show(primary) && (
+        <SiteLink href={cmsHref(primary!.href, locale)} className={cn(ctaPrimary, "w-full sm:w-auto")}>
+          <span {...field("primary", "label")}>{primary!.label}</span>
+          <ArrowRightIcon className="size-4.5" aria-hidden />
+        </SiteLink>
+      )}
+      {show(secondary) && (
+        <SiteLink href={cmsHref(secondary!.href, locale)} className={cn(ctaSecondary, "w-full sm:w-auto")}>
+          <span {...field("secondary", "label")}>{secondary!.label}</span>
+        </SiteLink>
+      )}
+    </div>
+  );
+}

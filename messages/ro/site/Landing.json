@@ -15,8 +15,10 @@
   "pages": {
     "updated": "Ultima actualizare: {date}",
     "missingTitle": "Această pagină nu este configurată încă",
-    "missingBody": "Creează în CMS o pagină din secțiuni cu adresa „{slug}” (Site › Pagini de site), apoi adaugă-i secțiuni (README › Building the website).",
+    "missingBody": "Creează în CMS o pagină din blocuri cu adresa „{slug}” (Conținut › Pagini), adaugă blocuri, salvează ciorna și publică; sau rulează pnpm db:seed:content pentru conținutul de pornire.",
     "editPage": "Editează pagina",
-    "editLesson": "Editează lecția"
+    "editService": "Editează serviciul",
+    "allServices": "Toate serviciile",
+    "fallbackNotice": "Nu a fost tradus încă, așa că apare în engleză."
   }
 }

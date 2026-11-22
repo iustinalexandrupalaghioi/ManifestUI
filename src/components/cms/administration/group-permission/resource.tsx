@@ -1,38 +1,21 @@
 "use client";
 
 import { defineResource } from "@/framework/core/define-resource";
-import {
-  fetchGroupPermissionDetail,
-  fetchGroupPermissionList,
-  fetchGroupPermissionAggregates,
-  addGroupPermission,
-  updateGroupPermission,
-  deleteGroupPermissions,
-} from "./config/api";
-import { groupPermissionsForm } from "./config/form";
-import {
-  groupPermissionSchema,
-  type GroupPermissionFormValues,
-} from "./config/schema";
-import {
-  groupPermissionColumns,
-  groupPermissionListColumns,
-} from "./config/columns";
+import { fetchGroupPermissionList, fetchGroupPermissionDetail, addGroupPermission, updateGroupPermission, deleteGroupPermission, fetchGroupPermissionAggregates } from "./config/api";
+import { groupPermissionColumns, groupPermissionListColumns, groupPermissionPickupColumns } from "./config/columns";
+import { groupPermissionForm } from "./config/form";
 import { groupPermissionsDescriptor } from "./config/descriptor";
+import { groupPermissionSchema, type GroupPermissionFormValues } from "./config/schema";
 import type { GroupPermission } from "./config/api";
 
 export const groupPermissionsResource = defineResource<
   GroupPermission,
-  GroupPermissionFormValues
+  GroupPermissionFormValues,
+  number
 >({
   descriptor: groupPermissionsDescriptor,
-
-  presentation: {
-    open: "split",
-    split: { onOpen: "open-first", defaultWidth: 50 },
-    add: "dialog",
-  },
-
+  idField: "id",
+  presentation: { open: "split", add: "dialog", split: { onOpen: "open-first" } },
   data: {
     fetchList: fetchGroupPermissionList,
     fetchAggregates: fetchGroupPermissionAggregates,
@@ -40,61 +23,39 @@ export const groupPermissionsResource = defineResource<
     mutations: {
       add: addGroupPermission,
       update: updateGroupPermission,
-      delete: deleteGroupPermissions,
+      delete: deleteGroupPermission,
     },
   },
-
   form: {
     schema: groupPermissionSchema,
     emptyValues: {
-      group_id: 0,
-      resource_id: "",
-      can_read: false,
-      can_add: false,
-      can_update: false,
-      can_delete: false,
+      groupId: 0,
+      resourceId: "",
+      canRead: false,
+      canAdd: false,
+      canUpdate: false,
+      canDelete: false,
       allowed: false,
     },
-    layout: groupPermissionsForm,
+    layout: groupPermissionForm,
   },
-
+  detail: { },
   dataView: {
     overview: {
       dataTableColumns: groupPermissionColumns,
       dataListColumns: groupPermissionListColumns,
-      features: {
-        edit: false,
-        grouping: false,
-        aggregates: false,
-      },
+      features: { aggregates: false, grouping: false },
     },
     pickup: {
-      dataTableColumns: groupPermissionColumns,
-      dataListColumns: groupPermissionListColumns,
-      features: {
-        edit: false,
-        grouping: false,
-        aggregates: false,
-      },
+      dataTableColumns: groupPermissionPickupColumns,
+      features: { aggregates: false, grouping: false, edit: false },
     },
   },
 });
 
-export const {
-  hooks: groupPermissionHooks,
-  components: groupPermissionComponents,
-} = groupPermissionsResource;
-
-export const groupPermissionKeys = groupPermissionHooks.keys;
-export const OVERVIEW_KEY = groupPermissionsDescriptor.overviewKey;
-export const useGroupPermissionsInfinite = groupPermissionHooks.useList;
-export const useGroupPermission = groupPermissionHooks.useDetail;
-
+export const { hooks: groupPermissionHooks, components: groupPermissionComponents } = groupPermissionsResource;
 export const {
   Overview: GroupPermissionOverview,
-  AddDialog: GroupPermissionAddDialog,
-  DetailDialog: GroupPermissionDetailDialog,
   AddPage: GroupPermissionAddPage,
   DetailPage: GroupPermissionDetailPage,
-  PickupDialog: GroupPermissionPickupDialog,
 } = groupPermissionComponents;

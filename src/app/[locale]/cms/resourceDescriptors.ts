@@ -8,7 +8,10 @@ import { userGroupsDescriptor } from "@/components/cms/administration/user-group
 import { usersDescriptor } from "@/components/cms/administration/user/config/descriptor";
 import { sitePagesDescriptor } from "@/components/cms/content/site-page/config/descriptor";
 import { siteSettingsDescriptor } from "@/components/cms/content/site-settings/config/descriptor";
+import { siteInfoDescriptor } from "@/components/cms/content/site-info/config/descriptor";
 import { servicesDescriptor } from "@/components/cms/content/service/config/descriptor";
+import { contentRevisionsDescriptor } from "@/components/cms/content/content-revision/config/descriptor";
+import { contentDraftsDescriptor } from "@/components/cms/content/content-draft/config/descriptor";
 
 // Whole-app resource registry — fed to the framework's generic
 // createResourceActions() (via ./createResourceActions) so failure messages
@@ -24,5 +27,8 @@ export const resourceDescriptors: ResourceDescriptor[] = [
   usersDescriptor,
   sitePagesDescriptor,
   siteSettingsDescriptor,
+  siteInfoDescriptor,
   servicesDescriptor,
+  contentRevisionsDescriptor,
+  contentDraftsDescriptor,
 ];

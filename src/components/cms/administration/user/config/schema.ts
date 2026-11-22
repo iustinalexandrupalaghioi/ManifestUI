@@ -1,9 +1,8 @@
 import { z } from "zod";
 
-// Only `administrator` is editable — the rest is synced from auth.users via
-// the webhook route and shown readonly (see ./form.ts).
 export const userSchema = z.object({
-  administrator: z.boolean(),
+  id: z.string(),
+  administrator: z.boolean().default(false),
 });
 
 export type UserFormValues = z.infer<typeof userSchema>;

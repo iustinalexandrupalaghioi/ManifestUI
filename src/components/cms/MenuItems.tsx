@@ -13,6 +13,8 @@ import {
   FileTextIcon,
   PanelsTopLeftIcon,
   BriefcaseIcon,
+  InfoIcon,
+  FilePenLineIcon,
 } from "lucide-react";
 
 export function useMenuItems(): MenuSection[] {
@@ -46,7 +48,7 @@ export function useMenuItems(): MenuSection[] {
       ],
     },
     {
-      module: t("website"),
+      module: t("content"),
       links: [
         {
           type: "live",
@@ -57,18 +59,40 @@ export function useMenuItems(): MenuSection[] {
           icon: FileTextIcon,
         },
         {
+          type: "live",
+          name: t("services"),
+          useLiveNumber: () => useResourceCount("services"),
+          path: `${BASE_ROUTE}/services`,
+          title: t("servicesDescription"),
+          icon: BriefcaseIcon,
+        },
+        {
+          type: "live",
+          name: t("contentDrafts"),
+          useLiveNumber: () => useResourceCount("content-drafts"),
+          path: `${BASE_ROUTE}/content-drafts`,
+          title: t("contentDraftsDescription"),
+          icon: FilePenLineIcon,
+        },
+      ],
+    },
+    {
+      // Single entries open straight to their form: no list, no Add or Delete.
+      module: t("singleEntries"),
+      links: [
+        {
           type: "link",
-          name: t("siteSettings"),
+          name: t("navigation"),
           path: `${BASE_ROUTE}/site-settings`,
-          title: t("siteSettingsDescription"),
+          title: t("navigationDescription"),
           icon: PanelsTopLeftIcon,
         },
         {
           type: "link",
-          name: t("services"),
-          path: `${BASE_ROUTE}/services`,
-          title: t("servicesDescription"),
-          icon: BriefcaseIcon,
+          name: t("siteInfo"),
+          path: `${BASE_ROUTE}/site-info`,
+          title: t("siteInfoDescription"),
+          icon: InfoIcon,
         },
       ],
     },

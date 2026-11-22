@@ -9,3 +9,6 @@ export * from "./relations";
 export * from "./site-page";
 export * from "./site-settings";
 export * from "./service";
+export * from "./content-draft";
+export * from "./content-revision";
+export * from "./site-info";

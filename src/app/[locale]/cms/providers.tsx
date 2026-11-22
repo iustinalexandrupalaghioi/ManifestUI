@@ -9,6 +9,7 @@ import { NavigationTrail } from "@/framework/hooks/navigationTrail";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, type ReactNode } from "react";
 import "./registerResourceComponents";
+import { ContentEditor } from "./contentEditor";
 import "@/components/extensions";
 import "@/lib/storage/registerDefaultStorageHandler";
 
@@ -65,7 +66,9 @@ export function Providers({
          *  end: not user-scrollable, so their sticky positioning would
          *  never have anything to react to. Making it a real (if rarely
          *  needed) scroll container keeps their stickiness working. */}
-        <div className="cms-page-scroll min-h-0 flex-1 overflow-y-auto">{children}</div>
+        <div className="cms-page-scroll min-h-0 flex-1 overflow-y-auto">
+          <ContentEditor>{children}</ContentEditor>
+        </div>
       </ThemeProvider>
     </QueryClientProvider>
   );

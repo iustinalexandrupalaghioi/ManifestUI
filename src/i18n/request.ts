@@ -29,9 +29,10 @@ const NAMESPACES = [
   { group: "framework", name: "Toolbar" },
   { group: "framework", name: "Calendar" },
   { group: "framework", name: "Editing" },
+  { group: "framework", name: "Content" },
   { group: "features", name: "Menu" },
   { group: "features", name: "Todos" },
-  { group: "features", name: "GroupPermissions" },
+  { group: "framework", name: "GroupPermissions" },
   { group: "site", name: "Site" },
   { group: "site", name: "Landing" },
 ] as const;

@@ -1,5 +1,6 @@
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 import { BASE_ROUTE } from "@/components/cms/constants";
+
 const id = "services";
 
 export const servicesDescriptor: ResourceDescriptor = {
@@ -19,4 +20,13 @@ export const servicesDescriptor: ResourceDescriptor = {
   },
   overviewKey: `${id}-overview`,
   defaultViewName: { en: "Services", ro: "Servicii" },
+  content: {
+    type: "service",
+    kind: "collection",
+    localized: true,
+    slugField: "slug",
+    titleField: "title",
+    url: "/{locale}/services/{slug}",
+    previewable: true,
+  },
 };

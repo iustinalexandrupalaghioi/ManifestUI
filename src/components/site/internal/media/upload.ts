@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { createSiteMediaUpload } from "./actions";
-import type { MediaKind } from "@/framework/site";
+import type { MediaKind } from "@/framework/content/media";
 import { SITE_MEDIA_BUCKET } from "./types";
 
 export interface UploadedMedia {

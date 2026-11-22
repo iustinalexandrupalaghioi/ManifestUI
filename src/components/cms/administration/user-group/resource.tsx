@@ -1,18 +1,11 @@
 "use client";
 
 import { defineResource } from "@/framework/core/define-resource";
-import {
-  fetchUserGroupDetail,
-  fetchUserGroupList,
-  fetchUserGroupAggregates,
-  addUserGroup,
-  updateUserGroup,
-  deleteUserGroups,
-} from "./config/api";
-import { userGroupsForm } from "./config/form";
-import { userGroupSchema, type UserGroupFormValues } from "./config/schema";
-import { userGroupColumns, userGroupListColumns } from "./config/columns";
+import { fetchUserGroupList, fetchUserGroupDetail, addUserGroup, updateUserGroup, deleteUserGroup, fetchUserGroupAggregates } from "./config/api";
+import { userGroupColumns, userGroupListColumns, userGroupPickupColumns } from "./config/columns";
+import { userGroupForm } from "./config/form";
 import { userGroupsDescriptor } from "./config/descriptor";
+import { userGroupSchema, type UserGroupFormValues } from "./config/schema";
 import type { UserGroup } from "./config/api";
 
 export const userGroupsResource = defineResource<
@@ -21,12 +14,8 @@ export const userGroupsResource = defineResource<
   string
 >({
   descriptor: userGroupsDescriptor,
-
-  presentation: {
-    open: "dialog",
-    add: "dialog",
-  },
-
+  idField: "id",
+  presentation: { open: "dialog", add: "dialog" },
   data: {
     fetchList: fetchUserGroupList,
     fetchAggregates: fetchUserGroupAggregates,
@@ -34,54 +23,38 @@ export const userGroupsResource = defineResource<
     mutations: {
       add: addUserGroup,
       update: updateUserGroup,
-      delete: deleteUserGroups,
+      delete: deleteUserGroup,
     },
   },
-
   form: {
     schema: userGroupSchema,
     emptyValues: {
-      user_id: "",
-      group_id: 0,
+      userId: "",
+      groupId: 0,
     },
-    layout: userGroupsForm,
+    layout: userGroupForm,
   },
-
+  detail: { },
   dataView: {
     overview: {
       dataTableColumns: userGroupColumns,
       dataListColumns: userGroupListColumns,
-      features: {
-        edit: false,
-        grouping: false,
-        aggregates: false,
+      features: { aggregates: false, grouping: false, edit: false },
+      defaultView: {
+        table: { sorting: [{ column: "createdAt", desc: false }] },
+        list: { sorting: [{ column: "createdAt", desc: false }] },
       },
     },
     pickup: {
-      dataTableColumns: userGroupColumns,
-      dataListColumns: userGroupListColumns,
-      features: {
-        edit: false,
-        grouping: false,
-        aggregates: false,
-      },
+      dataTableColumns: userGroupPickupColumns,
+      features: { aggregates: false, grouping: false, edit: false },
     },
   },
 });
 
-export const { hooks: userGroupHooks, components: userGroupComponents } =
-  userGroupsResource;
-
-export const userGroupKeys = userGroupHooks.keys;
-export const OVERVIEW_KEY = userGroupsDescriptor.overviewKey;
-export const useUserGroupsInfinite = userGroupHooks.useList;
-export const useUserGroup = userGroupHooks.useDetail;
-
+export const { hooks: userGroupHooks, components: userGroupComponents } = userGroupsResource;
 export const {
   Overview: UserGroupOverview,
-  AddDialog: UserGroupAddDialog,
-  DetailDialog: UserGroupDetailDialog,
   AddPage: UserGroupAddPage,
   DetailPage: UserGroupDetailPage,
-  PickupDialog: UserGroupPickupDialog,
 } = userGroupComponents;

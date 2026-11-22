@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
-import { pgTable, pgPolicy, text, bigint, timestamp, unique, check, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, pgPolicy, text, bigint, uuid, timestamp, unique, check, jsonb } from "drizzle-orm/pg-core";
 
 /**
  * Site-wide settings edited in the CMS (Website > Site settings): one row per
  * locale. `content` holds the header and footer ({ header, footer }), each
- * shaped by its defineSection schema in src/components/extensions/site.
+ * shaped by the navigation blocks in src/content/blocks/navigation.ts.
  */
 export const siteSettings = pgTable(
   "site_settings",
@@ -18,10 +18,17 @@ export const siteSettings = pgTable(
     locale: text().notNull(),
     content: jsonb().notNull().default({}),
     updatedAt: timestamp({ withTimezone: true, mode: "string" }).notNull().defaultNow(),
+    /** The same for every locale of one entry (content layer, references, links). */
+    entryId: uuid().notNull().defaultRandom(),
+    /** When the row went live; null = not live. Replaces `published` (kept until every reader moved). */
+    publishedAt: timestamp({ withTimezone: true, mode: "string" }),
+    /** Who published it (auth user id; not a foreign key, so deleting a user keeps the history). */
+    publishedBy: uuid(),
   },
   (table) => [
     // One record per locale; also the index for the lookup.
     unique("site_settings_locale_key").on(table.locale),
+    unique("site_settings_entry_id_locale_key").on(table.entryId, table.locale),
     check("site_settings_locale_check", sql`locale = ANY (ARRAY['en'::text, 'ro'::text])`),
     // The app reads through its server connection; this only governs
     // Supabase's public API, where the header and footer are public anyway.

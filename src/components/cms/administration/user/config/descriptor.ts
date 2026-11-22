@@ -1,5 +1,6 @@
 import type { ResourceDescriptor } from "@/framework/types/resource-descriptor-type";
 import { BASE_ROUTE } from "@/components/cms/constants";
+
 const id = "users";
 
 export const usersDescriptor: ResourceDescriptor = {

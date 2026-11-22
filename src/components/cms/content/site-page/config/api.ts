@@ -1,15 +1,15 @@
 "use server";
+
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { sitePage } from "@/db/schema";
+import { contentDraft, contentRevision, sitePage } from "@/db/schema";
+import { forgetContentRow } from "@/framework/content/server/forgetRow";
+import { afterContentDelete, saveContentFromForm, withContentDraft, withContentStatuses } from "@/framework/content/server/index.server";
 import { defineResourceActions } from "@/framework/authorization/lib/defineResourceActions";
 import { createResourceActions } from "@/app/[locale]/cms/createResourceActions";
-import { afterCommit } from "@/framework/lib/transactionalAction";
-import { refreshSitePages } from "@/components/site/internal/cache";
 import type { SortRule } from "@/framework/components/data-view/core/tanstack-augmentations";
 import type { FilterRule } from "@/framework/components/data-view/features/filtering/filters";
 import {
-  buildAggregateSelection,
   buildKeysetWhere,
   buildOrderBy,
   buildWhereConditions,
@@ -17,25 +17,17 @@ import {
   resolveSortColumns,
   type FilterColumnMap,
 } from "@/framework/components/data-view/features/filtering/drizzle-filters";
-import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
-import { buildGroupingSortRules } from "@/framework/components/data-view/features/grouping/grouping";
 import type { GroupByRule } from "@/framework/components/data-view/features/grouping/grouping";
+import type { AggregateRule } from "@/framework/components/data-view/features/aggregates/aggregates";
+import { buildAggregateSelection } from "@/framework/components/data-view/features/filtering/drizzle-filters";
+
 import type { Cursor } from "@/framework/types/pagination";
 import { sitePageSchema, type SitePageFormValues } from "./schema";
 
-const PAGE_SIZE = 50;
+export type SitePage = typeof sitePage.$inferSelect;
 
+const PAGE_SIZE = 100;
 const filterColumns: FilterColumnMap = {
-  id: sitePage.id,
-  slug: sitePage.slug,
-  locale: sitePage.locale,
-  kind: sitePage.kind,
-  title: sitePage.title,
-  published: sitePage.published,
-  updatedAt: sitePage.updatedAt,
-};
-
-const listSelection = {
   id: sitePage.id,
   slug: sitePage.slug,
   locale: sitePage.locale,
@@ -44,100 +36,80 @@ const listSelection = {
   kind: sitePage.kind,
   body: sitePage.body,
   sections: sitePage.sections,
-  published: sitePage.published,
   updatedAt: sitePage.updatedAt,
+  entryId: sitePage.entryId,
+  publishedAt: sitePage.publishedAt,
+  publishedBy: sitePage.publishedBy,
 };
-
 const crud = createResourceActions("site-pages");
 
 export const {
-  fetchSitePageList,
+  fetchSitePageList, fetchSitePageDetail, addSitePage, updateSitePage, deleteSitePage,
   fetchSitePageAggregates,
-  fetchSitePageDetail,
-  addSitePage,
-  updateSitePage,
-  deleteSitePages,
 } = defineResourceActions("site-pages", {
   fetchSitePageList: [
     "read",
-    async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null, groupBy: GroupByRule[]) => {
+    async (sorting: SortRule[], filters: FilterRule[], cursor: Cursor | null, _groupBy: GroupByRule[]) => {
       const where = buildWhereConditions(filters, filterColumns);
-      const effectiveSorting = groupBy.length ? [...buildGroupingSortRules(groupBy), ...sorting] : sorting;
-      const sortColumns = resolveSortColumns(effectiveSorting, filterColumns, { key: "id", column: sitePage.id });
-      const orderBy = buildOrderBy(sortColumns);
+      const sortColumns = resolveSortColumns(sorting, filterColumns, {
+        key: "id",
+        column: sitePage.id,
+      });
 
-      if (groupBy.length > 0) {
-        const [items, [{ count }]] = await Promise.all([
-          db.select(listSelection).from(sitePage).where(where).orderBy(...orderBy),
-          db.select({ count: sql<number>`count(*)::int` }).from(sitePage).where(where),
-        ]);
-        return { items, total: count ?? 0, nextCursor: null };
-      }
-
-      const seekWhere = and(where, buildKeysetWhere(sortColumns, cursor));
       const [items, [{ count }]] = await Promise.all([
-        db.select(listSelection).from(sitePage).where(seekWhere).orderBy(...orderBy).limit(PAGE_SIZE),
+        db.select().from(sitePage)
+          .where(and(where, buildKeysetWhere(sortColumns, cursor)))
+          .orderBy(...buildOrderBy(sortColumns))
+          .limit(PAGE_SIZE),
         db.select({ count: sql<number>`count(*)::int` }).from(sitePage).where(where),
       ]);
-      const nextCursor = items.length === PAGE_SIZE ? extractCursor(items[items.length - 1], sortColumns) : null;
-      return { items, total: count ?? 0, nextCursor };
+      return {
+        items: await withContentStatuses("page", items),
+        total: count ?? 0,
+        nextCursor: items.length === PAGE_SIZE
+          ? extractCursor(items[items.length - 1], sortColumns)
+          : null,
+      };
     },
   ],
-
   fetchSitePageAggregates: [
     "read",
     async (rules: AggregateRule[], filters: FilterRule[]) => {
       const where = buildWhereConditions(filters, filterColumns);
-      const selection = buildAggregateSelection(rules, filterColumns);
-      if (Object.keys(selection).length === 0) return {};
-      const [row] = await db.select(selection).from(sitePage).where(where);
+      const totals = buildAggregateSelection(rules, filterColumns);
+      if (Object.keys(totals).length === 0) return {};
+      const [row] = await db.select(totals).from(sitePage).where(where);
       return row;
     },
   ],
 
   fetchSitePageDetail: [
     "read",
-    async (id: number): Promise<typeof sitePage.$inferSelect> => {
-      const [row] = await db.select().from(sitePage).where(eq(sitePage.id, id)).limit(1);
+    async (id: number) => {
+      const [row] = await db.select().from(sitePage)
+        .where(eq(sitePage.id, id))
+        .limit(1);
       if (!row) throw new Error(`Site page ${id} not found`);
-      return row;
+      // The editor opens the draft when there is one.
+      return withContentDraft("page", id, row);
     },
   ],
-
-  // Public pages are cached; each save refreshes the addresses it touched once committed.
-  addSitePage: afterCommit(
-    crud.add(async (tx, data: SitePageFormValues) => {
-      const parsed = sitePageSchema.parse(data);
-      const [result] = await tx.insert(sitePage).values(parsed).returning({ id: sitePage.id });
-      return result.id;
-    }),
-    (id, data) => {
-      refreshSitePages([{ slug: sitePageSchema.shape.slug.parse(data.slug), locale: data.locale }]);
-      return id;
+  addSitePage: crud.add(async (tx, data: SitePageFormValues) => {
+    const parsed = sitePageSchema.parse(data);
+    // Not live until published; a new language row joins the entry with this address.
+    const [row] = await tx.insert(sitePage).values({ ...parsed, entryId: sql`coalesce((select ${sitePage.entryId} from ${sitePage} where ${sitePage.slug} = ${parsed.slug} limit 1), gen_random_uuid())`, publishedAt: null }).returning({ id: sitePage.id });
+    return row.id;
+  }),
+  // Save draft: to the row while it isn't live, else to its draft (Publish makes it live).
+  updateSitePage: [
+    "update",
+    async (id: number, data: SitePageFormValues) => {
+      await saveContentFromForm("page", id, sitePageSchema.parse(data));
     },
-  ),
-
-  updateSitePage: afterCommit(
-    crud.update(async (tx, id: number, data: SitePageFormValues) => {
-      const parsed = sitePageSchema.parse(data);
-      const [before] = await tx.select({ slug: sitePage.slug, locale: sitePage.locale }).from(sitePage).where(eq(sitePage.id, id));
-      await tx
-        .update(sitePage)
-        .set({ ...parsed, updatedAt: sql`now()` })
-        .where(eq(sitePage.id, id));
-      // The old address too, when the slug or language changed.
-      return before ? [before, { slug: parsed.slug, locale: parsed.locale }] : [{ slug: parsed.slug, locale: parsed.locale }];
-    }),
-    (pages) => {
-      refreshSitePages(pages);
-    },
-  ),
-
-  deleteSitePages: afterCommit(
-    crud.delete((tx, id: number) => tx.delete(sitePage).where(eq(sitePage.id, id))),
-    (result) => {
-      if (result.succeededIds.length) refreshSitePages();
-      return result;
-    },
-  ),
+  ],
+  // The row's draft and versions go with it; once committed, content.onChange hears of it.
+  deleteSitePage: afterContentDelete("page", crud.delete(async (tx, id: number) => {
+    await forgetContentRow(tx, { draft: contentDraft, revision: contentRevision }, "page", id);
+    return tx.delete(sitePage).where(eq(sitePage.id, id));
+  })),
 });

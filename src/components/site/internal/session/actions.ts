@@ -9,8 +9,8 @@ export interface SiteSession {
   displayName: string;
   avatarUrl: string | null;
   canAccessCms: boolean;
-  /** "Edit this page" / "Edit this lesson". */
-  canEdit: { page: boolean; lesson: boolean };
+  /** "Edit this page" / "Edit this service". */
+  canEdit: { page: boolean; service: boolean };
 }
 
 /**
@@ -21,16 +21,16 @@ export interface SiteSession {
 export async function getSiteSession(): Promise<SiteSession | null> {
   const userId = await getCurrentUserId();
   if (!userId) return null;
-  const [profile, canAccessCms, canEditPages, canEditLessons] = await Promise.all([
+  const [profile, canAccessCms, canEditPages, canEditServices] = await Promise.all([
     fetchUserProfile(userId),
     hasAnyGroup(userId),
     hasServerPermission(userId, "site-pages:update"),
-    hasServerPermission(userId, "learn-lessons:update"),
+    hasServerPermission(userId, "services:update"),
   ]);
   return {
     displayName: profile?.full_name || profile?.email || "Account",
     avatarUrl: profile ? resolveAvatarUrl({ ...profile, id: userId }) : null,
     canAccessCms,
-    canEdit: { page: canEditPages, lesson: canEditLessons },
+    canEdit: { page: canEditPages, service: canEditServices },
   };
 }
