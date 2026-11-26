@@ -52,7 +52,7 @@ export const servicesResource = defineResource<
       {
         type: "fields",
         value: "info",
-        label: { en: "SEO / Info", ro: "SEO / Informații" },
+        label: { en: "Details", ro: "Detalii" },
         formTab: "info",
       },
       contentHistoryTab,

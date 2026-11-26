@@ -29,7 +29,7 @@ export const sitePageForm: FormConfig<SitePageFormValues> = {
         },
         {
           key: "info",
-          label: { en: "SEO / Info", ro: "SEO / Informații" },
+          label: { en: "Details", ro: "Detalii" },
           children: [
             {
               type: "grid",
