@@ -21,8 +21,10 @@ import postgres from "postgres";
 import { resourceDescriptors } from "../src/app/[locale]/cms/resourceDescriptors.ts";
 import { routing } from "../src/i18n/routing.ts";
 import { entryIdFixes, missingSingletonRows } from "../src/framework/content/rows.ts";
-import { getContentType } from "../src/framework/content/define.ts";
-import "../src/content/index.ts";
+// Read the registered list itself: importing define.ts directly can load a second copy of
+// that module (its registry empty) next to the one src/content/index.ts registers into.
+import { contentTypes } from "../src/content/index.ts";
+const getContentType = (name) => contentTypes.find((def) => def.name === name);
 
 const args = process.argv.slice(2);
 const unknown = args.filter((arg) => arg !== "--apply");
