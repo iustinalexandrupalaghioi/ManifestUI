@@ -27,7 +27,7 @@ export const serviceForm: FormConfig<ServiceFormValues> = {
         },
         {
           key: "info",
-          label: { en: "SEO / Info", ro: "SEO / Informații" },
+          label: { en: "Details", ro: "Detalii" },
           children: [
             {
               type: "grid",

@@ -80,7 +80,7 @@ export function createAddPage<
         reset,
         label: resolvedLabels.singular,
         gender: labels.gender,
-        onComplete: () => router.back(),
+        onComplete: () => (hooks.afterAdd === "list" ? router.replace(hooks.routes.list) : router.back()),
       });
 
     return (

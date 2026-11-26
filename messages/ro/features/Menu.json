@@ -23,6 +23,8 @@
   "servicesDescription": "Servicii, fiecare cu pagina lui, listate de blocul de servicii",
   "menu": "Meniu",
   "openMenu": "Deschide meniul",
+  "expandAll": "Extinde tot",
+  "collapseAll": "Restrânge tot",
   "home": "Acasă",
   "breadcrumb": "Cale de navigare",
   "newRecord": "Nou",

@@ -32,6 +32,7 @@ function toResourceConfig<
     labels: descriptor,
     openMode: presentation?.open,
     addMode: presentation?.add,
+    afterAdd: presentation?.afterAdd,
     splitConfig: presentation?.split,
     fetchList: data.fetchList,
     pageSize: data.pageSize,

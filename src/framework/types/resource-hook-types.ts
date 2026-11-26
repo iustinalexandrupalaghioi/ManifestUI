@@ -94,6 +94,7 @@ export interface ResourceConfig<
   labels: ResourceLabels;
   openMode?: "dialog" | "page" | "split";
   addMode?: "dialog" | "page";
+  afterAdd?: "back" | "list";
   splitConfig?: SplitConfig;
   fetchList: (
     sorting: SortRule[],

@@ -37,11 +37,28 @@ const NAMESPACES = [
   { group: "site", name: "Landing" },
 ] as const;
 
-export default getRequestConfig(async () => {
-  // The [locale] segment above every root layout (`next/root-params`), so pages
-  // stay static: next-intl's `requestLocale` would read the request headers.
+/**
+ * The [locale] segment above every root layout (`next/root-params`), so pages
+ * stay static: next-intl's `requestLocale` would read the request headers.
+ * Server Actions can't call root params (Next throws there); they are dynamic
+ * anyway, so they read the locale next-intl's proxy set on the request.
+ *
+ * Never destructure `requestLocale` up front: it is a getter that reads the
+ * request headers when touched, which turns every page dynamic.
+ */
+async function readLocale(params: { requestLocale: Promise<string | undefined> }) {
+  try {
+    return await rootLocale();
+  } catch (error) {
+    // Only that one case: anything else must reach Next unchanged.
+    if (error instanceof Error && error.message.includes("Server Action")) return await params.requestLocale;
+    throw error;
+  }
+}
+
+export default getRequestConfig(async (params) => {
   // Outside [locale] (API routes) there is none, and the default applies.
-  const requested = await rootLocale();
+  const requested = await readLocale(params);
   const locale = hasLocale(routing.locales, requested)
     ? requested
     : routing.defaultLocale;

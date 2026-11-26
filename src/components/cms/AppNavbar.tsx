@@ -34,7 +34,8 @@ export async function AppNavBar({
       className="cms-navbar sticky top-0 z-50 flex h-[52px] w-full shrink-0 items-center gap-2 border-b bg-sidebar px-2 text-sidebar-foreground sm:h-12 sm:px-3">
       <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
         <CmsNavMenu />
-        <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex">
+        {/* Home on every screen size: on phones too, next to the menu (the title truncates). */}
+        <Button asChild variant="ghost" size="icon" className="shrink-0">
           <Link href={BASE_ROUTE} aria-label={tMenu("home")} title={tMenu("home")}>
             <HomeIcon />
           </Link>
