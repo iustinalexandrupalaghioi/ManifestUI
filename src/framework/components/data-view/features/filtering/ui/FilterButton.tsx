@@ -3,6 +3,7 @@ import { cn } from "@/framework/lib/utils"
 import { FilterIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { getFilteringStore } from "../filtering.store"
+import { useOptionalDataViewFilter } from "../../../core/stores/DataViewFilterContext"
 
 interface FilterButtonProps {
   viewId: string
@@ -12,7 +13,11 @@ interface FilterButtonProps {
 
 export function FilterButton({ viewId, tableId, onOpen }: FilterButtonProps) {
   const t = useTranslations("Filtering")
-  const activeCount = getFilteringStore(tableId, viewId)((s) => s.rules.length)
+  const ruleCount = getFilteringStore(tableId, viewId)((s) => s.rules.length)
+  // Filters applied from context (the URL's ?column=…, an embedded list's relation) count too:
+  // they narrow the rows just the same, and the panel lists them under "Applied from context".
+  const contextCount = useOptionalDataViewFilter()?.enrichedPreFilters.length ?? 0
+  const activeCount = ruleCount + contextCount
 
   return (
     <Button

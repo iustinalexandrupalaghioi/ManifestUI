@@ -26,6 +26,7 @@ export function createResourceHooks<
     relations = [],
     openMode = "page",
     addMode = "page",
+    afterAdd = "back",
     splitConfig,
   } = config
 
@@ -49,6 +50,7 @@ export function createResourceHooks<
     relations,
     openMode,
     addMode,
+    afterAdd,
     splitConfig: resolvedSplitConfig,
     isDeleteEligible,
 

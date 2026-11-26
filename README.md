@@ -410,6 +410,17 @@ context menu).
   `useLiveNumber: () => useResourceCount("users")` shows the resource's row count on its tile in
   the CMS home and beside it in the ☰ menu. It's counted by the resource's own aggregates action,
   so only users who can read the resource see it, and it refreshes when rows change.
+  `useResourceCount(id, filters)` counts only matching rows; pair it with a filtered link (the
+  overview reads `?column=operator|value` filters from the URL, e.g. `?status=is_any_of|new,open`
+  or `?active=is_true`) for an "active" tile. The Filters button counts those filters too.
+  A section can also have `groups: [{ name, links }]` after its `links`: each group gets its own
+  heading in the CMS home and the ☰ menu (where sections and groups expand and collapse, with
+  Expand all / Collapse all, remembered per browser), and its name in the breadcrumb
+  (`Content / Blog / Blog posts`). With `folder: "content"` and `folderHref` passed to `GridMenu`
+  and `NavBreadcrumb`, the CMS home shows the section as one folder tile beside its direct links,
+  opening its page (e.g. `/cms?folder=content`, each group a section of its own, built with
+  `folderSections`); the breadcrumb names the folder there (`home` prop) and links back to it
+  from its screens.
 - **`pickup`** — the dialog that opens from a relationship field to pick a record; its own
   columns, features and default view.
 - **Default views** are config, not code: `overview.defaultView`, `overview.navigationView`
@@ -482,7 +493,9 @@ normalise empty numeric input in the schema before number validation (avoid
 - **Detail slots** (`detail.slots`): `beforeForm`, `afterForm`, `afterTabs`, `left`,
   `right` — a render function or an extension reference.
 - **Presentation** (`presentation`): `open` as `page`, `dialog` or `split` (the detail beside
-  the overview, configured by `split`), and `add` as `page` or `dialog`.
+  the overview, configured by `split`), and `add` as `page` or `dialog`. `afterAdd` is where the add page goes after a save:
+  `"back"` (the default) or `"list"`, the overview, so the new record is seen there (for an add
+  page opened straight from a menu tile).
 - **Toolbar actions**: the top-level `add`, `open` and `delete` accept `true`/`false` or
   `{ toolbar, row }` to choose where each action appears.
 

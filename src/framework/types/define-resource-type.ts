@@ -52,6 +52,12 @@ export type {
 export interface ResourcePresentationConfig {
   open?: "dialog" | "page" | "split";
   add?: "dialog" | "page";
+  /**
+   * Where the add page goes after a save: "back" (the default) returns to the previous screen,
+   * "list" opens the resource's overview so the new record is seen there (e.g. when the add
+   * page is opened straight from a menu tile).
+   */
+  afterAdd?: "back" | "list";
   split?: SplitConfig;
   dialog?: DialogConfig;
 }

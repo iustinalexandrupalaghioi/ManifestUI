@@ -23,6 +23,8 @@
   "servicesDescription": "Services, each with its own page, listed by the services block",
   "menu": "Menu",
   "openMenu": "Open the menu",
+  "expandAll": "Expand all",
+  "collapseAll": "Collapse all",
   "home": "Home",
   "breadcrumb": "Breadcrumb",
   "newRecord": "New",

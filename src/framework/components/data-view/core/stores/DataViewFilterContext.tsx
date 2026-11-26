@@ -23,6 +23,11 @@ export function useDataViewFilter(): DataViewFilterCtx {
   return ctx;
 }
 
+/** The same, or null outside a <DataView> (for parts that also render on their own). */
+export function useOptionalDataViewFilter(): DataViewFilterCtx | null {
+  return useContext(DataViewFilterContext);
+}
+
 export function DataViewFilterProvider({
   value,
   children,
